@@ -1,0 +1,58 @@
+//
+//Test specific options go here.
+//Note - integrationTest depends on must be project specific as well as exclude categories.
+//
+def contractTests = false
+
+android {
+
+    sourceSets {
+        //include the integration test folder
+        test.java.srcDirs +=  file('src/contractTest/java')
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.all {
+            systemProperty 'test', 'true'
+            forkEvery = 5
+            maxParallelForks = 2
+
+            useJUnit()
+            if (contractTests.toBoolean()) {
+                println "Contract Tests Only for " + it.name
+                options {
+                    excludeCategories 'com.bam.test_module.categories.UnitTest'
+                }
+            } else {
+                println "Unit Tests Only for " + it.name
+                options {
+                    excludeCategories 'com.bam.test_module.categories.IntegrationTest'
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Gradle task to run only contract tests that were flagged with specific category.
+ */
+task contractTest(
+        type: Test,
+        description: 'Run integration tests only. Pass in \'-Pcontract=true\'',
+        dependsOn: ["testDebugUnitTest", 'clean']) {
+
+    //Here for task completion, not actually used since sub task of testDebugUnitTest
+    testClassesDir = file("src/contractTest/java/");
+    classpath = files("$System.env.ANDROID_HOME/sources/android-18")
+
+    //
+    //Turn on integration testing when argument exists and is true
+    //
+    if (project.hasProperty('contract')) {
+        println contract
+        if (contract == 'true') {
+            contractTests = true
+        }
+    }
+}
