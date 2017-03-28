@@ -1,0 +1,27 @@
+apply plugin: 'checkstyle'
+
+task checkstyle(type: Checkstyle) {
+    group = 'Code Quality'
+    description = 'Runs checkstyle against Android sourcesets'
+
+    source 'src/main'
+    include '**/*.java'
+    exclude '**/gen/**'
+    exclude '**/svg'
+
+    classpath = files()
+}
+
+checkstyle {
+    //Note - the highest version that works with gradle is 6.7
+    toolVersion = "7.0"
+
+    //Note - the location of the checkstyle.xml file
+    configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+
+    //Note - set to false to fail the build
+    ignoreFailures = false
+
+    //files to ignore
+    configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/checkstyle-suppressions.xml")
+}
