@@ -1,5 +1,5 @@
-# MVP
-This app is nothing more than an example of how to create an MVP (Model View Presenter) application.
+# MVP Example
+This app is nothing more than an example of how to create a MVP (Model View Presenter) application.
 
 MVP breaks down an application into more testable components keeping your internal business objects and data separate from
 the external UI or external data.
