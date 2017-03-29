@@ -19,6 +19,8 @@ The application architecture is as followed:
 
 ![Alt text](/doc/mvp_detailed_architecture.png?raw=true "App MVP Architecture")
 
+Note - the application packages are TYPE defined for ease of learning.
+
 ## Usage
 
 Apache License 2.0. Free to use & distribute.
