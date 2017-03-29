@@ -12,7 +12,7 @@ The requirements for the app:
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page. 
 
-<img src="/doc/screen_shot.png" width="200">
+<img src="/doc/screen_shot.png" width="292">
 
 The application architecture is as followed: 
 
