@@ -22,7 +22,6 @@ package com.example.mvpexample.adapter;
 import android.support.annotation.VisibleForTesting;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.OnScrollListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -139,7 +138,7 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
          * @param onLoadMoreListener -
          * @param nowPlayingListAdapter -
          */
-        public LoadMoreScrollListener(LinearLayoutManager linearLayoutManager,
+        LoadMoreScrollListener(LinearLayoutManager linearLayoutManager,
                                       OnLoadMoreListener onLoadMoreListener,
                                       NowPlayingListAdapter nowPlayingListAdapter) {
             this.linearLayoutManager = linearLayoutManager;
