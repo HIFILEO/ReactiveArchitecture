@@ -1,4 +1,4 @@
-<manifest package="example.com.mvpexample"
+<manifest package="com.example.mvpexample"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
