@@ -59,6 +59,7 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
                             onLoadMoreListener,
                             this
                     );
+            recyclerView.addOnScrollListener(loadMoreScrollListener);
         } else {
             loadMoreScrollListener = null;
         }

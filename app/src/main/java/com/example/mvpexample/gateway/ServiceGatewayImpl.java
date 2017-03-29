@@ -72,7 +72,7 @@ public class ServiceGatewayImpl implements ServiceGateway {
         Response<ServiceResponse> response = serviceResponseCall.execute();
 
         if (response.isSuccessful()) {
-            TranslateNowPlaying translateNowPlaying = new TranslateNowPlaying();
+            TranslateNowPlaying translateNowPlaying = new TranslateNowPlaying(imageUrlPath);
             return translateNowPlaying.translate(response.body());
         } else {
             Timber.e("Failed to get data from service.", response.errorBody().toString());
@@ -84,9 +84,19 @@ public class ServiceGatewayImpl implements ServiceGateway {
      * Class to translate external data to internal data for {@link NowPlayingInfo}.
      */
     @VisibleForTesting
-    protected class TranslateNowPlaying {
+    static class TranslateNowPlaying {
         @SuppressLint("SimpleDateFormat")
         private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        private final String imageUrlPath;
+
+        /**
+         * Constructor.
+         * @param imageUrlPath - base path to downloading images.
+         */
+        TranslateNowPlaying(String imageUrlPath) {
+            this.imageUrlPath = imageUrlPath;
+        }
 
         /**
          * Translate the {@link ServiceResponse} into {@link NowPlayingInfo}.
@@ -94,7 +104,7 @@ public class ServiceGatewayImpl implements ServiceGateway {
          * @return NowPlayingInfo object containing all data.
          * @throws ParseException fails to parse data.
          */
-        protected NowPlayingInfo translate(@NonNull ServiceResponse serviceResponse) throws ParseException {
+        NowPlayingInfo translate(@NonNull ServiceResponse serviceResponse) throws ParseException {
             List<MovieInfo> movieInfoList = new ArrayList<>();
 
             for (int i = 0; i < serviceResponse.getResults().length; i++) {
