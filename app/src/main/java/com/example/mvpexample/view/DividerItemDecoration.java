@@ -1,3 +1,4 @@
+// CHECKSTYLE:OFF
 /*
  * Copyright (C) 2014 The Android Open Source Project
  *
@@ -42,7 +43,10 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     private int orientation;
     private int color;
 
-    private int additionalLeftPadding, additionalTopPadding, additionalRightPadding, additionalBottomPadding;
+    private int additionalLeftPadding;
+    private int additionalTopPadding;
+    private int additionalRightPadding;
+    private int additionalBottomPadding;
 
     /**
      * constructor needs a context and an orientation.

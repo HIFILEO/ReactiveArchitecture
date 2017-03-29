@@ -113,7 +113,7 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
      * @param movieViewInfoList - list to add
      */
     public void addList(List<MovieViewInfo> movieViewInfoList) {
-        remove(getItem(getItemCount() -1));
+        remove(getItem(getItemCount() - 1));
 
         for (MovieViewInfo movieViewInfo : movieViewInfoList) {
             add(movieViewInfo);
@@ -125,7 +125,13 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
        onLoadMoreListener = null;
     }
 
-    public interface OnLoadMoreListener{
+    /**
+     * Listener when scrolling requires more data to be loaded.
+     */
+    public interface OnLoadMoreListener {
+        /**
+         * Load more data for adapter.
+         */
         void onLoadMore();
     }
 }

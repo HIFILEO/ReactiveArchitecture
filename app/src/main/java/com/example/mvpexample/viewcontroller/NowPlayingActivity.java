@@ -54,7 +54,8 @@ import butterknife.ButterKnife;
 /**
  * This is the only activity for the application that links into the MVP architecture.
  */
-public class NowPlayingActivity extends AppCompatActivity implements NowPlayingViewModel, NowPlayingListAdapter.OnLoadMoreListener {
+public class NowPlayingActivity extends AppCompatActivity implements NowPlayingViewModel,
+        NowPlayingListAdapter.OnLoadMoreListener {
     private NowPlayingPresenter nowPlayingPresenter;
     private NowPlayingListAdapter nowPlayingListAdapter;
 

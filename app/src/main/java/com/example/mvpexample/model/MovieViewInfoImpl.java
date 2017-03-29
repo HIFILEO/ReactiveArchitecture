@@ -16,6 +16,7 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.model;
 
 import android.annotation.SuppressLint;
@@ -28,6 +29,7 @@ import java.text.SimpleDateFormat;
  * handled by the view data.
  */
 public class MovieViewInfoImpl implements MovieViewInfo {
+    private static final int RATE_NUMBER_TO_STAR = 8;
     @SuppressLint("SimpleDateFormat")
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private MovieInfo movieInfo;
@@ -58,6 +60,6 @@ public class MovieViewInfoImpl implements MovieViewInfo {
 
     @Override
     public boolean isHighRating() {
-        return Math.round(movieInfo.getRating()) >= 8;
+        return Math.round(movieInfo.getRating()) >= RATE_NUMBER_TO_STAR;
     }
 }

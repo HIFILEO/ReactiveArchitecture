@@ -76,7 +76,8 @@ public class MvpExampleApplication extends Application {
                     .build();
             component.inject(this);
         } else {
-            Log.d(MvpExampleApplication.class.getSimpleName(), "setupComponent() called.  ApplicationComponent already set.");
+            Log.d(MvpExampleApplication.class.getSimpleName(), "setupComponent() called.  "
+                    + "ApplicationComponent already set.");
         }
     }
 

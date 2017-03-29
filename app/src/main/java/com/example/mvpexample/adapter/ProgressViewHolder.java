@@ -27,6 +27,9 @@ import com.example.mvpexample.R;
 
 import butterknife.Bind;
 
+/**
+ * View holder for Progress Item.
+ */
 public class ProgressViewHolder extends BaseViewHolder {
     @Bind(R.id.progressBar)
     ProgressBar progressBar;

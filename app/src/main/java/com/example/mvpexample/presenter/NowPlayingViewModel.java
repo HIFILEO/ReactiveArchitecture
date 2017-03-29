@@ -16,7 +16,9 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.presenter;
+
 import com.example.mvpexample.model.MovieViewInfo;
 
 import java.util.List;
@@ -27,6 +29,8 @@ import java.util.List;
  */
 public interface NowPlayingViewModel {
     void showInProgress(boolean show);
+
     void showError();
+
     void addToAdapter(List<MovieViewInfo> displayList);
 }

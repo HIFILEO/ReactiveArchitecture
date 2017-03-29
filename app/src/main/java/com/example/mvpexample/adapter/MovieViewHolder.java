@@ -24,14 +24,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.mvpexample.R;
-import com.example.mvpexample.adapter.BaseViewHolder;
 import com.example.mvpexample.model.MovieViewInfo;
 import com.squareup.picasso.Picasso;
 
-
-
 import butterknife.Bind;
-
 
 /**
  * Movie view holder.

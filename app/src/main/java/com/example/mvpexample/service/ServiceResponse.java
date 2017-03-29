@@ -1,3 +1,4 @@
+// CHECKSTYLE:OFF
 /*
 Copyright 2017 LEO LLC
 

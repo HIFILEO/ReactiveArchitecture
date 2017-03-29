@@ -30,8 +30,12 @@ import java.util.Hashtable;
  */
 class Typefaces {
     private static final String TAG = "Typefaces";
+    private static final Hashtable<String, Typeface> CACHE = new Hashtable<>();
 
-    private static final Hashtable<String, Typeface> cache = new Hashtable<>();
+
+    private Typefaces() {
+
+    }
 
     /**
      * Get one typeface per application.
@@ -40,19 +44,19 @@ class Typefaces {
      * @return - The {@link Typeface} to use
      */
     public static Typeface get(Context context, String assetPath) {
-        synchronized(cache){
-            if (!cache.containsKey(assetPath)) {
+        synchronized (CACHE) {
+            if (!CACHE.containsKey(assetPath)) {
                 try {
                     Typeface typeface = Typeface.createFromAsset(context.getResources().getAssets(),
                             assetPath);
-                    cache.put(assetPath, typeface);
+                    CACHE.put(assetPath, typeface);
                 } catch (Exception e) {
                     Log.e(TAG, "Could not get typeface '" + assetPath
                             + "' because " + e.getMessage());
                     return null;
                 }
             }
-            return cache.get(assetPath);
+            return CACHE.get(assetPath);
         }
     }
 }

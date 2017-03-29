@@ -16,11 +16,14 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.model;
 
 import java.util.List;
 
-
+/**
+ * Implementation of {@link NowPlayingInfo}.
+ */
 public class NowPlayingInfoImpl implements NowPlayingInfo {
     private final List<MovieInfo> movieInfoList;
     private int pageNumber;

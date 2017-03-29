@@ -16,11 +16,14 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.example.mvpexample.gateway;
 
+package com.example.mvpexample.gateway;
 
 import com.example.mvpexample.model.NowPlayingInfo;
 
+/**
+ * Interface for the service gateway.
+ */
 public interface ServiceGateway {
     NowPlayingInfo getNowPlaying(int pageNumber) throws Exception;
 }

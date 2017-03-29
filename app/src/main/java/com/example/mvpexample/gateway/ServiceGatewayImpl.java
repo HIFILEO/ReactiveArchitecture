@@ -16,6 +16,7 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.gateway;
 
 import android.annotation.SuppressLint;
@@ -41,11 +42,20 @@ import retrofit2.Call;
 import retrofit2.Response;
 import timber.log.Timber;
 
-public class ServiceGatewayImpl implements ServiceGateway{
+/**
+ * Implementation of {@link ServiceGateway}.
+ */
+public class ServiceGatewayImpl implements ServiceGateway {
     private final ServiceApi serviceApi;
     private final String apiKey;
     private final String imageUrlPath;
 
+    /**
+     * Constructor.
+     * @param serviceApi - Retrofit service.
+     * @param apiKey - access key.
+     * @param imageUrlPath - url base path for showing images.
+     */
     public ServiceGatewayImpl(@NonNull ServiceApi serviceApi, @NonNull String apiKey,
                               @NonNull String imageUrlPath) {
         this.serviceApi = serviceApi;
@@ -70,6 +80,9 @@ public class ServiceGatewayImpl implements ServiceGateway{
         }
     }
 
+    /**
+     * Class to translate external data to internal data for {@link NowPlayingInfo}.
+     */
     @VisibleForTesting
     protected class TranslateNowPlaying {
         @SuppressLint("SimpleDateFormat")
@@ -77,9 +90,9 @@ public class ServiceGatewayImpl implements ServiceGateway{
 
         /**
          * Translate the {@link ServiceResponse} into {@link NowPlayingInfo}.
-         * @param serviceResponse
-         * @return
-         * @throws ParseException
+         * @param serviceResponse -
+         * @return NowPlayingInfo object containing all data.
+         * @throws ParseException fails to parse data.
          */
         protected NowPlayingInfo translate(@NonNull ServiceResponse serviceResponse) throws ParseException {
             List<MovieInfo> movieInfoList = new ArrayList<>();

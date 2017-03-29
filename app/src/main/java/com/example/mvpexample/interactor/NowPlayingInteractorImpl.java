@@ -16,9 +16,8 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.interactor;
-
-
 
 import android.os.Handler;
 
@@ -47,10 +46,14 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
 
     @Override
     public void loadMoreInfo() {
-        (new Thread( new LoadDataThread(++pageNumber))).start();
+        (new Thread(new LoadDataThread(++pageNumber))).start();
     }
 
+    /**
+     * Thread to load data.
+     */
     private class LoadDataThread implements Runnable {
+        private static final int SLEEP_MSEC = 3000;
         private final int pageNumberToLoad;
         private NowPlayingInfo nowPlayingInfo = null;
 
@@ -64,7 +67,7 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
             //Delay for 3 seconds to show spinner on screen.
             //
             try {
-                Thread.sleep(3000);
+                Thread.sleep(SLEEP_MSEC);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

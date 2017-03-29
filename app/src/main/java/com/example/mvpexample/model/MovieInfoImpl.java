@@ -16,16 +16,27 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.model;
 
 import java.util.Date;
 
+/**
+ * Implementation of {@link MovieInfo}.
+ */
 public class MovieInfoImpl implements MovieInfo {
     private String pictureUrl;
     private String title;
     private Date releaseDate;
     private double rating;
 
+    /**
+     * Constructor.
+     * @param pictureUrl -
+     * @param title -
+     * @param releaseDate -
+     * @param rating -
+     */
     public MovieInfoImpl(String pictureUrl, String title, Date releaseDate, double rating) {
         this.pictureUrl = pictureUrl;
         this.title = title;

@@ -16,6 +16,7 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.example.mvpexample.presenter;
 
 /**
@@ -23,5 +24,6 @@ package com.example.mvpexample.presenter;
  */
 public interface NowPlayingPresenter {
     void loadMoreInfo();
+
     void start();
 }
