@@ -1,4 +1,4 @@
-package example.com.mvpexample.categories;
+package com.example.mvpexample.categories;
 
 /**
  * Contract Test Category.

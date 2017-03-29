@@ -26,8 +26,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
+import java.util.Map;
 
-import example.com.mvpexample.categories.ContractTest;
+import com.example.mvpexample.categories.ContractTest;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -49,7 +50,7 @@ public class ServiceApiTest {
         initMocks(this);
 
         Retrofit rest = new Retrofit.Builder()
-                .baseUrl("https://api.themoviedb.org/")
+                .baseUrl("https://api.themoviedb.org/3/movie/")
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
                 .build();
 
@@ -61,7 +62,9 @@ public class ServiceApiTest {
         //
         //Arrange
         //
-        Call<ServiceResponse> serviceResponseCall = serviceApi.nowPlaying(API_TOKEN, new HashMap<String, Integer>());
+        Map<String, Integer> mapToSend = new HashMap<>();
+        mapToSend.put("page", 1);
+        Call<ServiceResponse> serviceResponseCall = serviceApi.nowPlaying(API_TOKEN, mapToSend);
 
         //
         //Act
