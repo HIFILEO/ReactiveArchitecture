@@ -85,7 +85,6 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
         toolbar.setTitle(getString(R.string.now_playing));
         setSupportActionBar(toolbar);
 
-
         //Create Interactor
         ServiceGateway serviceGateway = new ServiceGatewayImpl(serviceApi,
                 getString(R.string.api_key),
