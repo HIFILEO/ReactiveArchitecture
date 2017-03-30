@@ -25,7 +25,8 @@ import android.view.View;
 import butterknife.ButterKnife;
 
 /**
- * Base class for View Holder so adapter didn't care about types.
+ * Base class for {@link android.support.v7.widget.RecyclerView.ViewHolder} so we automatically
+ * use butterknife.
  */
 public abstract class BaseViewHolder extends RecyclerView.ViewHolder {
 

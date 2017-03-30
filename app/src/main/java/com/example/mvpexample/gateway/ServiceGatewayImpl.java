@@ -81,7 +81,7 @@ public class ServiceGatewayImpl implements ServiceGateway {
     }
 
     /**
-     * Class to translate external data to internal data for {@link NowPlayingInfo}.
+     * Class to translate external {@link ServiceResponse} to internal data for {@link NowPlayingInfo}.
      */
     @VisibleForTesting
     static class TranslateNowPlaying {

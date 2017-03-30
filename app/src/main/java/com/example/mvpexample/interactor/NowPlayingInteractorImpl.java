@@ -55,7 +55,7 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     }
 
     /**
-     * Thread to load data.
+     * Thread to load data from service.
      */
     @VisibleForTesting
     static class LoadDataThread implements Runnable {

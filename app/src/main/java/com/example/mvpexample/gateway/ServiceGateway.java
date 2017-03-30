@@ -22,7 +22,7 @@ package com.example.mvpexample.gateway;
 import com.example.mvpexample.model.NowPlayingInfo;
 
 /**
- * Interface for the service gateway.
+ * Gateway that fetches movie information from a RESTFUL api service.
  */
 public interface ServiceGateway {
     NowPlayingInfo getNowPlaying(int pageNumber) throws Exception;

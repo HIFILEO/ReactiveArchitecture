@@ -30,7 +30,7 @@ import com.squareup.picasso.Picasso;
 import butterknife.Bind;
 
 /**
- * Movie view holder.
+ * {@link MovieViewInfo} holder.
  */
 public class MovieViewHolder extends BaseViewHolder {
     @Bind(R.id.nameTextView)

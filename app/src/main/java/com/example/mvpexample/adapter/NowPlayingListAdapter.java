@@ -32,7 +32,7 @@ import com.example.mvpexample.model.MovieViewInfo;
 import java.util.List;
 
 /**
- * Simple recycle view adapter with continuous scrolling.
+ * Adapter that shows a list of {@link MovieViewInfo} with continuous scrolling.
  */
 public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, BaseViewHolder> {
     private static final int VIEW_PROGRESS = 0;
