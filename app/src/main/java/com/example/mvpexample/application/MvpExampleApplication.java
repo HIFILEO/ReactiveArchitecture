@@ -65,7 +65,7 @@ public class MvpExampleApplication extends Application {
     }
 
     /**
-     * Setup the Dagger2 component graph.
+     * Setup the Dagger2 component graph. Must be called before {@link #onCreate()}
      */
     @VisibleForTesting
     void setupComponent() {
@@ -79,6 +79,14 @@ public class MvpExampleApplication extends Application {
             Log.d(MvpExampleApplication.class.getSimpleName(), "setupComponent() called.  "
                     + "ApplicationComponent already set.");
         }
+    }
+
+    /**
+     * Set the Dagger2 component graph.
+     */
+    @VisibleForTesting
+    void setComponent (ApplicationComponent applicationComponent) {
+        component = applicationComponent;
     }
 
     /**

@@ -8,7 +8,7 @@ The app simply loads a list of "Now Playing" movies based on [The Movie Database
 
 The requirements for the app:
 1. As a user, show a list of "Now Playing" movies. Poster, Title, Release Date, & Rating. 
-2. As a user, any rating at eight or above should be started.
+2. As a user, any rating at eight or above should be stared.
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page. 
 
@@ -36,6 +36,7 @@ This project supports the following type of tests:
 1. Java Unit Test
 2. Robolectric(There are none - and that was intentional to show how you can test without this when you use MVP)
 3. Contract Test (Testing API end point / Restful API contracts)
+4. Espresso UI Test (Written from engineering perspective)
 
 To run all unit tests:
 
@@ -44,6 +45,12 @@ To run all unit tests:
 To run all contract tests:
 
 ./gradlew contractTest '-Pcontract=true'
+
+### Standards
+
+There are style standards in this app as examples of how to maintain clean code.
+
+#### Checkstyle
 
 Ro run all checkstyle:
 ./gradlew checkstyle

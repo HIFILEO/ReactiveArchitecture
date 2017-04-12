@@ -21,7 +21,7 @@ package com.example.mvpexample.viewcontroller;
 
 
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.VisibleForTesting;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -33,15 +33,13 @@ import android.widget.Toast;
 import com.example.mvpexample.R;
 import com.example.mvpexample.adapter.NowPlayingListAdapter;
 import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.gateway.ServiceGateway;
-import com.example.mvpexample.gateway.ServiceGatewayImpl;
-import com.example.mvpexample.interactor.NowPlayingInteractor;
-import com.example.mvpexample.interactor.NowPlayingInteractorImpl;
+import com.example.mvpexample.dagger.ApplicationComponent;
+import com.example.mvpexample.dagger.DaggerNowPlayingActivityComponent;
+import com.example.mvpexample.dagger.NowPlayingActivityComponent;
+import com.example.mvpexample.dagger.NowPlayingActivityModule;
 import com.example.mvpexample.model.MovieViewInfo;
 import com.example.mvpexample.presenter.NowPlayingPresenter;
-import com.example.mvpexample.presenter.NowPlayingPresenterImpl;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
-import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.view.DividerItemDecoration;
 
 import java.util.List;
@@ -56,12 +54,11 @@ import butterknife.ButterKnife;
  */
 public class NowPlayingActivity extends AppCompatActivity implements NowPlayingViewModel,
         NowPlayingListAdapter.OnLoadMoreListener {
-    private NowPlayingPresenter nowPlayingPresenter;
     private NowPlayingListAdapter nowPlayingListAdapter;
+    private NowPlayingActivityComponent nowPlayingActivityComponent;
 
-    //Injected components
     @Inject
-    ServiceApi serviceApi;
+    NowPlayingPresenter nowPlayingPresenter;
 
     //Bind Views
     @Bind(R.id.progressBar)
@@ -74,26 +71,16 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_now_playing);
         ButterKnife.bind(this);
 
-        //Inject Dagger Service
-        MvpExampleApplication.getInstance().getComponent().inject(this);
+        //Inject Dagger Service (Double scoped here - Singleton (App Level) & Activity
+        injectDaggerMembers(((MvpExampleApplication) getApplication()).getComponent());
 
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
         toolbar.setTitle(getString(R.string.now_playing));
         setSupportActionBar(toolbar);
-
-        //Create Interactor
-        ServiceGateway serviceGateway = new ServiceGatewayImpl(serviceApi,
-                getString(R.string.api_key),
-                getString(R.string.image_url_path));
-        NowPlayingInteractor nowPlayingInteractor =
-                new NowPlayingInteractorImpl(serviceGateway, new Handler());
-
-        //Create Presenter
-        nowPlayingPresenter = new NowPlayingPresenterImpl(this, nowPlayingInteractor);
 
         //Start Presenter so Interactor response model is setup correctly.
         nowPlayingPresenter.start();
@@ -140,5 +127,26 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
     @Override
     public void onLoadMore() {
         nowPlayingPresenter.loadMoreInfo();
+    }
+
+    /**
+     * Inject the Dagger components used by {@link NowPlayingActivity}
+     * @param applicationComponent - {@link android.app.Application} level component
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    void injectDaggerMembers(ApplicationComponent applicationComponent) {
+        if (nowPlayingActivityComponent == null) {
+            nowPlayingActivityComponent =
+            DaggerNowPlayingActivityComponent.builder()
+                    .applicationComponent(applicationComponent)
+                    .nowPlayingActivityModule(new NowPlayingActivityModule(this, this))
+                    .build();
+            nowPlayingActivityComponent.inject(this);
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    void setComponent(NowPlayingActivityComponent nowPlayingActivityComponent) {
+        this.nowPlayingActivityComponent = nowPlayingActivityComponent;
     }
 }

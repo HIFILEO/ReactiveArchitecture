@@ -61,24 +61,24 @@ public class ApplicationModule {
      */
     @Provides
     @Singleton
-    public Application provideApplication() {
+    public Application providesApplication() {
         return application;
     }
 
     @Provides
     @Singleton
-    public Resources provideResources() {
+    public Resources providesResources() {
         return application.getResources();
     }
 
     @Singleton
     @Provides
-    public Gson provideGson(GsonBuilder builder) {
+    public Gson providesGson(GsonBuilder builder) {
         return builder.create();
     }
 
     @Provides
-    public GsonBuilder provideGsonBuilder() {
+    public GsonBuilder providesGsonBuilder() {
 
         GsonBuilder gsonBuilder = new GsonBuilder();
         return gsonBuilder;
@@ -86,13 +86,13 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    public OkHttpClient.Builder provideOkHttpBuilder() {
+    public OkHttpClient.Builder providesOkHttpBuilder() {
         return new OkHttpClient.Builder();
     }
 
     @Singleton
     @Provides
-    public OkHttpClient provideOkHttpClient(OkHttpClient.Builder builder, HttpLoggingInterceptor.Level level) {
+    public OkHttpClient providesOkHttpClient(OkHttpClient.Builder builder, HttpLoggingInterceptor.Level level) {
         //Log HTTP request and response data in debug mode
         final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(level);
@@ -103,7 +103,7 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    public Retrofit.Builder provideRetrofitBuilder(OkHttpClient client, Gson gson) {
+    public Retrofit.Builder providesRetrofitBuilder(OkHttpClient client, Gson gson) {
         return new Retrofit.Builder()
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson));
@@ -111,13 +111,13 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    public HttpLoggingInterceptor.Level provideHttpLoggingInterceptorLevel() {
+    public HttpLoggingInterceptor.Level providesHttpLoggingInterceptorLevel() {
         return HttpLoggingInterceptor.Level.NONE;
     }
 
     @Provides
     @Singleton
-    public ServiceApi provideInfoServiceApi(Retrofit.Builder retrofit) {
+    public ServiceApi providesInfoServiceApi(Retrofit.Builder retrofit) {
         return retrofit.baseUrl("https://api.themoviedb.org/3/movie/")
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
                 .build()

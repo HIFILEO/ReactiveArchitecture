@@ -19,29 +19,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import android.app.Application;
-
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
-
-import javax.inject.Singleton;
+import com.example.mvpexample.viewcontroller.NowPlayingActivity;
 
 import dagger.Component;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Dagger component that injects {@link NowPlayingActivity}.
  */
-@Singleton
+@ActivityScope
 @Component(
+        dependencies = ApplicationComponent.class,
         modules = {
-                ApplicationModule.class,
+                NowPlayingActivityModule.class
         })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
-
-    void inject(MvpExampleApplication application);
+public interface NowPlayingActivityComponent {
+    void inject(NowPlayingActivity activity);
 }

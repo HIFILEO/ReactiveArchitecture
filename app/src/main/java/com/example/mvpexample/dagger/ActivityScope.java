@@ -19,29 +19,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import android.app.Application;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
-
-import javax.inject.Singleton;
-
-import dagger.Component;
+import javax.inject.Scope;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Annotation for Dagger2 components that signifies the scope of the components are set to the Activity lifecycle.
  */
-@Singleton
-@Component(
-        modules = {
-                ApplicationModule.class,
-        })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
-
-    void inject(MvpExampleApplication application);
+@Scope
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ActivityScope {
 }

@@ -75,7 +75,7 @@ public class ServiceGatewayImpl implements ServiceGateway {
             TranslateNowPlaying translateNowPlaying = new TranslateNowPlaying(imageUrlPath);
             return translateNowPlaying.translate(response.body());
         } else {
-            Timber.e("Failed to get data from service.", response.errorBody().toString());
+            Timber.e("Failed to get data from service. %s", response.errorBody().toString());
             throw new Exception("Service failed to get data from API.");
         }
     }

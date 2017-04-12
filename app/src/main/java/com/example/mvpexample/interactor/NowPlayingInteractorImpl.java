@@ -99,7 +99,7 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
             try {
                 nowPlayingInfo = serviceGateway.getNowPlaying(pageNumberToLoad);
             } catch (Exception e) {
-                Timber.e("Failed to fetch data: ", e);
+                Timber.e(e, "Failed to fetch data:");
             }
 
             //
