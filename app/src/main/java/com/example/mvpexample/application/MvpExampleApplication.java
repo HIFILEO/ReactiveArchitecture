@@ -25,7 +25,10 @@ import android.util.Log;
 
 import com.example.mvpexample.dagger.ApplicationComponent;
 import com.example.mvpexample.dagger.ApplicationModule;
+import com.example.mvpexample.dagger.ComponentProvider;
 import com.example.mvpexample.dagger.DaggerApplicationComponent;
+
+import javax.inject.Inject;
 
 import timber.log.Timber;
 
@@ -34,7 +37,12 @@ import timber.log.Timber;
  */
 public class MvpExampleApplication extends Application {
     private static MvpExampleApplication mvpExampleApplication;
-    private ApplicationComponent component;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    protected ApplicationComponent component;
+
+    @Inject
+    ComponentProvider componentProvider;
 
     public static MvpExampleApplication getInstance() {
         return mvpExampleApplication;
@@ -57,6 +65,10 @@ public class MvpExampleApplication extends Application {
         return component;
     }
 
+    public ComponentProvider getComponentProvider() {
+        return componentProvider;
+    }
+
     /**
      * Setup the Timber logging tree.
      */
@@ -67,7 +79,7 @@ public class MvpExampleApplication extends Application {
     /**
      * Setup the Dagger2 component graph. Must be called before {@link #onCreate()}
      */
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     void setupComponent() {
         if (component == null) {
 
@@ -79,14 +91,6 @@ public class MvpExampleApplication extends Application {
             Log.d(MvpExampleApplication.class.getSimpleName(), "setupComponent() called.  "
                     + "ApplicationComponent already set.");
         }
-    }
-
-    /**
-     * Set the Dagger2 component graph.
-     */
-    @VisibleForTesting
-    void setComponent (ApplicationComponent applicationComponent) {
-        component = applicationComponent;
     }
 
     /**

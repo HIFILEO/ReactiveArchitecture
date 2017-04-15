@@ -17,29 +17,22 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvpexample.dagger;
+package com.example.mvpexample.application;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
+import android.app.Application;
+import android.content.Context;
+import android.support.test.runner.AndroidJUnitRunner;
 
-import javax.inject.Singleton;
-
-import dagger.Component;
+import com.example.mvpexample.application.TestMvpExampleApplication;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Custom test runner so Espresso can utilize {@link TestMvpExampleApplication} and inject
+ * {@link com.example.mvpexample.dagger.TestApplicationModule}
  */
-@Singleton
-@Component(
-        modules = {
-                ApplicationModule.class,
-        })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
-
-    void inject(MvpExampleApplication application);
+public class MvpExampleTestRunner extends AndroidJUnitRunner {
+    @Override
+    public Application newApplication(ClassLoader cl, String className, Context context)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        return super.newApplication(cl, TestMvpExampleApplication.class.getName(), context);
+    }
 }

@@ -19,27 +19,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
-
-import javax.inject.Singleton;
+import com.example.mvpexample.viewcontroller.NowPlayingActivityTest;
 
 import dagger.Component;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Dagger component that injects {@link com.example.mvpexample.viewcontroller.NowPlayingActivityTest} and extends
+ * {@link NowPlayingActivityComponent} for testing.
  */
-@Singleton
+@ActivityScope
 @Component(
+        //Note - even though you are extending the other component, you still need the correct dependencies
+        dependencies = TestApplicationComponent.class,
         modules = {
-                ApplicationModule.class,
+                TestNowPlayingActivityModule.class,
+                ActivityModule.class
         })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
-
-    void inject(MvpExampleApplication application);
+public interface TestNowPlayingActivityComponent extends NowPlayingActivityComponent {
+    //Note - the reason for extends 'NowPlayingActivityComponent', is that any automatically get the getters and
+    //injectors if the 'NowPlayingActivityComponent' happened to contain any. For example, I can reuse this mock
+    //component on the 'NowPlayingActivity' injection.
+    void inject(NowPlayingActivityTest nowPlayingActivityTest);
 }

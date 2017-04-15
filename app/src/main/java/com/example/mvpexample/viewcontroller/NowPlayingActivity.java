@@ -21,8 +21,6 @@ package com.example.mvpexample.viewcontroller;
 
 
 import android.os.Bundle;
-import android.support.annotation.VisibleForTesting;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -32,7 +30,6 @@ import android.widget.Toast;
 
 import com.example.mvpexample.R;
 import com.example.mvpexample.adapter.NowPlayingListAdapter;
-import com.example.mvpexample.application.MvpExampleApplication;
 import com.example.mvpexample.dagger.ApplicationComponent;
 import com.example.mvpexample.dagger.DaggerNowPlayingActivityComponent;
 import com.example.mvpexample.dagger.NowPlayingActivityComponent;
@@ -47,15 +44,13 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.Bind;
-import butterknife.ButterKnife;
 
 /**
  * This is the only activity for the application that links into the MVP architecture.
  */
-public class NowPlayingActivity extends AppCompatActivity implements NowPlayingViewModel,
+public class NowPlayingActivity extends BaseActivity implements NowPlayingViewModel,
         NowPlayingListAdapter.OnLoadMoreListener {
     private NowPlayingListAdapter nowPlayingListAdapter;
-    private NowPlayingActivityComponent nowPlayingActivityComponent;
 
     @Inject
     NowPlayingPresenter nowPlayingPresenter;
@@ -72,10 +67,6 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_now_playing);
-        ButterKnife.bind(this);
-
-        //Inject Dagger Service (Double scoped here - Singleton (App Level) & Activity
-        injectDaggerMembers(((MvpExampleApplication) getApplication()).getComponent());
 
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
@@ -88,7 +79,6 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
         //Load Info
         nowPlayingPresenter.loadMoreInfo();
     }
-
 
     @Override
     public void showInProgress(boolean show) {
@@ -129,24 +119,13 @@ public class NowPlayingActivity extends AppCompatActivity implements NowPlayingV
         nowPlayingPresenter.loadMoreInfo();
     }
 
-    /**
-     * Inject the Dagger components used by {@link NowPlayingActivity}
-     * @param applicationComponent - {@link android.app.Application} level component
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    void injectDaggerMembers(ApplicationComponent applicationComponent) {
-        if (nowPlayingActivityComponent == null) {
-            nowPlayingActivityComponent =
-            DaggerNowPlayingActivityComponent.builder()
-                    .applicationComponent(applicationComponent)
-                    .nowPlayingActivityModule(new NowPlayingActivityModule(this, this))
-                    .build();
-            nowPlayingActivityComponent.inject(this);
-        }
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    void setComponent(NowPlayingActivityComponent nowPlayingActivityComponent) {
-        this.nowPlayingActivityComponent = nowPlayingActivityComponent;
+    @Override
+    public void injectDaggerMembers(ApplicationComponent applicationComponent) {
+        NowPlayingActivityComponent nowPlayingActivityComponent =
+                DaggerNowPlayingActivityComponent.builder()
+                        .applicationComponent(applicationComponent)
+                        .nowPlayingActivityModule(new NowPlayingActivityModule(this, this))
+                        .build();
+        nowPlayingActivityComponent.inject(this);
     }
 }

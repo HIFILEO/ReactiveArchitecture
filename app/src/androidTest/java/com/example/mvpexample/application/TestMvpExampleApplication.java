@@ -17,29 +17,22 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvpexample.dagger;
+package com.example.mvpexample.application;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
-
-import javax.inject.Singleton;
-
-import dagger.Component;
+import com.example.mvpexample.dagger.DaggerTestApplicationComponent;
+import com.example.mvpexample.dagger.TestApplicationModule;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Test class for {@link MvpExampleApplication}
  */
-@Singleton
-@Component(
-        modules = {
-                ApplicationModule.class,
-        })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
+public class TestMvpExampleApplication extends MvpExampleApplication {
 
-    void inject(MvpExampleApplication application);
+    @Override
+    void setupComponent() {
+        component = DaggerTestApplicationComponent.builder()
+                .testApplicationModule(new TestApplicationModule(getApplicationModule()))
+                .build();
+        component.inject(this);
+    }
+
 }

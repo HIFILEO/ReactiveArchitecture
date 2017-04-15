@@ -16,59 +16,46 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.example.mvpexample.dagger;
 
-import android.app.Activity;
-
-import android.os.Handler;
-
-import com.example.mvpexample.R;
 import com.example.mvpexample.gateway.ServiceGateway;
-import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
-import com.example.mvpexample.interactor.NowPlayingInteractorImpl;
 import com.example.mvpexample.presenter.NowPlayingPresenter;
-import com.example.mvpexample.presenter.NowPlayingPresenterImpl;
-import com.example.mvpexample.presenter.NowPlayingViewModel;
+import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.service.ServiceApi;
 
 import dagger.Module;
 import dagger.Provides;
 
 /**
- * Dagger Module for the {@link com.example.mvpexample.viewcontroller.NowPlayingActivity}.
+ * Mock {@link NowPlayingActivityModule}
+ * Note - you cannot extend the {@link NowPlayingActivityModule}. So the work around, pass in via constructor.
  */
 @Module
-public class NowPlayingActivityModule extends ActivityModule {
-    private NowPlayingViewModel nowPlayingViewModel;
+public class TestNowPlayingActivityModule {
+    private NowPlayingActivityModule nowPlayingActivityModule;
 
-    public NowPlayingActivityModule(Activity activity, NowPlayingViewModel nowPlayingViewModel) {
-        super(activity);
-        this.nowPlayingViewModel = nowPlayingViewModel;
+    public TestNowPlayingActivityModule(NowPlayingActivityModule nowPlayingActivityModule) {
+        this.nowPlayingActivityModule = nowPlayingActivityModule;
     }
 
     @Provides
     @ActivityScope
     public ServiceGateway providesServiceGateway(ServiceApi serviceApi) {
-        return new ServiceGatewayImpl(serviceApi,
-                activity().getString(R.string.api_key),
-                activity().getString(R.string.image_url_path));
+        return nowPlayingActivityModule.providesServiceGateway(serviceApi);
     }
 
     @Provides
     @ActivityScope
     public NowPlayingInteractor providesNowPlayingInteractor(ServiceGateway serviceGateway) {
-        return new NowPlayingInteractorImpl(serviceGateway, new Handler());
+        return nowPlayingActivityModule.providesNowPlayingInteractor(serviceGateway);
     }
 
     @Provides
     @ActivityScope
     public NowPlayingPresenter providesNowPlayingPresenter(NowPlayingInteractor nowPlayingInteractor) {
-        return new NowPlayingPresenterImpl(nowPlayingViewModel, nowPlayingInteractor);
-    }
-
-    protected NowPlayingViewModel getNowPlayingViewModel() {
-        return nowPlayingViewModel;
+        //In order to make sure espresso idles the view checks, we put the IdlingResource on the presenter.
+        return new NowPlayingPresenterImpl_IdlingResource(nowPlayingActivityModule.getNowPlayingViewModel(),
+                nowPlayingInteractor);
     }
 }

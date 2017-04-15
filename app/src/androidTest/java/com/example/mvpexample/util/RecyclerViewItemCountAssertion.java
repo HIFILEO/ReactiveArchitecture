@@ -17,29 +17,35 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvpexample.dagger;
+package com.example.mvpexample.util;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.service.ServiceApi;
+import android.support.test.espresso.NoMatchingViewException;
+import android.support.test.espresso.ViewAssertion;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
-import javax.inject.Singleton;
-
-import dagger.Component;
+import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
+import static org.hamcrest.Matchers.is;
 
 /**
- * Application-level Dagger2 {@link Component}.
+ * Assert the {@link android.support.v7.widget.RecyclerView.Adapter} has a specific count given the parent's view id.
+ *
  */
-@Singleton
-@Component(
-        modules = {
-                ApplicationModule.class,
-        })
-public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
+public class RecyclerViewItemCountAssertion implements ViewAssertion {
+    private final int expectedCount;
 
-    void inject(MvpExampleApplication application);
+    public RecyclerViewItemCountAssertion(int expectedCount) {
+        this.expectedCount = expectedCount;
+    }
+
+    @Override
+    public void check(View view, NoMatchingViewException noViewFoundException) {
+        if (noViewFoundException != null) {
+            throw noViewFoundException;
+        }
+
+        RecyclerView recyclerView = (RecyclerView) view;
+        RecyclerView.Adapter adapter = recyclerView.getAdapter();
+        assertThat(adapter.getItemCount(), is(expectedCount));
+    }
 }

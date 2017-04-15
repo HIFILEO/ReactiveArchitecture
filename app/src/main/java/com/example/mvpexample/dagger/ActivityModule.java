@@ -25,7 +25,7 @@ import dagger.Module;
 import dagger.Provides;
 
 /**
- * Dagger {@link Module} that provides Activity dependency binding for {@link ActivityComponent}
+ * Dagger {@link Module} that provides Activity dependency binding for BaseActivity.
  */
 @Module
 public class ActivityModule {

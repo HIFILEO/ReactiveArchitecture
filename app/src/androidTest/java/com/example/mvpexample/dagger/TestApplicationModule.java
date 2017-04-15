@@ -19,16 +19,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.example.mvpexample.application.MvpExampleApplication;
 import com.example.mvpexample.service.ServiceApi;
-import com.example.mvpexample.viewcontroller.BaseActivity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.mockito.Mockito;
 
 import javax.inject.Singleton;
 
@@ -37,24 +36,23 @@ import dagger.Provides;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+
 
 /**
- * Dagger2 {@link Module} providing application-level dependency bindings.
+ * Dagger2 {@link Module} providing application-level dependency bindings for test.
  */
 @Module
-public class ApplicationModule {
-    private MvpExampleApplication application;
-    private ComponentProvider spyComponentProvider;
+public class TestApplicationModule {
+    private ApplicationModule applicationModule;
 
-    public ApplicationModule(MvpExampleApplication application) {
-        this.application = application;
+    public TestApplicationModule(ApplicationModule applicationModule) {
+        this.applicationModule = applicationModule;
     }
 
     @Provides
     @Singleton
     Context context() {
-        return application;
+        return applicationModule.context();
     }
 
     /**
@@ -65,77 +63,59 @@ public class ApplicationModule {
     @Provides
     @Singleton
     public Application providesApplication() {
-        return application;
+        return applicationModule.providesApplication();
     }
 
     @Provides
     @Singleton
     public Resources providesResources() {
-        return application.getResources();
+        return applicationModule.providesResources();
     }
 
     @Singleton
     @Provides
     public Gson providesGson(GsonBuilder builder) {
-        return builder.create();
+        return applicationModule.providesGson(builder);
     }
 
     @Provides
     public GsonBuilder providesGsonBuilder() {
-
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        return gsonBuilder;
+        return applicationModule.providesGsonBuilder();
     }
 
     @Singleton
     @Provides
     public OkHttpClient.Builder providesOkHttpBuilder() {
-        return new OkHttpClient.Builder();
+        return applicationModule.providesOkHttpBuilder();
     }
 
     @Singleton
     @Provides
     public OkHttpClient providesOkHttpClient(OkHttpClient.Builder builder, HttpLoggingInterceptor.Level level) {
-        //Log HTTP request and response data in debug mode
-        final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(level);
-        builder.addInterceptor(loggingInterceptor);
-
-        return builder.build();
+        return applicationModule.providesOkHttpClient(builder, level);
     }
 
     @Singleton
     @Provides
     public Retrofit.Builder providesRetrofitBuilder(OkHttpClient client, Gson gson) {
-        return new Retrofit.Builder()
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create(gson));
+        return applicationModule.providesRetrofitBuilder(client, gson);
     }
 
     @Singleton
     @Provides
     public HttpLoggingInterceptor.Level providesHttpLoggingInterceptorLevel() {
-        return HttpLoggingInterceptor.Level.NONE;
+        return applicationModule.providesHttpLoggingInterceptorLevel();
     }
 
     @Provides
     @Singleton
     public ServiceApi providesInfoServiceApi(Retrofit.Builder retrofit) {
-        return retrofit.baseUrl("https://api.themoviedb.org/3/movie/")
-                .addConverterFactory(GsonConverterFactory.create(new Gson()))
-                .build()
-                .create(ServiceApi.class);
+        return applicationModule.providesInfoServiceApi(retrofit);
     }
 
     @Provides
     @Singleton
     public ComponentProvider providesComponentProvider() {
-        return new ComponentProvider() {
-            @Override
-            public void setupComponent(Activity activity) {
-                BaseActivity baseActivity = (BaseActivity) activity;
-                baseActivity.injectDaggerMembers(baseActivity.getInjectorComponent());
-            }
-        };
+        return Mockito.spy(applicationModule.providesComponentProvider());
     }
 }

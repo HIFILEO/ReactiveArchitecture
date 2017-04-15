@@ -19,19 +19,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import android.app.Activity;
+import javax.inject.Singleton;
 
 import dagger.Component;
 
 /**
- * Activity-level components should extend this component.
- * <p>Subclasses of this should be decorated with annotation: {@link ActivityScope}</p>
+ * Application-level Dagger2 {@link Component} for Testing.
  */
-@ActivityScope
+@Singleton
 @Component(
-        dependencies = ApplicationComponent.class,
-        modules = ActivityModule.class)
-
-public interface ActivityComponent {
-    Activity getActivity();
+        modules = {
+                TestApplicationModule.class,
+        })
+public interface TestApplicationComponent extends ApplicationComponent{
+    ComponentProvider getComponentProvider();
 }
