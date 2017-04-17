@@ -40,7 +40,8 @@ android {
 task contractTest(
         type: Test,
         description: 'Run contract tests only. Pass in \'-Pcontract=true\'',
-        dependsOn: ["testDebugUnitTest"]) {
+        dependsOn: ["testDebugUnitTest"],
+        group: "Verification") {
 
     //Here for task completion, not actually used since sub task of testDebugUnitTest
     testClassesDir = file("src/contractTest/java/");
