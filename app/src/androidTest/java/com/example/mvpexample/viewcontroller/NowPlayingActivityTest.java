@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
+import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -57,6 +58,7 @@ import org.mockito.stubbing.Answer;
 import javax.inject.Inject;
 
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -166,12 +168,57 @@ public class NowPlayingActivityTest {
         onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
     }
 
-    //TODO - test scrolling
-//    @Test
-//    public void progressBarShowsWhenLoadingMoreData() {
-//
-//        //onView(withId(R.id.recyclerView)).perform(RecyclerViewActions.scrollToPosition(10));
-//    }
+    @Test
+    public void progressBarShowsWhenLoadingMoreData() {
+        //
+        //Arrange
+        //
+        //Create a component provider that can be used for testing. One part we setup the injections including
+        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
+        //under test continues.
+        final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
+            @Override
+            public void setupMocks() {
+                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+            }
+        };
+
+        //When activity under test fetches the ComponentProvider, we use our test ComponentProvider instead.
+        Mockito.doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                componentProviderForTest.setupComponent((Activity) (invocation.getArguments())[0]);
+                return null;
+            }
+        }).when(spyComponentProvider).setupComponent(any(NowPlayingActivity.class));
+
+        //
+        //Act
+        //
+        activityTestRule.launchActivity(new Intent());
+
+        //
+        //Assert
+        //
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
+
+        //unregister
+        Espresso.unregisterIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+
+        //Works but you need to chain two actions
+        onView(withId(R.id.recyclerView)).perform(
+                RecyclerViewActions.scrollToPosition(19),
+                RecyclerViewActions.actionOnItemAtPosition(19, click())
+        );
+
+        onView(withId(R.id.recyclerView)).perform(
+                RecyclerViewActions.scrollToPosition(20),
+                RecyclerViewActions.actionOnItemAtPosition(20, click()))
+                .check(matches(withId(R.id.progressBar)));
+
+        Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(40));
+    }
 
     @NonNull
     private String getResourceString(int id) {
