@@ -45,6 +45,7 @@ import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
 import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.util.RecyclerViewItemCountAssertion;
+import com.example.mvpexample.util.RecyclerViewMatcher;
 import com.example.mvpexample.util.TestComponentProvider;
 
 import org.junit.Before;
@@ -76,13 +77,22 @@ public class NowPlayingActivityTest {
     @Inject
     ServiceApi serviceApi;
     @Inject
-    NowPlayingPresenter nowPlayingPresenter;
+    NowPlayingPresenter spyNowPlayingPresenter;
 
     @Rule
     public ActivityTestRule<NowPlayingActivity> activityTestRule = new ActivityTestRule<>(
             NowPlayingActivity.class,
             true,
             false);//do not start activity
+
+    /**
+     * Convenience helper to create matcher for recycler view.
+     * @param recyclerViewId - ID of {@link android.support.v7.widget.RecyclerView}
+     * @return
+     */
+    public static RecyclerViewMatcher withRecyclerView(final int recyclerViewId) {
+        return new RecyclerViewMatcher(recyclerViewId);
+    }
 
     @Before
     public void setUp() {
@@ -144,7 +154,7 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
-                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
             }
         };
 
@@ -179,7 +189,7 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
-                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
             }
         };
 
@@ -200,24 +210,22 @@ public class NowPlayingActivityTest {
         //
         //Assert
         //
+        //Note - because of the idling resource, this check will wait until data is loaded.
         onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
 
-        //unregister
-        Espresso.unregisterIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
+        //unregister so we can do checks without waiting for data
+        Espresso.unregisterIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
 
-        //Works but you need to chain two actions
+        //Scroll to the bottom to trigger the progress par.
         onView(withId(R.id.recyclerView)).perform(
-                RecyclerViewActions.scrollToPosition(19),
-                RecyclerViewActions.actionOnItemAtPosition(19, click())
+                RecyclerViewActions.scrollToPosition(19),//scroll to bottom so progress spinner gets added
+                RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
         );
 
-        onView(withId(R.id.recyclerView)).perform(
-                RecyclerViewActions.scrollToPosition(20),
-                RecyclerViewActions.actionOnItemAtPosition(20, click()))
-                .check(matches(withId(R.id.progressBar)));
+        //Note - without idling resource, we can check for progress item while data loads.
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(21));
 
-        Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingPresenter);
-        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(40));
+
     }
 
     @NonNull

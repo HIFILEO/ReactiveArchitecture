@@ -24,6 +24,8 @@ import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.service.ServiceApi;
 
+import org.mockito.Mockito;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -55,7 +57,7 @@ public class TestNowPlayingActivityModule {
     @ActivityScope
     public NowPlayingPresenter providesNowPlayingPresenter(NowPlayingInteractor nowPlayingInteractor) {
         //In order to make sure espresso idles the view checks, we put the IdlingResource on the presenter.
-        return new NowPlayingPresenterImpl_IdlingResource(nowPlayingActivityModule.getNowPlayingViewModel(),
-                nowPlayingInteractor);
+        return Mockito.spy(new NowPlayingPresenterImpl_IdlingResource(nowPlayingActivityModule.getNowPlayingViewModel(),
+                nowPlayingInteractor));
     }
 }
