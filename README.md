@@ -46,6 +46,10 @@ To run all contract tests:
 
 ./gradlew contractTest '-Pcontract=true'
 
+To run all espresso tests:
+
+./gradlew connectedDebugAndroidTest
+
 ### Standards
 
 There are style standards in this app as examples of how to maintain clean code.

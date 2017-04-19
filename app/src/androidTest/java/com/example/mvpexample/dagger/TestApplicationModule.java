@@ -37,7 +37,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 
-
 /**
  * Dagger2 {@link Module} providing application-level dependency bindings for test.
  */
@@ -110,7 +109,8 @@ public class TestApplicationModule {
     @Provides
     @Singleton
     public ServiceApi providesInfoServiceApi(Retrofit.Builder retrofit) {
-        return applicationModule.providesInfoServiceApi(retrofit);
+        //Note - mock the web calls. You test the in contract testing.
+        return Mockito.mock(ServiceApi.class);
     }
 
     @Provides

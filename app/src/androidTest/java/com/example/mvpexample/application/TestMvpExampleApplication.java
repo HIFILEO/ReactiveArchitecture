@@ -34,5 +34,4 @@ public class TestMvpExampleApplication extends MvpExampleApplication {
                 .build();
         component.inject(this);
     }
-
 }

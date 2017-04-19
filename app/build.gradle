@@ -95,8 +95,7 @@ dependencies {
         exclude module: 'recyclerview-v7'
     }
     androidTestApt "com.google.dagger:dagger-compiler:2.8"
-    //androidTestCompile 'org.mockito:mockito-core:2.0.7-beta'
+    androidTestCompile 'com.squareup.retrofit2:retrofit-mock:2.1.0'
     androidTestCompile 'org.mockito:mockito-android:2.6.2'
-
     androidTestAnnotationProcessor 'com.google.dagger:dagger-compiler:2.8'
 }

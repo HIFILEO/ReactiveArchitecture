@@ -45,12 +45,15 @@ import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
 import com.example.mvpexample.service.ServiceApi;
+import com.example.mvpexample.service.ServiceResponse;
 import com.example.mvpexample.util.RecyclerViewItemCountAssertion;
 import com.example.mvpexample.util.RecyclerViewMatcher;
 import com.example.mvpexample.util.TestComponentProvider;
+import com.example.mvpexample.util.TestEspressoAssetFileHelper;
+import com.google.gson.Gson;
 
 import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,9 +61,15 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
+
+import retrofit2.Call;
+import retrofit2.Response;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -68,20 +77,26 @@ import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class NowPlayingActivityTest {
-    private MvpExampleApplication mvpExampleApplication;
-    private ComponentProvider spyComponentProvider;
+    private static MvpExampleApplication mvpExampleApplication;
+    private static ComponentProvider spyComponentProvider;
+    private static ServiceResponse serviceResponse1;
+    private static ServiceResponse serviceResponse2;
+    private static Map<String, Integer> mapToSend1 = new HashMap<>();
+    private static Map<String, Integer> mapToSend2 = new HashMap<>();
 
     //Note - NowPlayingActivityTest is set to activity scope.
     @Inject
-    ServiceApi serviceApi;
-    @Inject
     NowPlayingPresenter spyNowPlayingPresenter;
+    @Inject
+    ServiceApi serviceApi;
 
     @Rule
     public ActivityTestRule<NowPlayingActivity> activityTestRule = new ActivityTestRule<>(
@@ -92,23 +107,46 @@ public class NowPlayingActivityTest {
     /**
      * Convenience helper to create matcher for recycler view.
      * @param recyclerViewId - ID of {@link android.support.v7.widget.RecyclerView}
-     * @return
+     * @return {@link RecyclerViewMatcher}
      */
     public static RecyclerViewMatcher withRecyclerView(final int recyclerViewId) {
         return new RecyclerViewMatcher(recyclerViewId);
     }
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUpClass() {
         //
-        //Before the activity is launched, get the componentProvider so we can provide our own module for the
-        //activity under test.
+        //Application Mocking setup
         //
+
+        //Before the activity is launched, get the componentProvider so we can provide our own
+        //module for the activity under test.
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         mvpExampleApplication = (MvpExampleApplication)
                 instrumentation.getTargetContext().getApplicationContext();
 
         spyComponentProvider = mvpExampleApplication.getComponentProvider();
+
+        //Load JSON data you plan to test with
+        //Note - if you wanted to just load it once per test you move this logic.
+        String json = null;
+        String json2 = null;
+        try {
+            json = TestEspressoAssetFileHelper.getFileContentAsString(
+                    InstrumentationRegistry.getContext(),
+                    "now_playing_page_1.json");
+            json2 = TestEspressoAssetFileHelper.getFileContentAsString(
+                    InstrumentationRegistry.getContext(),
+                    "now_playing_page_2.json");
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+
+        serviceResponse1 = new Gson().fromJson(json,  ServiceResponse.class);
+        serviceResponse2 = new Gson().fromJson(json2,  ServiceResponse.class);
+
+        mapToSend1.put("page", 1);
+        mapToSend2.put("page", 2);
     }
 
     @Test
@@ -122,7 +160,11 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
-                //NO-OP
+                try {
+                    setupServiceApiMockForData();
+                } catch (IOException e) {
+                    fail(e.toString());
+                }
             }
         };
 
@@ -158,7 +200,11 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
-                //NO-OP
+                try {
+                    setupServiceApiMockForData();
+                } catch (IOException e) {
+                    fail(e.toString());
+                }
             }
         };
 
@@ -193,6 +239,12 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
+                try {
+                    setupServiceApiMockForData();
+                } catch (IOException e) {
+                    fail(e.toString());
+                }
+
                 Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
             }
         };
@@ -228,6 +280,12 @@ public class NowPlayingActivityTest {
         final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
             @Override
             public void setupMocks() {
+                try {
+                    setupServiceApiMockForData();
+                } catch (IOException e) {
+                    fail(e.toString());
+                }
+
                 Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
             }
         };
@@ -270,6 +328,7 @@ public class NowPlayingActivityTest {
 
     @After
     public void tearDown() {
+        //Note - you must remove the idling resources after each Test
         List<IdlingResource> idlingResourceList = Espresso.getIdlingResources();
         if (idlingResourceList != null) {
             for (int i = 0; i < idlingResourceList.size(); i++) {
@@ -282,6 +341,32 @@ public class NowPlayingActivityTest {
     private String getResourceString(int id) {
         Context targetContext = InstrumentationRegistry.getTargetContext();
         return targetContext.getResources().getString(id);
+    }
+
+    /**
+     * Setup the serviceApi mock to mock backend calls.
+     * @throws IOException -
+     */
+    private void setupServiceApiMockForData() throws IOException {
+        //Since the 'serviceApi' is an application singleton, we must reset it for every test.
+        Mockito.reset(serviceApi);
+
+        //Mock the Service API calls.
+        @SuppressWarnings( "unchecked" )
+        Call<ServiceResponse> callResponse1 = Mockito.mock(Call.class);
+        @SuppressWarnings( "unchecked" )
+        Call<ServiceResponse> callResponse2 = Mockito.mock(Call.class);
+
+        @SuppressWarnings( "unchecked" )
+        Response<ServiceResponse> response1 = Response.success(serviceResponse1);
+        @SuppressWarnings( "unchecked" )
+        Response<ServiceResponse> response2 = Response.success(serviceResponse2);
+
+        String apiKey = getResourceString(R.string.api_key);
+        when(serviceApi.nowPlaying(apiKey, mapToSend1)).thenReturn(callResponse1);
+        when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(callResponse2);
+        when(callResponse1.execute()).thenReturn(response1);
+        when(callResponse2.execute()).thenReturn(response2);
     }
 
     /**
