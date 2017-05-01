@@ -33,6 +33,7 @@ import dagger.Component;
 @Component(
         modules = {
                 ApplicationModule.class,
+                ActivitySubComponentBuilderModule.class
         })
 public interface ApplicationComponent {
     /*

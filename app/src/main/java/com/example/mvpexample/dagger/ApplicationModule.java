@@ -134,7 +134,7 @@ public class ApplicationModule {
             @Override
             public void setupComponent(Activity activity) {
                 BaseActivity baseActivity = (BaseActivity) activity;
-                baseActivity.injectDaggerMembers(baseActivity.getInjectorComponent());
+                baseActivity.injectDaggerMembers();
             }
         };
     }

@@ -32,7 +32,9 @@ import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
 import com.example.mvpexample.service.ServiceApi;
+import com.example.mvpexample.viewcontroller.NowPlayingActivity;
 
+import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 
@@ -40,35 +42,26 @@ import dagger.Provides;
  * Dagger Module for the {@link com.example.mvpexample.viewcontroller.NowPlayingActivity}.
  */
 @Module
-public class NowPlayingActivityModule extends ActivityModule {
-    private NowPlayingViewModel nowPlayingViewModel;
+public abstract class NowPlayingActivityModule {
 
-    public NowPlayingActivityModule(Activity activity, NowPlayingViewModel nowPlayingViewModel) {
-        super(activity);
-        this.nowPlayingViewModel = nowPlayingViewModel;
-    }
+    @Binds
+    abstract NowPlayingViewModel provideNowPlayingViewModel(NowPlayingActivity nowPlayingActivity);
+
+    @Binds
+    abstract NowPlayingInteractor provideNowPlayingInteractor(NowPlayingInteractorImpl nowPlayingInteractor);
+
+    @Binds
+    abstract NowPlayingPresenter provideNowPlayingPresenter(NowPlayingPresenterImpl nowPlayingPresenter);
 
     @Provides
-    @ActivityScope
-    public ServiceGateway providesServiceGateway(ServiceApi serviceApi) {
+    public static ServiceGateway providesServiceGateway(ServiceApi serviceApi, NowPlayingActivity activity) {
         return new ServiceGatewayImpl(serviceApi,
-                activity().getString(R.string.api_key),
-                activity().getString(R.string.image_url_path));
+                activity.getString(R.string.api_key),
+                activity.getString(R.string.image_url_path));
     }
 
     @Provides
-    @ActivityScope
-    public NowPlayingInteractor providesNowPlayingInteractor(ServiceGateway serviceGateway) {
-        return new NowPlayingInteractorImpl(serviceGateway, new Handler());
-    }
-
-    @Provides
-    @ActivityScope
-    public NowPlayingPresenter providesNowPlayingPresenter(NowPlayingInteractor nowPlayingInteractor) {
-        return new NowPlayingPresenterImpl(nowPlayingViewModel, nowPlayingInteractor);
-    }
-
-    protected NowPlayingViewModel getNowPlayingViewModel() {
-        return nowPlayingViewModel;
+    public static Handler providesHandler() {
+        return new Handler();
     }
 }

@@ -22,20 +22,25 @@ package com.example.mvpexample.interactor;
 import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
 
+import com.example.mvpexample.dagger.ActivityScope;
 import com.example.mvpexample.gateway.ServiceGateway;
 import com.example.mvpexample.model.NowPlayingInfo;
+
+import javax.inject.Inject;
 
 import timber.log.Timber;
 
 /**
  * Info Interactor Implementation.
  */
+@ActivityScope
 public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     private NowPlayingResponseModel nowPlayingResponseModel;
     private ServiceGateway serviceGateway;
     private Handler mainUiHandler;
     private int pageNumber = 0;
 
+    @Inject
     public NowPlayingInteractorImpl(ServiceGateway serviceGateway, Handler mainUiHandler) {
         this.serviceGateway = serviceGateway;
         this.mainUiHandler = mainUiHandler;

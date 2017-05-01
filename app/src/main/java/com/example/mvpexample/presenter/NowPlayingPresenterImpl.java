@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.presenter;
 
+import com.example.mvpexample.dagger.ActivityScope;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
 import com.example.mvpexample.interactor.NowPlayingResponseModel;
 import com.example.mvpexample.model.MovieInfo;
@@ -28,14 +29,18 @@ import com.example.mvpexample.model.MovieViewInfoImpl;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 
 /**
  * Implements the Presenter interface.
  */
+@ActivityScope
 public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingResponseModel {
     private NowPlayingViewModel nowPlayingViewModel;
     private NowPlayingInteractor nowPlayingInteractor;
 
+    @Inject
     public NowPlayingPresenterImpl(NowPlayingViewModel nowPlayingViewModel,
                                    NowPlayingInteractor nowPlayingInteractor) {
         this.nowPlayingInteractor = nowPlayingInteractor;

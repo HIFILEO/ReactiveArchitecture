@@ -24,20 +24,18 @@ import com.example.mvpexample.viewcontroller.NowPlayingActivityTest;
 import dagger.Component;
 
 /**
- * Dagger component that injects {@link com.example.mvpexample.viewcontroller.NowPlayingActivityTest} and extends
- * {@link NowPlayingActivityComponent} for testing.
+ * Dagger component that injects {@link com.example.mvpexample.viewcontroller.NowPlayingActivityTest}.
  */
-@ActivityScope
-@Component(
-        //Note - even though you are extending the other component, you still need the correct dependencies
-        dependencies = TestApplicationComponent.class,
-        modules = {
-                TestNowPlayingActivityModule.class,
-                ActivityModule.class
-        })
-public interface TestNowPlayingActivityComponent extends NowPlayingActivityComponent {
-    //Note - the reason for extends 'NowPlayingActivityComponent', is that any automatically get the getters and
-    //injectors if the 'NowPlayingActivityComponent' happened to contain any. For example, I can reuse this mock
-    //component on the 'NowPlayingActivity' injection.
-    void inject(NowPlayingActivityTest nowPlayingActivityTest);
-}
+//@ActivityScope
+//@Component(
+//        //Note - even though you are extending the other component, you still need the correct dependencies
+//        dependencies = TestApplicationComponent.class,
+//        modules = {
+//                TestNowPlayingActivityModule.class
+//        })
+//public interface TestNowPlayingActivityComponent  {
+//    //Note - the reason for extends 'NowPlayingActivityComponent', is that any automatically get the getters and
+//    //injectors if the 'NowPlayingActivityComponent' happened to contain any. For example, I can reuse this mock
+//    //component on the 'NowPlayingActivity' injection.
+//    void inject(NowPlayingActivityTest nowPlayingActivityTest);
+//}

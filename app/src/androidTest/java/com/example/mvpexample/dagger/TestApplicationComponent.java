@@ -30,6 +30,7 @@ import dagger.Component;
 @Component(
         modules = {
                 TestApplicationModule.class,
+                TestActivitySubComponentBuilderModule.class
         })
 public interface TestApplicationComponent extends ApplicationComponent{
     ComponentProvider getComponentProvider();

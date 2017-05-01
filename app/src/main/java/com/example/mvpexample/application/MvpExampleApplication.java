@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.application;
 
+import android.app.Activity;
 import android.app.Application;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
@@ -28,6 +29,10 @@ import com.example.mvpexample.dagger.ApplicationModule;
 import com.example.mvpexample.dagger.ComponentProvider;
 import com.example.mvpexample.dagger.DaggerApplicationComponent;
 
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasActivityInjector;
+
 import javax.inject.Inject;
 
 import timber.log.Timber;
@@ -35,11 +40,14 @@ import timber.log.Timber;
 /**
  * This is the MVP application class for setting up Dagger 2 and Timber.
  */
-public class MvpExampleApplication extends Application {
+public class MvpExampleApplication extends Application implements HasActivityInjector {
     private static MvpExampleApplication mvpExampleApplication;
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     protected ApplicationComponent component;
+
+    @Inject
+    DispatchingAndroidInjector<Activity> dispatchingActivityInjector;
 
     @Inject
     ComponentProvider componentProvider;
@@ -82,7 +90,6 @@ public class MvpExampleApplication extends Application {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     void setupComponent() {
         if (component == null) {
-
             component = DaggerApplicationComponent.builder()
                     .applicationModule(getApplicationModule())
                     .build();
@@ -101,4 +108,8 @@ public class MvpExampleApplication extends Application {
         return new ApplicationModule(this);
     }
 
+    @Override
+    public AndroidInjector<Activity> activityInjector() {
+        return dispatchingActivityInjector;
+    }
 }

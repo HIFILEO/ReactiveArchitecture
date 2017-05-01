@@ -21,11 +21,19 @@ package com.example.mvpexample.application;
 
 import com.example.mvpexample.dagger.DaggerTestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationModule;
+import com.example.mvpexample.util.BaseTest;
+
+import javax.inject.Inject;
+
+import dagger.android.DispatchingAndroidInjector;
 
 /**
  * Test class for {@link MvpExampleApplication}
  */
 public class TestMvpExampleApplication extends MvpExampleApplication {
+
+    @Inject
+    DispatchingAndroidInjector<BaseTest> dispatchingTestInjector;
 
     @Override
     void setupComponent() {
@@ -33,5 +41,13 @@ public class TestMvpExampleApplication extends MvpExampleApplication {
                 .testApplicationModule(new TestApplicationModule(getApplicationModule()))
                 .build();
         component.inject(this);
+
+        int a = 0;
+        a++;
+
+    }
+
+    public DispatchingAndroidInjector<BaseTest> testInjector() {
+        return dispatchingTestInjector;
     }
 }
