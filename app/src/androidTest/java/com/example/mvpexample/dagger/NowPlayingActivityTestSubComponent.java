@@ -19,7 +19,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import com.example.mvpexample.viewcontroller.NowPlayingActivity;
 import com.example.mvpexample.viewcontroller.NowPlayingActivityTest;
 
 import dagger.Subcomponent;

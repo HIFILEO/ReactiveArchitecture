@@ -19,8 +19,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.application;
 
+import android.content.res.Resources;
+
+import com.example.mvpexample.dagger.ComponentProvider;
 import com.example.mvpexample.dagger.DaggerTestApplicationComponent;
+import com.example.mvpexample.dagger.TestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationModule;
+import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.util.BaseTest;
 
 import javax.inject.Inject;
@@ -32,8 +37,13 @@ import dagger.android.DispatchingAndroidInjector;
  */
 public class TestMvpExampleApplication extends MvpExampleApplication {
 
+    TestApplicationComponent component;
+
+    //@Inject
+   // DispatchingAndroidInjector<BaseTest> dispatchingTestInjector;
+
     @Inject
-    DispatchingAndroidInjector<BaseTest> dispatchingTestInjector;
+    ComponentProvider componentProvider;
 
     @Override
     void setupComponent() {
@@ -46,8 +56,8 @@ public class TestMvpExampleApplication extends MvpExampleApplication {
         a++;
 
     }
-
-    public DispatchingAndroidInjector<BaseTest> testInjector() {
-        return dispatchingTestInjector;
-    }
+//
+//    public DispatchingAndroidInjector<BaseTest> testInjector() {
+//        return dispatchingTestInjector;
+//    }
 }

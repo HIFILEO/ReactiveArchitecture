@@ -161,8 +161,8 @@ public class NowPlayingActivityTest extends BaseTest {
         //
         //Once per test, get a fresh copy of the created
         //
-        AndroidInjector<BaseTest> testInjector = testMvpExampleApplication.testInjector();
-        testInjector.inject(this);
+//        AndroidInjector<BaseTest> testInjector = testMvpExampleApplication.testInjector();
+//        testInjector.inject(this);
     }
 
     @Test

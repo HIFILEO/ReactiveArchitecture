@@ -19,7 +19,8 @@ import dagger.multibindings.IntoMap;
  */
 @Module(subcomponents = {
         BaseActivitySubComponent.class,
-        TestNowPlayingActivitySubComponent.class
+        TestNowPlayingActivitySubComponent.class,
+        NowPlayingActivityTestSubComponent.class
     }
 )
 public abstract class TestActivitySubComponentBuilderModule {

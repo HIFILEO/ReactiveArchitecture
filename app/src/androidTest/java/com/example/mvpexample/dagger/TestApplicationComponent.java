@@ -19,6 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
+import com.example.mvpexample.application.MvpExampleApplication;
+import com.example.mvpexample.application.TestMvpExampleApplication;
+import com.example.mvpexample.service.ServiceApi;
+
 import javax.inject.Singleton;
 
 import dagger.Component;
@@ -32,6 +36,16 @@ import dagger.Component;
                 TestApplicationModule.class,
                 TestActivitySubComponentBuilderModule.class
         })
-public interface TestApplicationComponent extends ApplicationComponent{
+public interface TestApplicationComponent {
+    /*
+   VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
+   In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
+    */
+    ServiceApi getServiceApi();
+
+    void inject(MvpExampleApplication application);
+
     ComponentProvider getComponentProvider();
+
+    void inject(TestMvpExampleApplication application);
 }
