@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
+import android.support.annotation.VisibleForTesting;
 
 import com.example.mvpexample.application.MvpExampleApplication;
 import com.example.mvpexample.service.ServiceApi;
@@ -45,7 +46,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class ApplicationModule {
     private MvpExampleApplication application;
-    private ComponentProvider spyComponentProvider;
+    private InjectionProcessor spyInjectionProvider;
 
     public ApplicationModule(MvpExampleApplication application) {
         this.application = application;
@@ -129,12 +130,12 @@ public class ApplicationModule {
 
     @Provides
     @Singleton
-    public ComponentProvider providesComponentProvider() {
-        return new ComponentProvider() {
+    @VisibleForTesting
+    public InjectionProcessor providesComponentProvider() {
+        return new InjectionProcessor() {
             @Override
-            public void setupComponent(Activity activity) {
-                BaseActivity baseActivity = (BaseActivity) activity;
-                baseActivity.injectDaggerMembers();
+            public void processInjection(Activity activity) {
+                //Do nothing, unless overridden by individual test.
             }
         };
     }

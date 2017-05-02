@@ -17,13 +17,25 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvpexample.dagger;
+package com.example.mvpexample.util;
 
 import android.app.Activity;
 
-/**
- * Provides {@link dagger.Component} via {@link com.example.mvpexample.viewcontroller.BaseActivity}.
- */
-public interface ComponentProvider {
-    void setupComponent(Activity activity);
+import com.example.mvpexample.dagger.InjectionProcessor;
+
+public abstract class TestInjectionProcessor implements InjectionProcessor {
+
+    /**
+     * Changing original calling method to something more readable for tests.
+     * @param activity - activity to process.
+     */
+    public void processInjection(Activity activity) {
+        setupMocksOrFakes(activity);
+    }
+
+    /**
+     * Specific to each test. You want to setup you mocks or fake values.
+     * @param activity - activity to grab member objects from.
+     */
+    public abstract void setupMocksOrFakes(Activity activity);
 }

@@ -26,7 +26,8 @@ import android.util.Log;
 
 import com.example.mvpexample.dagger.ApplicationComponent;
 import com.example.mvpexample.dagger.ApplicationModule;
-import com.example.mvpexample.dagger.ComponentProvider;
+import com.example.mvpexample.dagger.HasInjectionProcessor;
+import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.dagger.DaggerApplicationComponent;
 import com.example.mvpexample.service.ServiceApi;
 
@@ -42,42 +43,19 @@ import timber.log.Timber;
  * This is the MVP application class for setting up Dagger 2 and Timber.
  */
 public class MvpExampleApplication extends Application implements HasActivityInjector {
-    private static MvpExampleApplication mvpExampleApplication;
-
     private ApplicationComponent component;
 
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingActivityInjector;
 
     @Inject
-    ComponentProvider componentProvider;
-
-    @Inject
-    ServiceApi serviceApi;
-
-    public static MvpExampleApplication getInstance() {
-        return mvpExampleApplication;
-    }
+    InjectionProcessor injectionProvider;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        MvpExampleApplication.mvpExampleApplication = this;
         setupComponent();
         setupTimber();
-    }
-
-    /**
-     * Get the {@link ApplicationComponent}.
-     *
-     * @return The single {@link ApplicationComponent} object.
-     */
-    public ApplicationComponent getComponent() {
-        return component;
-    }
-
-    public ComponentProvider getComponentProvider() {
-        return componentProvider;
     }
 
     /**

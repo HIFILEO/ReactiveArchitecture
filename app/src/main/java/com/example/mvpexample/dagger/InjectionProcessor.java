@@ -17,19 +17,19 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvpexample.util;
+package com.example.mvpexample.dagger;
 
 import android.app.Activity;
 
-import com.example.mvpexample.dagger.ComponentProvider;
+/**
+ * Provides a mechanism for injecting dagger members into calling {@link Activity}.
+ */
+public interface InjectionProcessor {
 
+    /**
+     * Process the injection on the calling {@link Activity}
+     * @param activity - activity to process.
+     */
+    void processInjection(Activity activity);
 
-public abstract class TestComponentProvider implements ComponentProvider {
-    public void setupComponent(Activity activity) {
-        inject(activity);
-        setupMocks();
-    }
-
-    public abstract void inject(Activity activity);
-    public abstract void setupMocks();
 }

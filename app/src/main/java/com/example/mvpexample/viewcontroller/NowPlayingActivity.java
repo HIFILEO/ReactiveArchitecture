@@ -30,10 +30,6 @@ import android.widget.Toast;
 
 import com.example.mvpexample.R;
 import com.example.mvpexample.adapter.NowPlayingListAdapter;
-import com.example.mvpexample.dagger.ApplicationComponent;
-//import com.example.mvpexample.dagger.DaggerNowPlayingActivityComponent;
-//import com.example.mvpexample.dagger.NowPlayingActivityComponent;
-import com.example.mvpexample.dagger.NowPlayingActivityModule;
 import com.example.mvpexample.model.MovieViewInfo;
 import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
@@ -118,14 +114,4 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
     public void onLoadMore() {
         nowPlayingPresenter.loadMoreInfo();
     }
-
-//    @Override
-//    public void injectDaggerMembers(ApplicationComponent applicationComponent) {
-//        NowPlayingActivityComponent nowPlayingActivityComponent =
-//                DaggerNowPlayingActivityComponent.builder()
-//                        .applicationComponent(applicationComponent)
-//                        .nowPlayingActivityModule(new NowPlayingActivityModule(this, this))
-//                        .build();
-//        nowPlayingActivityComponent.inject(this);
-//    }
 }

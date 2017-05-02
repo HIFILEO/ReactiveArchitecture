@@ -19,8 +19,7 @@ import dagger.multibindings.IntoMap;
  */
 @Module(subcomponents = {
         BaseActivitySubComponent.class,
-        TestNowPlayingActivitySubComponent.class,
-        NowPlayingActivityTestSubComponent.class
+        TestNowPlayingActivitySubComponent.class
     }
 )
 public abstract class TestActivitySubComponentBuilderModule {
@@ -37,9 +36,4 @@ public abstract class TestActivitySubComponentBuilderModule {
     abstract AndroidInjector.Factory<? extends Activity> bindNowPlayingInjectorFactory(
             TestNowPlayingActivitySubComponent.Builder builder);
 
-    @Binds
-    @IntoMap
-    @ClassKey(NowPlayingActivityTest.class)
-    abstract AndroidInjector.Factory<? extends BaseTest> bindNowPlayingTestInjectorFactory(
-            NowPlayingActivityTestSubComponent.Builder builder);
 }

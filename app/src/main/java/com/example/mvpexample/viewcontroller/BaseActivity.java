@@ -20,11 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.mvpexample.viewcontroller;
 
 import android.os.Bundle;
-import android.support.annotation.VisibleForTesting;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.mvpexample.application.MvpExampleApplication;
-import com.example.mvpexample.dagger.ApplicationComponent;
+import com.example.mvpexample.dagger.HasInjectionProcessor;
+import com.example.mvpexample.dagger.InjectionProcessor;
 
 import butterknife.ButterKnife;
 import dagger.android.AndroidInjection;
@@ -36,7 +35,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ((MvpExampleApplication) getApplication()).getComponentProvider().setupComponent(this);
+        injectDaggerMembers();
         super.onCreate(savedInstanceState);
     }
 
@@ -46,23 +45,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         ButterKnife.bind(this);
     }
 
-//    /**
-//     * Override to inject dagger members into activity.
-//     *
-//     * @param applicationComponent The {@link ApplicationComponent} instance.
-//     */
-//    public abstract void injectDaggerMembers();
-
+    /**
+     * Injects members into activity.
+     */
     public void injectDaggerMembers() {
         AndroidInjection.inject(this);
+
+        //Process Injections before activity start.
+        if ((getApplication() instanceof HasInjectionProcessor)) {
+            InjectionProcessor injectionProcessor =
+                    ((HasInjectionProcessor) getApplication()).injectionProcessor();
+            if (injectionProcessor != null) {
+                injectionProcessor.processInjection(this);
+            }
+        }
     }
 
-//    /**
-//     * Ease of access method to get the ApplicationComponent.
-//     *
-//     * @return - ApplicationComponent
-//     */
-//    public ApplicationComponent getInjectorComponent() {
-//        return ((MvpExampleApplication) getApplication()).getComponent();
-//    }
 }

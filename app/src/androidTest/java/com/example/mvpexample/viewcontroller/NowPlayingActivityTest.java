@@ -33,25 +33,17 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.example.mvpexample.R;
-import com.example.mvpexample.application.MvpExampleApplication;
 
 import com.example.mvpexample.application.TestMvpExampleApplication;
-import com.example.mvpexample.dagger.ComponentProvider;
-//import com.example.mvpexample.dagger.DaggerTestNowPlayingActivityComponent;
-import com.example.mvpexample.dagger.NowPlayingActivityModule;
-//import com.example.mvpexample.dagger.TestNowPlayingActivityComponent;
-import com.example.mvpexample.dagger.TestApplicationComponent;
-//import com.example.mvpexample.dagger.TestNowPlayingActivityModule;
-import com.example.mvpexample.presenter.NowPlayingPresenter;
+import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
-import com.example.mvpexample.presenter.NowPlayingViewModel;
 import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.service.ServiceResponse;
 import com.example.mvpexample.util.BaseTest;
 import com.example.mvpexample.util.RecyclerViewItemCountAssertion;
 import com.example.mvpexample.util.RecyclerViewMatcher;
-import com.example.mvpexample.util.TestComponentProvider;
 import com.example.mvpexample.util.TestEspressoAssetFileHelper;
+import com.example.mvpexample.util.TestInjectionProcessor;
 import com.google.gson.Gson;
 
 import org.junit.After;
@@ -71,9 +63,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import dagger.android.AndroidInjection;
-import dagger.android.AndroidInjector;
-import dagger.android.HasActivityInjector;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -83,9 +72,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static dagger.internal.Preconditions.checkNotNull;
 import static junit.framework.TestCase.fail;
-import static org.hamcrest.core.AnyOf.anyOf;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -93,15 +80,14 @@ import static org.mockito.Mockito.when;
 @LargeTest
 public class NowPlayingActivityTest extends BaseTest {
     private static TestMvpExampleApplication testMvpExampleApplication;
-    private static ComponentProvider spyComponentProvider;
     private static ServiceResponse serviceResponse1;
     private static ServiceResponse serviceResponse2;
     private static Map<String, Integer> mapToSend1 = new HashMap<>();
     private static Map<String, Integer> mapToSend2 = new HashMap<>();
 
-    //Note - NowPlayingActivityTest is set to activity scope.
+    //Note - application specific injection only
     @Inject
-    NowPlayingPresenter spyNowPlayingPresenter;
+    InjectionProcessor spyInjectionProvider;
     @Inject
     ServiceApi serviceApi;
 
@@ -132,8 +118,6 @@ public class NowPlayingActivityTest extends BaseTest {
         testMvpExampleApplication = (TestMvpExampleApplication)
                 instrumentation.getTargetContext().getApplicationContext();
 
-        spyComponentProvider = testMvpExampleApplication.getComponentProvider();
-
         //Load JSON data you plan to test with
         //Note - if you wanted to just load it once per test you move this logic.
         String json = null;
@@ -158,11 +142,15 @@ public class NowPlayingActivityTest extends BaseTest {
 
     @Before
     public void setup() {
-        //
-        //Once per test, get a fresh copy of the created
-        //
-//        AndroidInjector<BaseTest> testInjector = testMvpExampleApplication.testInjector();
-//        testInjector.inject(this);
+        //Inject all the application level objects into this test class
+        testMvpExampleApplication.getComponent().inject(this);
+
+        //Every test uses the same JSON response so set it up here once.
+        try {
+            setupServiceApiMockForData();
+        } catch (IOException e) {
+            fail(e.toString());
+        }
     }
 
     @Test
@@ -170,28 +158,6 @@ public class NowPlayingActivityTest extends BaseTest {
         //
         //Arrange
         //
-//        //Create a component provider that can be used for testing. One part we setup the injections including
-//        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
-//        //under test continues.
-//        final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
-//            @Override
-//            public void setupMocks() {
-//                try {
-//                    setupServiceApiMockForData();
-//                } catch (IOException e) {
-//                    fail(e.toString());
-//                }
-//            }
-//        };
-//
-//        //When activity under test fetches the ComponentProvider, we use our test ComponentProvider instead.
-//        Mockito.doAnswer(new Answer() {
-//            @Override
-//            public Object answer(InvocationOnMock invocation) throws Throwable {
-//                componentProviderForTest.setupComponent((Activity) (invocation.getArguments())[0]);
-//                return null;
-//            }
-//        }).when(spyComponentProvider).setupComponent(any(NowPlayingActivity.class));
 
         //
         //Act
@@ -204,154 +170,137 @@ public class NowPlayingActivityTest extends BaseTest {
         String name = getResourceString(R.string.now_playing);
         onView(withText(name)).check(matches(isDisplayed()));
     }
-//
-//    @Test
-//    public void progressBarShowsWhenFirstStart() {
-//        //
-//        //Arrange
-//        //
-//        //Create a component provider that can be used for testing. One part we setup the injections including
-//        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
-//        //under test continues.
-//        final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
-//            @Override
-//            public void setupMocks() {
-//                try {
-//                    setupServiceApiMockForData();
-//                } catch (IOException e) {
-//                    fail(e.toString());
-//                }
-//            }
-//        };
-//
-//        //When activity under test fetches the ComponentProvider, we use our test ComponentProvider instead.
-//        Mockito.doAnswer(new Answer() {
-//            @Override
-//            public Object answer(InvocationOnMock invocation) throws Throwable {
-//                componentProviderForTest.setupComponent((Activity) (invocation.getArguments())[0]);
-//                return null;
-//            }
-//        }).when(spyComponentProvider).setupComponent(any(NowPlayingActivity.class));
-//
-//        //
-//        //Act
-//        //
-//        activityTestRule.launchActivity(new Intent());
-//
-//        //
-//        //Assert
-//        //
-//        onView(anyOf(withId(R.id.progressBar))).check(matches(isDisplayed()));
-//    }
-//
-//    @Test
-//    public void adapterHasData() {
-//        //
-//        //Arrange
-//        //
-//        //Create a component provider that can be used for testing. One part we setup the injections including
-//        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
-//        //under test continues.
-//        final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
-//            @Override
-//            public void setupMocks() {
-//                try {
-//                    setupServiceApiMockForData();
-//                } catch (IOException e) {
-//                    fail(e.toString());
-//                }
-//
-//                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
-//            }
-//        };
-//
-//        //When activity under test fetches the ComponentProvider, we use our test ComponentProvider instead.
-//        Mockito.doAnswer(new Answer() {
-//            @Override
-//            public Object answer(InvocationOnMock invocation) throws Throwable {
-//                componentProviderForTest.setupComponent((Activity) (invocation.getArguments())[0]);
-//                return null;
-//            }
-//        }).when(spyComponentProvider).setupComponent(any(NowPlayingActivity.class));
-//
-//        //
-//        //Act
-//        //
-//        activityTestRule.launchActivity(new Intent());
-//
-//        //
-//        //Assert
-//        //
-//        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
-//    }
-//
-//    @Test
-//    public void progressBarShowsWhenLoadingMoreData() {
-//        //
-//        //Arrange
-//        //
-//        //Create a component provider that can be used for testing. One part we setup the injections including
-//        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
-//        //under test continues.
-//        final ComponentProvider componentProviderForTest = new NowPlayingActivityTest_TestComponentProvider() {
-//            @Override
-//            public void setupMocks() {
-//                try {
-//                    setupServiceApiMockForData();
-//                } catch (IOException e) {
-//                    fail(e.toString());
-//                }
-//
-//                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
-//            }
-//        };
-//
-//        //When activity under test fetches the ComponentProvider, we use our test ComponentProvider instead.
-//        Mockito.doAnswer(new Answer() {
-//            @Override
-//            public Object answer(InvocationOnMock invocation) throws Throwable {
-//                componentProviderForTest.setupComponent((Activity) (invocation.getArguments())[0]);
-//                return null;
-//            }
-//        }).when(spyComponentProvider).setupComponent(any(NowPlayingActivity.class));
-//
-//        //
-//        //Act
-//        //
-//        activityTestRule.launchActivity(new Intent());
-//
-//        //
-//        //Assert
-//        //
-//        //Note - because of the idling resource, this check will wait until data is loaded.
-//        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
-//
-//        //unregister so we can do checks without waiting for data
-//        Espresso.unregisterIdlingResources((NowPlayingPresenterImpl_IdlingResource) spyNowPlayingPresenter);
-//
-//        //Scroll to the bottom to trigger the progress par.
-//        onView(withId(R.id.recyclerView)).perform(
-//                RecyclerViewActions.scrollToPosition(19),//scroll to bottom so progress spinner gets added
-//                RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
-//        );
-//
-//        //Note - without idling resource, we can check for progress item while data loads.
-//        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(21));
-//
-//        onView(withRecyclerView(R.id.recyclerView).atPosition(20))
-//                .check(matches(hasDescendant(withId(R.id.progressBar))));
-//    }
-//
-//    @After
-//    public void tearDown() {
-//        //Note - you must remove the idling resources after each Test
-//        List<IdlingResource> idlingResourceList = Espresso.getIdlingResources();
-//        if (idlingResourceList != null) {
-//            for (int i = 0; i < idlingResourceList.size(); i++) {
-//                Espresso.unregisterIdlingResources(idlingResourceList.get(i));
-//            }
-//        }
-//    }
+
+    @Test
+    public void progressBarShowsWhenFirstStart() {
+        //
+        //Arrange
+        //
+
+        //
+        //Act
+        //
+        activityTestRule.launchActivity(new Intent());
+
+        //TODO - fix this
+        //Note - not sure why this was needed.
+        List<IdlingResource> idlingResourceList = Espresso.getIdlingResources();
+        if (idlingResourceList != null) {
+            for (int i = 0; i < idlingResourceList.size(); i++) {
+                Espresso.unregisterIdlingResources(idlingResourceList.get(i));
+            }
+        }
+
+        //
+        //Assert
+        //
+        onView(withId(R.id.progressBar)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void adapterHasData() {
+        //
+        //Arrange
+        //
+        //Create a component provider that can be used for testing. One part we setup the injections including
+        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
+        //under test continues.
+        final InjectionProcessor injectionProcessorForTest = new TestInjectionProcessor() {
+            @Override
+            public void setupMocksOrFakes(Activity activity) {
+                NowPlayingActivity nowPlayingActivity = (NowPlayingActivity) activity;
+
+                //Note - this works because our presenter is a SPY which wraps a NowPlayingPresenterImpl_IdlingResource
+                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingActivity.nowPlayingPresenter);
+            }
+        };
+
+        //When activity under test fetches the InjectionProcessor, we use our TestInjectionProcessor instead.
+        Mockito.doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                injectionProcessorForTest.processInjection((Activity) (invocation.getArguments())[0]);
+                return null;
+            }
+        }).when(spyInjectionProvider).processInjection(any(NowPlayingActivity.class));
+
+        //
+        //Act
+        //
+        activityTestRule.launchActivity(new Intent());
+
+        //
+        //Assert
+        //
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
+    }
+
+    @Test
+    public void progressBarShowsWhenLoadingMoreData() {
+        //
+        //Arrange
+        //
+        //Create a component provider that can be used for testing. One part we setup the injections including
+        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
+        //under test continues.
+        final NowPlayingPresenterImpl_IdlingResource[] idlingResource = new NowPlayingPresenterImpl_IdlingResource[1];
+        final InjectionProcessor injectionProcessorForTest = new TestInjectionProcessor() {
+            @Override
+            public void setupMocksOrFakes(Activity activity) {
+                NowPlayingActivity nowPlayingActivity = (NowPlayingActivity) activity;
+
+                //Note - this works because our presenter is a SPY which wraps a NowPlayingPresenterImpl_IdlingResource
+                idlingResource[0] = (NowPlayingPresenterImpl_IdlingResource) nowPlayingActivity.nowPlayingPresenter;
+                Espresso.registerIdlingResources(idlingResource[0]);
+            }
+        };
+
+        //When activity under test fetches the InjectionProcessor, we use our TestInjectionProcessor instead.
+        Mockito.doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                injectionProcessorForTest.processInjection((Activity) (invocation.getArguments())[0]);
+                return null;
+            }
+        }).when(spyInjectionProvider).processInjection(any(NowPlayingActivity.class));
+
+        //
+        //Act
+        //
+        activityTestRule.launchActivity(new Intent());
+
+        //
+        //Assert
+        //
+        //Note - because of the idling resource, this check will wait until data is loaded.
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
+
+        //unregister so we can do checks without waiting for data
+        Espresso.unregisterIdlingResources((NowPlayingPresenterImpl_IdlingResource) idlingResource[0]);
+
+        //Scroll to the bottom to trigger the progress par.
+        onView(withId(R.id.recyclerView)).perform(
+                RecyclerViewActions.scrollToPosition(19),//scroll to bottom so progress spinner gets added
+                RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
+        );
+
+        //Note - without idling resource, we can check for progress item while data loads.
+        onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(21));
+
+        onView(withRecyclerView(R.id.recyclerView).atPosition(20))
+                .check(matches(hasDescendant(withId(R.id.progressBar))));
+    }
+
+    @After
+    public void tearDown() {
+        //Note - you must remove the idling resources after each Test
+        List<IdlingResource> idlingResourceList = Espresso.getIdlingResources();
+        if (idlingResourceList != null) {
+            for (int i = 0; i < idlingResourceList.size(); i++) {
+                Espresso.unregisterIdlingResources(idlingResourceList.get(i));
+            }
+        }
+    }
 
     @NonNull
     private String getResourceString(int id) {
@@ -383,28 +332,7 @@ public class NowPlayingActivityTest extends BaseTest {
         when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(callResponse2);
         when(callResponse1.execute()).thenReturn(response1);
         when(callResponse2.execute()).thenReturn(response2);
-    }
-//
-//    /**
-//     * {@link ComponentProvider} specific to {@link NowPlayingActivityTest} because every test will need to use the
-//     * same dagger injection.
-//     */
-//    public abstract class NowPlayingActivityTest_TestComponentProvider extends TestComponentProvider {
-//        public void inject(Activity activity) {
-//
-//            NowPlayingActivityModule nowPlayingActivityModule = new NowPlayingActivityModule(
-//                    activity,
-//                    (NowPlayingViewModel) activity
-//            );
-//
-//            TestNowPlayingActivityComponent mockNowPlayingActivityComponent = DaggerTestNowPlayingActivityComponent.builder()
-//                .testApplicationComponent((TestApplicationComponent) mvpExampleApplication.getComponent())
-//                .testNowPlayingActivityModule(new TestNowPlayingActivityModule(nowPlayingActivityModule))
-//                .build();
-//
-//            mockNowPlayingActivityComponent.inject((NowPlayingActivity) activity);
-//            mockNowPlayingActivityComponent.inject(NowPlayingActivityTest.this);
-//        }
-//    }
 
+
+    }
 }

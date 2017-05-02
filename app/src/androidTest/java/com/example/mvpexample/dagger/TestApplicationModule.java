@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
@@ -115,7 +116,12 @@ public class TestApplicationModule {
 
     @Provides
     @Singleton
-    public ComponentProvider providesComponentProvider() {
-        return Mockito.spy(applicationModule.providesComponentProvider());
+    public InjectionProcessor providesComponentProvider() {
+        return Mockito.spy(new InjectionProcessor() {
+            @Override
+            public void processInjection(Activity activity) {
+                //Do nothing, unless overridden by individual test.
+            }
+        });
     }
 }

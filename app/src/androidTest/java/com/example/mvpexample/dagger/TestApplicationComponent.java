@@ -22,6 +22,7 @@ package com.example.mvpexample.dagger;
 import com.example.mvpexample.application.MvpExampleApplication;
 import com.example.mvpexample.application.TestMvpExampleApplication;
 import com.example.mvpexample.service.ServiceApi;
+import com.example.mvpexample.viewcontroller.NowPlayingActivityTest;
 
 import javax.inject.Singleton;
 
@@ -45,7 +46,7 @@ public interface TestApplicationComponent {
 
     void inject(MvpExampleApplication application);
 
-    ComponentProvider getComponentProvider();
-
     void inject(TestMvpExampleApplication application);
+
+    void inject(NowPlayingActivityTest nowPlayingActivityTest);
 }

@@ -19,13 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.application;
 
-import android.content.res.Resources;
-
-import com.example.mvpexample.dagger.ComponentProvider;
+import com.example.mvpexample.dagger.HasInjectionProcessor;
+import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.dagger.DaggerTestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationModule;
-import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.util.BaseTest;
 
 import javax.inject.Inject;
@@ -35,15 +33,8 @@ import dagger.android.DispatchingAndroidInjector;
 /**
  * Test class for {@link MvpExampleApplication}
  */
-public class TestMvpExampleApplication extends MvpExampleApplication {
-
-    TestApplicationComponent component;
-
-    //@Inject
-   // DispatchingAndroidInjector<BaseTest> dispatchingTestInjector;
-
-    @Inject
-    ComponentProvider componentProvider;
+public class TestMvpExampleApplication extends MvpExampleApplication implements HasInjectionProcessor {
+    private TestApplicationComponent component;
 
     @Override
     void setupComponent() {
@@ -54,10 +45,14 @@ public class TestMvpExampleApplication extends MvpExampleApplication {
 
         int a = 0;
         a++;
-
     }
-//
-//    public DispatchingAndroidInjector<BaseTest> testInjector() {
-//        return dispatchingTestInjector;
-//    }
+
+    public TestApplicationComponent getComponent() {
+        return component;
+    }
+
+    @Override
+    public InjectionProcessor injectionProcessor() {
+        return injectionProvider;
+    }
 }
