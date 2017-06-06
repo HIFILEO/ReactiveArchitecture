@@ -19,8 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.viewcontroller;
 
-
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -35,6 +35,7 @@ import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
 import com.example.mvpexample.view.DividerItemDecoration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -46,6 +47,9 @@ import butterknife.Bind;
  */
 public class NowPlayingActivity extends BaseActivity implements NowPlayingViewModel,
         NowPlayingListAdapter.OnLoadMoreListener {
+    private static final String LAST_SCROLL_POSITION = "LAST_SCROLL_POSITION";
+    private static final String LOADING_DATA = "LOADING_DATA";
+    private static List<MovieViewInfo> movieViewInfoList = new ArrayList<>();
     private NowPlayingListAdapter nowPlayingListAdapter;
 
     @Inject
@@ -70,10 +74,26 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
         setSupportActionBar(toolbar);
 
         //Start Presenter so Interactor response model is setup correctly.
-        nowPlayingPresenter.start();
+        nowPlayingPresenter.start(savedInstanceState);
+    }
 
-        //Load Info
-        nowPlayingPresenter.loadMoreInfo();
+    @Override
+    public void onStart() {
+        super.onStart();
+        nowPlayingPresenter.onStart();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(LAST_SCROLL_POSITION, recyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putBoolean(LOADING_DATA, nowPlayingListAdapter.isLoadingMoreShowing());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        nowPlayingPresenter.onStop();
     }
 
     @Override
@@ -92,22 +112,34 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
 
     @Override
     public void addToAdapter(List<MovieViewInfo> movieViewInfoList) {
-        if (nowPlayingListAdapter == null) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.addItemDecoration(new DividerItemDecoration(
-                    this,
-                    DividerItemDecoration.VERTICAL_LIST,
-                    getResources().getColor(android.R.color.black, null)));
-            nowPlayingListAdapter = new NowPlayingListAdapter(movieViewInfoList, this, recyclerView);
-            recyclerView.setAdapter(nowPlayingListAdapter);
-
+        if (!movieViewInfoList.isEmpty()) {
+            nowPlayingListAdapter.addList(movieViewInfoList);
         } else {
-            if (!movieViewInfoList.isEmpty()) {
-                nowPlayingListAdapter.addList(movieViewInfoList);
-            } else {
-                nowPlayingListAdapter.disableLoadMore();
-            }
+            nowPlayingListAdapter.disableLoadMore();
         }
+    }
+
+    @Override
+    public void restoreState(Bundle savedInstanceState) {
+        Parcelable savedRecyclerLayoutState =
+                savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
+        recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+
+        if (!movieViewInfoList.isEmpty()) {
+            nowPlayingPresenter.dataRestored();
+        }
+    }
+
+    @Override
+    public void createAdapter(Bundle savedInstanceState) {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.addItemDecoration(new DividerItemDecoration(
+                this,
+                DividerItemDecoration.VERTICAL_LIST,
+                getResources().getColor(android.R.color.black, null)));
+        nowPlayingListAdapter = new NowPlayingListAdapter(movieViewInfoList, this, recyclerView,
+                savedInstanceState != null && savedInstanceState.getBoolean(LOADING_DATA));
+        recyclerView.setAdapter(nowPlayingListAdapter);
     }
 
     @Override

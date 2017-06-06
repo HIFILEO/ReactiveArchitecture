@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.presenter;
 
+import android.os.Bundle;
+
 import com.example.mvpexample.dagger.ActivityScope;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
 import com.example.mvpexample.interactor.NowPlayingResponseModel;
@@ -30,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-
 
 /**
  * Implements the Presenter interface.
@@ -53,9 +54,31 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
     }
 
     @Override
-    public void start() {
+    public void onStart() {
+        nowPlayingInteractor.registerCallbacks();
+    }
+
+    @Override
+    public void onStop() {
+        nowPlayingInteractor.unregisterCallbacks();
+    }
+
+    @Override
+    public void start(Bundle savedInstanceState) {
         nowPlayingInteractor.setNowPlayingResponseModel(this);
         nowPlayingViewModel.showInProgress(true);
+        nowPlayingViewModel.createAdapter(savedInstanceState);
+
+        if (savedInstanceState == null) {
+            loadMoreInfo();
+        } else {
+            nowPlayingViewModel.restoreState(savedInstanceState);
+        }
+    }
+
+    @Override
+    public void dataRestored() {
+        nowPlayingViewModel.showInProgress(false);
     }
 
     @Override

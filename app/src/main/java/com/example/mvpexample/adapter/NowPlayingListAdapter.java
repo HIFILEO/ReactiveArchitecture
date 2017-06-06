@@ -45,10 +45,12 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
      * @param objects            - list of {@link MovieViewInfo}
      * @param onLoadMoreListener - listener for when to load more information
      * @param recyclerView       - {@link RecyclerView} using this adapter.
+     * @param showLoadMore       - true to show load more spinner, false otherwise.
      */
     public NowPlayingListAdapter(List<MovieViewInfo> objects,
                                  OnLoadMoreListener onLoadMoreListener,
-                                 RecyclerView recyclerView) {
+                                 RecyclerView recyclerView,
+                                 boolean showLoadMore) {
         super(objects);
 
         if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
@@ -59,6 +61,10 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
                             this
                     );
             recyclerView.addOnScrollListener(loadMoreScrollListener);
+
+            if (showLoadMore) {
+                loadMoreScrollListener.setLoading(true);
+            }
         } else {
             loadMoreScrollListener = null;
         }
@@ -99,7 +105,9 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
      * @param movieViewInfoList - list to add
      */
     public void addList(List<MovieViewInfo> movieViewInfoList) {
-        remove(getItem(getItemCount() - 1));
+        if (getItemCount() != 0) {
+            remove(getItem(getItemCount() - 1));
+        }
 
         for (MovieViewInfo movieViewInfo : movieViewInfoList) {
             add(movieViewInfo);
@@ -109,6 +117,10 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
 
     public void disableLoadMore() {
         loadMoreScrollListener.setOnLoadMoreListener(null);
+    }
+
+    public boolean isLoadingMoreShowing() {
+        return loadMoreScrollListener.isLoading();
     }
 
     /**

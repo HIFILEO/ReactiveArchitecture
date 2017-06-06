@@ -13,13 +13,16 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @Category(UnitTest.class)
@@ -125,5 +128,111 @@ public class NowPlayingInteractorImplTest {
         verify(mockServiceGateway).getNowPlaying(1);
         verify(mockHandler).post(any(Runnable.class));
         verify(mockNowPlayingResponseModel).errorLoadingInfoData();
+    }
+
+    @Test
+    public void registerCallback_noData() {
+        //
+        //Arrange
+        //
+        Handler mockHandler = Mockito.mock(Handler.class);
+        ServiceGateway mockServiceGateway = Mockito.mock(ServiceGateway.class);
+        NowPlayingResponseModel mockNowPlayingResponseModel = Mockito.mock(NowPlayingResponseModel.class);
+
+        NowPlayingInteractorImpl.LoadDataThread loadDataThread =
+                new NowPlayingInteractorImpl.LoadDataThread(
+                        1,
+                        mockHandler,
+                        mockServiceGateway,
+                        null
+                );
+
+        //
+        //Act
+        //
+        loadDataThread.registerCallback(mockNowPlayingResponseModel);
+
+        //
+        //Assert
+        //
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference).isNotNull();
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference.get()).isNotNull();
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference.get())
+                .isEqualTo(mockNowPlayingResponseModel);
+        assertThat(loadDataThread.runnableCache).isNull();
+
+        verify(mockHandler, never());
+    }
+
+    @Test
+    public void registerCallback_withData() {
+        //
+        //Arrange
+        //
+        Handler mockHandler = Mockito.mock(Handler.class);
+        ServiceGateway mockServiceGateway = Mockito.mock(ServiceGateway.class);
+        NowPlayingResponseModel mockNowPlayingResponseModel = Mockito.mock(NowPlayingResponseModel.class);
+        Runnable mockRunnable = Mockito.mock(Runnable.class);
+
+        NowPlayingInteractorImpl.LoadDataThread loadDataThread =
+                new NowPlayingInteractorImpl.LoadDataThread(
+                        1,
+                        mockHandler,
+                        mockServiceGateway,
+                        null
+                );
+        loadDataThread.runnableCache = mockRunnable;
+
+        ArgumentCaptor<Runnable> argumentCaptorRunnable = ArgumentCaptor.forClass(Runnable.class);
+
+        //
+        //Act
+        //
+        loadDataThread.registerCallback(mockNowPlayingResponseModel);
+
+        //
+        //Assert
+        //
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference).isNotNull();
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference.get()).isNotNull();
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference.get())
+                .isEqualTo(mockNowPlayingResponseModel);
+
+        verify(mockHandler).post(argumentCaptorRunnable.capture());
+        assertThat(argumentCaptorRunnable.getValue()).isEqualTo(mockRunnable);
+
+        assertThat(loadDataThread.runnableCache).isNull();
+    }
+
+    @Test
+    public void unregisterCallback() {
+        //
+        //Arrange
+        //
+        Handler mockHandler = Mockito.mock(Handler.class);
+        ServiceGateway mockServiceGateway = Mockito.mock(ServiceGateway.class);
+        NowPlayingResponseModel mockNowPlayingResponseModel = Mockito.mock(NowPlayingResponseModel.class);
+        WeakReference<NowPlayingResponseModel> mockNowPlayingResponseModelWeakReference
+                = Mockito.mock(WeakReference.class);
+
+        NowPlayingInteractorImpl.LoadDataThread loadDataThread =
+                new NowPlayingInteractorImpl.LoadDataThread(
+                        1,
+                        mockHandler,
+                        mockServiceGateway,
+                        mockNowPlayingResponseModel
+                );
+        loadDataThread.nowPlayingResponseModelWeakReference = mockNowPlayingResponseModelWeakReference;
+
+        //
+        //Act
+        //
+        loadDataThread.unregisterCallback();
+
+        //
+        //Assert
+        //
+        verify(mockNowPlayingResponseModelWeakReference).clear();
+        assertThat(loadDataThread.nowPlayingResponseModelWeakReference).isNull();
     }
 }

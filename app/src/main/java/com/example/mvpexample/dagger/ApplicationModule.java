@@ -23,9 +23,14 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
+import android.telecom.GatewayInfo;
 
+import com.example.mvpexample.R;
 import com.example.mvpexample.application.MvpExampleApplication;
+import com.example.mvpexample.gateway.ServiceGateway;
+import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.viewcontroller.BaseActivity;
 import com.google.gson.Gson;
@@ -46,7 +51,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class ApplicationModule {
     private MvpExampleApplication application;
-    private InjectionProcessor spyInjectionProvider;
 
     public ApplicationModule(MvpExampleApplication application) {
         this.application = application;
@@ -83,7 +87,6 @@ public class ApplicationModule {
 
     @Provides
     public GsonBuilder providesGsonBuilder() {
-
         GsonBuilder gsonBuilder = new GsonBuilder();
         return gsonBuilder;
     }
@@ -126,6 +129,20 @@ public class ApplicationModule {
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
                 .build()
                 .create(ServiceApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public ServiceGateway providesGatewayInfo(ServiceApi serviceApi) {
+        return new ServiceGatewayImpl(serviceApi,
+                application.getString(R.string.api_key),
+                application.getString(R.string.image_url_path));
+    }
+
+    @Provides
+    @Singleton
+    public Handler providesHandler() {
+        return new Handler();
     }
 
     @Provides

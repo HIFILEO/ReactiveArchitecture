@@ -26,6 +26,7 @@ import com.example.mvpexample.dagger.ActivityScope;
 import com.example.mvpexample.gateway.ServiceGateway;
 import com.example.mvpexample.model.NowPlayingInfo;
 
+import java.lang.ref.WeakReference;
 import javax.inject.Inject;
 
 import timber.log.Timber;
@@ -35,10 +36,13 @@ import timber.log.Timber;
  */
 @ActivityScope
 public class NowPlayingInteractorImpl implements NowPlayingInteractor {
+    @VisibleForTesting
+    protected static LoadDataThread loadDataThread;
+
     private NowPlayingResponseModel nowPlayingResponseModel;
     private ServiceGateway serviceGateway;
     private Handler mainUiHandler;
-    private int pageNumber = 0;
+    private static int pageNumber = 0;
 
     @Inject
     public NowPlayingInteractorImpl(ServiceGateway serviceGateway, Handler mainUiHandler) {
@@ -51,24 +55,48 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     }
 
     @Override
+    public void registerCallbacks() {
+        if (loadDataThread != null) {
+            loadDataThread.registerCallback(nowPlayingResponseModel);
+        }
+    }
+
+    @Override
+    public void unregisterCallbacks() {
+        if (loadDataThread != null) {
+            loadDataThread.unregisterCallback();
+        }
+    }
+
+    @Override
     public void loadMoreInfo() {
-        (new Thread(new LoadDataThread(
-                ++pageNumber,
-                mainUiHandler,
-                serviceGateway,
-                nowPlayingResponseModel))).start();
+        if (loadDataThread == null) {
+            loadDataThread = new LoadDataThread(
+                    ++pageNumber,
+                    mainUiHandler,
+                    serviceGateway,
+                    nowPlayingResponseModel);
+            (new Thread(loadDataThread)).start();
+        } else {
+            loadDataThread.registerCallback(nowPlayingResponseModel);
+        }
     }
 
     /**
      * Thread to load data from service.
      */
-    @VisibleForTesting
     static class LoadDataThread implements Runnable {
         private static final int SLEEP_MSEC = 3000;
+
+        @VisibleForTesting
+        protected Runnable runnableCache;
+
+        @VisibleForTesting
+        protected WeakReference<NowPlayingResponseModel> nowPlayingResponseModelWeakReference;
+
         private final int pageNumberToLoad;
         private final Handler mainUiHandler;
         private final ServiceGateway serviceGateway;
-        private final NowPlayingResponseModel nowPlayingResponseModel;
         private int sleepMsec = SLEEP_MSEC;
         private NowPlayingInfo nowPlayingInfo = null;
 
@@ -84,7 +112,35 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
             this.pageNumberToLoad = pageNumberToLoad;
             this.mainUiHandler = mainUiHandler;
             this.serviceGateway = serviceGateway;
-            this.nowPlayingResponseModel = nowPlayingResponseModel;
+            this.nowPlayingResponseModelWeakReference =
+                    new WeakReference<>(nowPlayingResponseModel);
+        }
+
+        /**
+         * Register callback.
+         * @param nowPlayingResponseModel - callback to register
+         */
+        @VisibleForTesting
+        public void registerCallback(NowPlayingResponseModel nowPlayingResponseModel) {
+            this.nowPlayingResponseModelWeakReference =
+                    new WeakReference<>(nowPlayingResponseModel);
+
+            if (runnableCache != null) {
+                mainUiHandler.post(runnableCache);
+                NowPlayingInteractorImpl.loadDataThread = null;
+                runnableCache = null;
+            }
+        }
+
+        /**
+         * Unregister callback.
+         */
+        @VisibleForTesting
+        public void unregisterCallback() {
+            if (nowPlayingResponseModelWeakReference != null) {
+                this.nowPlayingResponseModelWeakReference.clear();
+            }
+            this.nowPlayingResponseModelWeakReference = null;
         }
 
         @Override
@@ -108,22 +164,30 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
             }
 
             //
-            //Process Results
+            //Process Results - use cache when needed
             //
             if (nowPlayingInfo == null || nowPlayingInfo.getPageNumber() != pageNumberToLoad) {
-                mainUiHandler.post(new Runnable() {
+                runnableCache = new Runnable() {
                     @Override
                     public void run() {
-                        nowPlayingResponseModel.errorLoadingInfoData();
+                        nowPlayingResponseModelWeakReference.get().errorLoadingInfoData();
                     }
-                });
+                };
             } else {
-                mainUiHandler.post(new Runnable() {
+                runnableCache = new Runnable() {
                     @Override
                     public void run() {
-                        nowPlayingResponseModel.infoLoaded(nowPlayingInfo.getMovies());
+                        nowPlayingResponseModelWeakReference.get().infoLoaded(
+                                nowPlayingInfo.getMovies());
                     }
-                });
+                };
+            }
+
+            if (nowPlayingResponseModelWeakReference != null &&
+                    nowPlayingResponseModelWeakReference.get() != null) {
+                mainUiHandler.post(runnableCache);
+                NowPlayingInteractorImpl.loadDataThread = null;
+                runnableCache = null;
             }
         }
 

@@ -19,11 +19,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.presenter;
 
+import android.os.Bundle;
+
 /**
  * P is for Presenter.
  */
 public interface NowPlayingPresenter {
     void loadMoreInfo();
-
-    void start();
+    void onStart();
+    void onStop();
+    void start(Bundle savedInstanceState);
+    void dataRestored();
 }

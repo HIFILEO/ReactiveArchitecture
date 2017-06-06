@@ -52,16 +52,4 @@ public abstract class NowPlayingActivityModule {
 
     @Binds
     abstract NowPlayingPresenter provideNowPlayingPresenter(NowPlayingPresenterImpl nowPlayingPresenter);
-
-    @Provides
-    public static ServiceGateway providesServiceGateway(ServiceApi serviceApi, NowPlayingActivity activity) {
-        return new ServiceGatewayImpl(serviceApi,
-                activity.getString(R.string.api_key),
-                activity.getString(R.string.image_url_path));
-    }
-
-    @Provides
-    public static Handler providesHandler() {
-        return new Handler();
-    }
 }

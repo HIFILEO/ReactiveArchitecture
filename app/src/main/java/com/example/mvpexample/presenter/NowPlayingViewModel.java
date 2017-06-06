@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.presenter;
 
+import android.os.Bundle;
+
 import com.example.mvpexample.model.MovieViewInfo;
 
 import java.util.List;
@@ -28,9 +30,29 @@ import java.util.List;
  * View interface to be implemented by the forward facing UI part of android. An activity or fragment.
  */
 public interface NowPlayingViewModel {
+
+    /**
+     * Show main progress spinner.
+     * @param show - true to show, false otherwise.
+     */
     void showInProgress(boolean show);
 
+    /**
+     * Show error message.
+     */
     void showError();
 
+    /**
+     * Add data to adapter.
+     * @param displayList - data to add
+     */
     void addToAdapter(List<MovieViewInfo> displayList);
+
+    /**
+     * Restore the screen from saved instance.
+     * @param savedInstanceState
+     */
+    void restoreState(Bundle savedInstanceState);
+
+    void createAdapter(Bundle savedInstanceState);
 }
