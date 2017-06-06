@@ -64,6 +64,8 @@ public class NowPlayingInteractorImplTest {
         ArgumentCaptor<Runnable> argumentCaptorRunnable = ArgumentCaptor.forClass(Runnable.class);
         ArgumentCaptor<List<MovieInfo>> argumentCaptorListMovieInfo = ArgumentCaptor.forClass(List.class);
 
+        loadDataThread.setSleepMsec(0);
+
         //
         //Act
         //
@@ -113,6 +115,8 @@ public class NowPlayingInteractorImplTest {
 
         ArgumentCaptor<Runnable> argumentCaptorRunnable = ArgumentCaptor.forClass(Runnable.class);
 
+        loadDataThread.setSleepMsec(0);
+
         //
         //Act
         //
@@ -161,7 +165,7 @@ public class NowPlayingInteractorImplTest {
                 .isEqualTo(mockNowPlayingResponseModel);
         assertThat(loadDataThread.runnableCache).isNull();
 
-        verify(mockHandler, never());
+        verify(mockHandler, never()).post(any(Runnable.class));
     }
 
     @Test
