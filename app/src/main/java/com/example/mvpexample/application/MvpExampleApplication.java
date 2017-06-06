@@ -26,16 +26,14 @@ import android.util.Log;
 
 import com.example.mvpexample.dagger.ApplicationComponent;
 import com.example.mvpexample.dagger.ApplicationModule;
-import com.example.mvpexample.dagger.HasInjectionProcessor;
-import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.dagger.DaggerApplicationComponent;
-import com.example.mvpexample.service.ServiceApi;
+import com.example.mvpexample.dagger.InjectionProcessor;
+
+import javax.inject.Inject;
 
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
-
-import javax.inject.Inject;
 
 import timber.log.Timber;
 

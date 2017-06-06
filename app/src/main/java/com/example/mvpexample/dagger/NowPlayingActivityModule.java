@@ -19,24 +19,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.dagger;
 
-import android.app.Activity;
-
-import android.os.Handler;
-
-import com.example.mvpexample.R;
-import com.example.mvpexample.gateway.ServiceGateway;
-import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
 import com.example.mvpexample.interactor.NowPlayingInteractorImpl;
 import com.example.mvpexample.presenter.NowPlayingPresenter;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
-import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.viewcontroller.NowPlayingActivity;
 
 import dagger.Binds;
 import dagger.Module;
-import dagger.Provides;
 
 /**
  * Dagger Module for the {@link com.example.mvpexample.viewcontroller.NowPlayingActivity}.

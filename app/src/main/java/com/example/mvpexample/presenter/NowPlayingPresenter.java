@@ -26,8 +26,12 @@ import android.os.Bundle;
  */
 public interface NowPlayingPresenter {
     void loadMoreInfo();
+
     void onStart();
+
     void onStop();
+
     void start(Bundle savedInstanceState);
+
     void dataRestored();
 }

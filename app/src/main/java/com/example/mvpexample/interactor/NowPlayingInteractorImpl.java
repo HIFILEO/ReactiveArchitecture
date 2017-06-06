@@ -183,8 +183,8 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
                 };
             }
 
-            if (nowPlayingResponseModelWeakReference != null &&
-                    nowPlayingResponseModelWeakReference.get() != null) {
+            if (nowPlayingResponseModelWeakReference != null
+                    && nowPlayingResponseModelWeakReference.get() != null) {
                 mainUiHandler.post(runnableCache);
                 NowPlayingInteractorImpl.loadDataThread = null;
                 runnableCache = null;

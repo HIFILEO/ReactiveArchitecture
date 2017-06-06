@@ -50,9 +50,13 @@ public interface NowPlayingViewModel {
 
     /**
      * Restore the screen from saved instance.
-     * @param savedInstanceState
+     * @param savedInstanceState - saved instance state from activity.
      */
     void restoreState(Bundle savedInstanceState);
 
+    /**
+     * Create adapter.
+     * @param savedInstanceState - saved instance state from activity.
+     */
     void createAdapter(Bundle savedInstanceState);
 }

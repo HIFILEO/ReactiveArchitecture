@@ -27,7 +27,7 @@ import android.app.Activity;
 public interface InjectionProcessor {
 
     /**
-     * Process the injection on the calling {@link Activity}
+     * Process the injection on the calling {@link Activity}.
      * @param activity - activity to process.
      */
     void processInjection(Activity activity);

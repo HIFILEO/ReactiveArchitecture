@@ -22,6 +22,7 @@ package com.example.mvpexample.dagger;
 import com.example.mvpexample.viewcontroller.BaseActivity;
 
 import dagger.Subcomponent;
+
 import dagger.android.AndroidInjector;
 
 /**

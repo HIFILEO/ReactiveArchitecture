@@ -25,14 +25,12 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
-import android.telecom.GatewayInfo;
 
 import com.example.mvpexample.R;
 import com.example.mvpexample.application.MvpExampleApplication;
 import com.example.mvpexample.gateway.ServiceGateway;
 import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.service.ServiceApi;
-import com.example.mvpexample.viewcontroller.BaseActivity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
