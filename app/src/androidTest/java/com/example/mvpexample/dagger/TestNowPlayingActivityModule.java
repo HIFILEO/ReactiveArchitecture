@@ -18,18 +18,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
  */
 package com.example.mvpexample.dagger;
 
-import android.os.Handler;
-
-import com.example.mvpexample.R;
-import com.example.mvpexample.gateway.ServiceGateway;
-import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
 import com.example.mvpexample.interactor.NowPlayingInteractorImpl;
 import com.example.mvpexample.presenter.NowPlayingPresenter;
-import com.example.mvpexample.presenter.NowPlayingPresenterImpl;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.presenter.NowPlayingViewModel;
-import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.viewcontroller.NowPlayingActivity;
 
 import org.mockito.Mockito;
@@ -50,18 +43,6 @@ public abstract class TestNowPlayingActivityModule {
 
     @Binds
     abstract NowPlayingInteractor provideNowPlayingInteractor(NowPlayingInteractorImpl nowPlayingInteractor);
-
-    @Provides
-    @ActivityScope
-    public static ServiceGateway providesServiceGateway(ServiceApi serviceApi, NowPlayingActivity activity) {
-        return NowPlayingActivityModule.providesServiceGateway(serviceApi, activity);
-    }
-
-    @Provides
-    @ActivityScope
-    public static Handler providesHandler() {
-        return new Handler();
-    }
 
     @Provides
     @ActivityScope

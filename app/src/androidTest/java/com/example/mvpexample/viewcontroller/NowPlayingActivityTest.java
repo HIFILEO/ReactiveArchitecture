@@ -29,7 +29,6 @@ import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.example.mvpexample.R;
@@ -40,6 +39,7 @@ import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.service.ServiceResponse;
 import com.example.mvpexample.util.BaseTest;
+import com.example.mvpexample.util.EspressoTestRule;
 import com.example.mvpexample.util.RecyclerViewItemCountAssertion;
 import com.example.mvpexample.util.RecyclerViewMatcher;
 import com.example.mvpexample.util.TestEspressoAssetFileHelper;
@@ -92,7 +92,7 @@ public class NowPlayingActivityTest extends BaseTest {
     ServiceApi serviceApi;
 
     @Rule
-    public ActivityTestRule<NowPlayingActivity> activityTestRule = new ActivityTestRule<>(
+    public EspressoTestRule<NowPlayingActivity> activityTestRule = new EspressoTestRule<>(
             NowPlayingActivity.class,
             true,
             false);//do not start activity
@@ -332,7 +332,5 @@ public class NowPlayingActivityTest extends BaseTest {
         when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(callResponse2);
         when(callResponse1.execute()).thenReturn(response1);
         when(callResponse2.execute()).thenReturn(response2);
-
-
     }
 }

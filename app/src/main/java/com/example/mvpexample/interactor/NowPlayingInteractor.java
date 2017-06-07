@@ -25,6 +25,8 @@ package com.example.mvpexample.interactor;
 public interface NowPlayingInteractor {
     void setNowPlayingResponseModel(NowPlayingResponseModel nowPlayingResponseModel);
 
+    void setFirstLaunch();
+
     void registerCallbacks();
 
     void unregisterCallbacks();

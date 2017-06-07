@@ -132,6 +132,10 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
 
     @Override
     public void createAdapter(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            movieViewInfoList.clear();
+        }
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(
                 this,

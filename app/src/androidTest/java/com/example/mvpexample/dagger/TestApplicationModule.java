@@ -23,7 +23,11 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Handler;
 
+import com.example.mvpexample.R;
+import com.example.mvpexample.gateway.ServiceGateway;
+import com.example.mvpexample.gateway.ServiceGatewayImpl;
 import com.example.mvpexample.service.ServiceApi;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -105,6 +109,18 @@ public class TestApplicationModule {
     @Provides
     public HttpLoggingInterceptor.Level providesHttpLoggingInterceptorLevel() {
         return applicationModule.providesHttpLoggingInterceptorLevel();
+    }
+
+    @Provides
+    @Singleton
+    public ServiceGateway providesGatewayInfo(ServiceApi serviceApi) {
+        return applicationModule.providesGatewayInfo(serviceApi);
+    }
+
+    @Provides
+    @Singleton
+    public Handler providesHandler() {
+        return applicationModule.providesHandler();
     }
 
     @Provides

@@ -55,6 +55,15 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     }
 
     @Override
+    public void setFirstLaunch() {
+        if (loadDataThread != null) {
+            loadDataThread.unregisterCallback();
+        }
+        loadDataThread = null;
+        pageNumber = 0;
+    }
+
+    @Override
     public void registerCallbacks() {
         if (loadDataThread != null) {
             loadDataThread.registerCallback(nowPlayingResponseModel);
@@ -122,13 +131,15 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
          */
         @VisibleForTesting
         public void registerCallback(NowPlayingResponseModel nowPlayingResponseModel) {
-            this.nowPlayingResponseModelWeakReference =
-                    new WeakReference<>(nowPlayingResponseModel);
+            synchronized (this) {
+                this.nowPlayingResponseModelWeakReference =
+                        new WeakReference<>(nowPlayingResponseModel);
 
-            if (runnableCache != null) {
-                mainUiHandler.post(runnableCache);
-                NowPlayingInteractorImpl.loadDataThread = null;
-                runnableCache = null;
+                if (runnableCache != null) {
+                    mainUiHandler.post(runnableCache);
+                    NowPlayingInteractorImpl.loadDataThread = null;
+                    runnableCache = null;
+                }
             }
         }
 
@@ -137,10 +148,12 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
          */
         @VisibleForTesting
         public void unregisterCallback() {
-            if (nowPlayingResponseModelWeakReference != null) {
-                this.nowPlayingResponseModelWeakReference.clear();
+            synchronized (this) {
+                if (nowPlayingResponseModelWeakReference != null) {
+                    this.nowPlayingResponseModelWeakReference.clear();
+                }
+                this.nowPlayingResponseModelWeakReference = null;
             }
-            this.nowPlayingResponseModelWeakReference = null;
         }
 
         @Override
@@ -183,11 +196,13 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
                 };
             }
 
-            if (nowPlayingResponseModelWeakReference != null
-                    && nowPlayingResponseModelWeakReference.get() != null) {
-                mainUiHandler.post(runnableCache);
-                NowPlayingInteractorImpl.loadDataThread = null;
-                runnableCache = null;
+            synchronized (this) {
+                if (nowPlayingResponseModelWeakReference != null
+                        && nowPlayingResponseModelWeakReference.get() != null) {
+                    mainUiHandler.post(runnableCache);
+                    NowPlayingInteractorImpl.loadDataThread = null;
+                    runnableCache = null;
+                }
             }
         }
 

@@ -70,6 +70,7 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
         nowPlayingViewModel.createAdapter(savedInstanceState);
 
         if (savedInstanceState == null) {
+            nowPlayingInteractor.setFirstLaunch();
             loadMoreInfo();
         } else {
             nowPlayingViewModel.restoreState(savedInstanceState);
