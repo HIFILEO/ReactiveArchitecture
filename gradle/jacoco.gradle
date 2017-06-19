@@ -23,8 +23,7 @@ android {
     }
 }
 
-//task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDENCY']}"]) {
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDENCY']}"]) {
     group = 'Reporting'
     description = 'Generate Jacoco coverage reports after running tests.'
 
