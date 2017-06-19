@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="AddJavascriptInterface" severity="warning"/>
+    <issue id="AppIndexingApiWarning" severity="info"/>
+    <issue id="BackButton" severity="warning"/>
+    <issue id="ContentDescription" severity="info" />
+    <issue id="DuplicateIncludedIds" severity="error"/>
+    <issue id="DuplicateUsesFeature" severity="error"/>
+    <issue id="ExtraText" severity="error"/>
+    <issue id="GradleDeprecated" severity="error"/>
+    <issue id="HandlerLeak" severity="error"/>
+    <issue id="IconColors" severity="info"/>
+    <issue id="IconExpectedSize" severity="warning"/>
+    <issue id="LabelFor" severity="info"/>
+    <issue id="LogConditional" severity="warning"/>
+    <issue id="MissingId" severity="error"/>
+    <issue id="NegativeMargin" severity="warning"/>
+    <issue id="NewerVersionAvailable" severity="warning"/>
+    <issue id="Registered" severity="error"/>
+    <issue id="RtlSymmetry" severity="info"/>
+    <issue id="ScrollViewCount" severity="error"/>
+    <issue id="SdCardPath" severity="error"/>
+    <issue id="StopShip" severity="warning"/>
+    <issue id="Suspicious0dp" severity="warning"/>
+    <issue id="TooDeepLayout" severity="error"/>
+    <issue id="TooManyViews" severity="error"/>
+    <issue id="TypographyDashes" severity="info"/>
+    <issue id="TypographyQuotes" severity="warning"/>
+    <issue id="UnusedIds" severity="warning"/>
+    <issue id="UseSparseArrays" severity="info"/>
+    <issue id="UsingHttp" severity="error"/>
+    <issue id="InvalidPackage2" severity="warning">
+        <ignore regexp=".*okio.*" />
+    </issue>
+    <issue id="MissingTranslation">
+        <ignore regexp="example"/>
+    </issue>
+</lint>

@@ -40,7 +40,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import butterknife.Bind;
+import butterknife.BindView;
+
 
 /**
  * This is the only activity for the application that links into the MVP architecture.
@@ -56,11 +57,11 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
     NowPlayingPresenter nowPlayingPresenter;
 
     //Bind Views
-    @Bind(R.id.progressBar)
+    @BindView(R.id.progressBar)
     ProgressBar progressBar;
-    @Bind(R.id.toolbar)
+    @BindView(R.id.toolbar)
     Toolbar toolbar;
-    @Bind(R.id.recyclerView)
+    @BindView(R.id.recyclerView)
     RecyclerView recyclerView;
 
     @Override

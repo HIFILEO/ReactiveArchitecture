@@ -1,6 +1,9 @@
 apply plugin: 'com.android.application'
+apply plugin: 'project-report'
 apply from: '../gradle/contractTest.gradle'
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/lint.gradle'
+apply from: '../gradle/jacoco.gradle'
 
 android {
     compileSdkVersion 25
@@ -38,8 +41,9 @@ dependencies {
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:support-annotations:25.3.1'
 
-    //Butterknife
-    compile 'com.jakewharton:butterknife:7.0.1'
+    //Butterknife (Note apt is obsolete, and butterknife requires annotation processing)
+    compile 'com.jakewharton:butterknife:8.6.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.6.0'
 
     //Dagger
     annotationProcessor "com.google.dagger:dagger-compiler:2.11-rc1"
@@ -66,7 +70,7 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
 
     //Timber
-    compile 'com.jakewharton.timber:timber:4.1.2'
+    compile 'com.jakewharton.timber:timber:4.5.1'
 
     //Gson
     compile 'com.google.code.gson:gson:2.7'

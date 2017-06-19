@@ -27,21 +27,21 @@ import com.example.mvpexample.R;
 import com.example.mvpexample.model.MovieViewInfo;
 import com.squareup.picasso.Picasso;
 
-import butterknife.Bind;
+import butterknife.BindView;
 
 /**
  * {@link MovieViewInfo} holder.
  */
 public class MovieViewHolder extends BaseViewHolder {
-    @Bind(R.id.nameTextView)
+    @BindView(R.id.nameTextView)
     TextView nameTextView;
-    @Bind(R.id.moviePosterImageView)
+    @BindView(R.id.moviePosterImageView)
     ImageView moviePosterImageView;
-    @Bind(R.id.releaseDateTextView)
+    @BindView(R.id.releaseDateTextView)
     TextView releaseDateTextView;
-    @Bind(R.id.ratingTextView)
+    @BindView(R.id.ratingTextView)
     TextView ratingTextView;
-    @Bind(R.id.highRatingImageView)
+    @BindView(R.id.highRatingImageView)
     ImageView highRatingImageView;
 
     public MovieViewHolder(View itemView) {

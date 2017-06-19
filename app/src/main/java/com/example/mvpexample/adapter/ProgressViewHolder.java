@@ -25,13 +25,13 @@ import android.widget.ProgressBar;
 
 import com.example.mvpexample.R;
 
-import butterknife.Bind;
+import butterknife.BindView;
 
 /**
  * View holder for Progress Item.
  */
 public class ProgressViewHolder extends BaseViewHolder {
-    @Bind(R.id.progressBar)
+    @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
     public ProgressViewHolder(View view) {

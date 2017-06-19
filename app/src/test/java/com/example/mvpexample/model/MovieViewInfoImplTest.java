@@ -36,6 +36,7 @@ public class MovieViewInfoImplTest {
         //Assert
         //
         assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
         assertThat(movieViewInfo.getReleaseDate()).isEqualToIgnoringCase(dateFormat.format(movieInfo.getReleaseDate()));
         assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase("8/10");
         assertThat(movieViewInfo.isHighRating()).isTrue();

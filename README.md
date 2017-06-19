@@ -24,6 +24,17 @@ Note - the application packages are TYPE defined for ease of learning.
 
 Apache License 2.0. Free to use & distribute.
 
+### Documentation
+
+Please review all documentation in **docs/**. The following summaries describe their purpose:
+
+| Name                                                                                          | Summary                                                     |
+| :--------------------------------------------------------------------------------------------:|:------------------------------------------------------------|
+| [AUTHORS.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/AUTHORS.md)               | History of past and present contributors                    |
+| [BUILDS.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/BUILDS.md)                 | Description of official builds                              |
+| [DEPENDENCIES.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/DEPENDENCIES.md)     | How to generate a list of all major third party dependencies|
+| [STYLE.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/STYLE.md)                   | Description of Code Style and Static Analysis tools         |
+
 ### Build Flavors
 
 Only the original build flavors release / debug. Use Debug since this

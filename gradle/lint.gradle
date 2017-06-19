@@ -1,0 +1,18 @@
+//
+//Android lint configurations
+//
+android {
+
+    lintOptions {
+        //True - fail build on declared "error" lint checks
+        abortOnError true
+        //Enable all default:disabled checks
+        checkAllWarnings true
+        //Builds breaking because of generated string res google_app_id
+        //https://code.google.com/p/analytics-issues/issues/detail?id=733
+        disable 'MissingTranslation'
+        //Lint definition file
+        lintConfig file("../config/lint/lint.xml")
+        disable 'InvalidPackage'
+    }
+}

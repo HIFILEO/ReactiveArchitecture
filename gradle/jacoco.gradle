@@ -1,0 +1,95 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    version '0.7.7.201606060606'
+}
+
+configurations {
+    jacocoTestReport
+}
+
+dependencies {
+    jacocoTestReport 'org.jacoco:org.jacoco.ant:0.7.7.201606060606'
+    jacocoTestReport 'org.jacoco:org.jacoco.core:0.7.7.201606060606'
+}
+
+android {
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+}
+
+//task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDENCY']}"]) {
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+    group = 'Reporting'
+    description = 'Generate Jacoco coverage reports after running tests.'
+
+    reports {
+        xml {
+            enabled true // coveralls
+            destination "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        }
+
+        html {
+            enabled true
+            destination "${project.buildDir}/reports/jacoco/test/html"
+        }
+    }
+
+    // fix issue with double $$ at generate report task
+    doFirst {
+        applyDaggerWorkaround('app/build/intermediates/classes/')
+    }
+    // avoid some side effects through revert renaming
+    doLast {
+        revertDaggerWorkaround('app/build/intermediates/classes/')
+    }
+
+    // use hidden configuration, for details look into JacocoPlugin.groovy
+    jacocoClasspath = project.configurations['androidJacocoAnt']
+
+    // exclude auto-generated classes and tests
+    def fileFilter = JACOCO_FILE_FILTER.tokenize(",")
+
+    def debugTree = fileTree(
+            dir: "${project.buildDir}/${project['JACOCO_CLASS_DIR']}",
+            excludes: fileFilter
+    )
+
+    def coverageSourceDirs = [
+            "src/main/java",
+            "src/qa/java",
+            "src/internal/java",
+    ]
+
+    sourceDirectories = files([coverageSourceDirs])
+    classDirectories = files([debugTree])
+
+    executionData fileTree(project.buildDir).include('**/jacoco/*.exec')
+            .include('**/code-coverage/**/coverage.ec')
+}
+
+def applyDaggerWorkaround(String pathWithDaggerClasses) {
+    def filePath = new File(pathWithDaggerClasses)
+    if (filePath.exists()) {
+        filePath.eachFileRecurse { file ->
+            if (file.name.contains('$$')) {
+                file.renameTo(file.path.replace('$$', '$'))
+            }
+        }
+    }
+}
+def revertDaggerWorkaround(String pathWithDaggerClasses) {
+    def filePath = new File(pathWithDaggerClasses)
+    if (filePath.exists()) {
+        filePath.eachFileRecurse { file ->
+            if (file.name.contains('$ModuleAdapter')) {
+                file.renameTo(file.path.replace('$ModuleAdapter', '$$ModuleAdapter'))
+            }
+        }
+    }
+}
