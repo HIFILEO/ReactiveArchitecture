@@ -63,6 +63,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -316,21 +317,8 @@ public class NowPlayingActivityTest extends BaseTest {
         //Since the 'serviceApi' is an application singleton, we must reset it for every test.
         Mockito.reset(serviceApi);
 
-        //Mock the Service API calls.
-        @SuppressWarnings( "unchecked" )
-        Call<ServiceResponse> callResponse1 = Mockito.mock(Call.class);
-        @SuppressWarnings( "unchecked" )
-        Call<ServiceResponse> callResponse2 = Mockito.mock(Call.class);
-
-        @SuppressWarnings( "unchecked" )
-        Response<ServiceResponse> response1 = Response.success(serviceResponse1);
-        @SuppressWarnings( "unchecked" )
-        Response<ServiceResponse> response2 = Response.success(serviceResponse2);
-
         String apiKey = getResourceString(R.string.api_key);
-        when(serviceApi.nowPlaying(apiKey, mapToSend1)).thenReturn(callResponse1);
-        when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(callResponse2);
-        when(callResponse1.execute()).thenReturn(response1);
-        when(callResponse2.execute()).thenReturn(response2);
+        when(serviceApi.nowPlaying(apiKey, mapToSend1)).thenReturn(Observable.just(serviceResponse1));
+        when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(Observable.just(serviceResponse2));
     }
 }

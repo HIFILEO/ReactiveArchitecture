@@ -3,27 +3,35 @@ package com.example.mvpexample.gateway;
 import com.example.mvpexample.categories.UnitTest;
 import com.example.mvpexample.model.MovieInfo;
 import com.example.mvpexample.model.NowPlayingInfo;
+import com.example.mvpexample.rx.RxJavaTest;
 import com.example.mvpexample.service.ServiceResponse;
 import com.example.mvpexample.util.TestResourceFileHelper;
 import com.google.gson.Gson;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.text.ParseException;
+import io.reactivex.observers.TestObserver;
 
 import static com.ibm.icu.impl.Assert.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Category(UnitTest.class)
-public class ServiceGatewayImplTest {
+public class ServiceGatewayImplTest extends RxJavaTest {
     private static final String IMAGE_PATH = "www.imagepath.com";
 
+    @Before
+    public void setUp() {
+        super.setUp();
+    }
+
     @Test
-    public void testTranslateNowPlaying() throws ParseException {
+    public void testTranslateNowPlaying() throws Exception {
         //
         //Arrange
         //
+        TestObserver<NowPlayingInfo> testObserver;
         String json = null;
         try {
             json = TestResourceFileHelper.getFileContentAsString(this, "now_playing_page_1.json");
@@ -32,19 +40,23 @@ public class ServiceGatewayImplTest {
         }
         ServiceResponse serviceResponse = new Gson().fromJson(json,  ServiceResponse.class);
 
-
-
-        ServiceGatewayImpl.TranslateNowPlaying translateNowPlaying = new
-                ServiceGatewayImpl.TranslateNowPlaying(IMAGE_PATH);
+        ServiceGatewayImpl.TranslateNowPlayingSubscriptionFunc translateNowPlayingSubscriptionFunc
+                = new ServiceGatewayImpl.TranslateNowPlayingSubscriptionFunc(IMAGE_PATH);
 
         //
         //Act
         //
-        NowPlayingInfo nowPlayingInfo = translateNowPlaying.translate(serviceResponse);
+        testObserver = translateNowPlayingSubscriptionFunc.apply(serviceResponse).test();
+        testScheduler.triggerActions();
 
         //
         //Assert
         //
+        testObserver.assertComplete();
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+
+        NowPlayingInfo nowPlayingInfo = (NowPlayingInfo) testObserver.getEvents().get(0).get(0);
         assertThat(nowPlayingInfo).isNotNull();
         assertThat(nowPlayingInfo.getPageNumber()).isEqualTo(1);
         assertThat(nowPlayingInfo.getTotalPageNumber()).isEqualTo(35);

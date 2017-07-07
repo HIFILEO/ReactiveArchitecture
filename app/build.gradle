@@ -53,9 +53,6 @@ dependencies {
     compile "com.google.dagger:dagger-android:2.11-rc1"
     annotationProcessor "com.google.dagger:dagger-android-processor:2.11-rc1"
 
-    //Retrofit
-    compile "com.squareup.retrofit2:retrofit:2.1.0"
-
     //okhttp
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'com.squareup.okhttp3:okhttp-urlconnection:3.2.0'
@@ -63,11 +60,12 @@ dependencies {
     compile 'com.squareup.okio:okio:1.6.0'
 
     //Retrofit
-    compile('com.squareup.retrofit2:retrofit:2.1.0') {
+    compile('com.squareup.retrofit2:retrofit:2.2.0') {
         //exclude Retrofit's Okhttp peer-dependency module and define your own module import
         exclude module: 'okhttp'
     }
-    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.2.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
 
     //Rx
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
@@ -107,7 +105,7 @@ dependencies {
         exclude module: 'recyclerview-v7'
     }
     androidTestCompile "com.google.dagger:dagger-android:2.11-rc1"
-    androidTestCompile 'com.squareup.retrofit2:retrofit-mock:2.1.0'
+    androidTestCompile 'com.squareup.retrofit2:retrofit-mock:2.2.0'
     androidTestCompile 'org.mockito:mockito-android:2.6.2'
     androidTestAnnotationProcessor 'com.google.dagger:dagger-compiler:2.11-rc1'
 }

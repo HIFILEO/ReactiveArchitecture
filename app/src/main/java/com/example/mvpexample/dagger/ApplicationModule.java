@@ -41,6 +41,7 @@ import dagger.Provides;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
@@ -125,6 +126,7 @@ public class ApplicationModule {
     public ServiceApi providesInfoServiceApi(Retrofit.Builder retrofit) {
         return retrofit.baseUrl("https://api.themoviedb.org/3/movie/")
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build()
                 .create(ServiceApi.class);
     }

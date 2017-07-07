@@ -7,6 +7,7 @@ import com.example.mvpexample.gateway.ServiceGateway;
 import com.example.mvpexample.model.MovieInfo;
 import com.example.mvpexample.model.MovieInfoImpl;
 import com.example.mvpexample.model.NowPlayingInfo;
+import com.example.mvpexample.rx.RxJavaTest;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,6 +19,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
@@ -26,7 +30,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @Category(UnitTest.class)
-public class NowPlayingInteractorImplTest {
+public class NowPlayingInteractorImplTest extends RxJavaTest {
 
     @Test
     public void loadData() throws Exception {
@@ -47,7 +51,7 @@ public class NowPlayingInteractorImplTest {
 
         NowPlayingInfo mockNowPlayingInfo = Mockito.mock(NowPlayingInfo.class);
 
-        when(mockServiceGateway.getNowPlaying(1)).thenReturn(mockNowPlayingInfo);
+        when(mockServiceGateway.getNowPlaying(1)).thenReturn(Observable.just(mockNowPlayingInfo));
         when(mockNowPlayingInfo.getPageNumber()).thenReturn(1);
 
         List<MovieInfo> movieInfoList = new ArrayList<>();
@@ -70,6 +74,7 @@ public class NowPlayingInteractorImplTest {
         //Act
         //
         loadDataThread.run();
+        testScheduler.triggerActions();
 
         //Act-2
         verify(mockHandler).post(argumentCaptorRunnable.capture());
@@ -111,7 +116,8 @@ public class NowPlayingInteractorImplTest {
                         mockNowPlayingResponseModel
                 );
 
-        when(mockServiceGateway.getNowPlaying(1)).thenReturn(null);
+        when(mockServiceGateway.getNowPlaying(1))
+                .thenReturn(Observable.<NowPlayingInfo>error(new Throwable("Test Error")));
 
         ArgumentCaptor<Runnable> argumentCaptorRunnable = ArgumentCaptor.forClass(Runnable.class);
 
@@ -121,6 +127,7 @@ public class NowPlayingInteractorImplTest {
         //Act
         //
         loadDataThread.run();
+        testScheduler.triggerActions();
 
         //Act-2
         verify(mockHandler).post(argumentCaptorRunnable.capture());

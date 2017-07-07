@@ -22,7 +22,7 @@ package com.example.mvpexample.service;
 
 import java.util.Map;
 
-import retrofit2.Call;
+import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
@@ -33,7 +33,7 @@ import retrofit2.http.QueryMap;
 public interface ServiceApi {
 
     @GET("now_playing")
-    Call<ServiceResponse> nowPlaying(
+    Observable<ServiceResponse> nowPlaying(
             @Query("api_key") String api_key,
             @QueryMap Map<String, Integer> query);
 }

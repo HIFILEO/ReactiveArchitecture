@@ -21,9 +21,11 @@ package com.example.mvpexample.gateway;
 
 import com.example.mvpexample.model.NowPlayingInfo;
 
+import io.reactivex.Observable;
+
 /**
  * Gateway that fetches movie information from a RESTFUL api service.
  */
 public interface ServiceGateway {
-    NowPlayingInfo getNowPlaying(int pageNumber) throws Exception;
+    Observable<NowPlayingInfo> getNowPlaying(int pageNumber);
 }
