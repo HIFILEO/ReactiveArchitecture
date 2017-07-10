@@ -2,16 +2,13 @@ package com.example.mvpexample.dagger;
 
 import android.app.Activity;
 
-import com.example.mvpexample.util.BaseTest;
 import com.example.mvpexample.viewcontroller.BaseActivity;
 import com.example.mvpexample.viewcontroller.NowPlayingActivity;
-import com.example.mvpexample.viewcontroller.NowPlayingActivityTest;
 
 import dagger.Binds;
 import dagger.Module;
 import dagger.android.ActivityKey;
 import dagger.android.AndroidInjector;
-import dagger.multibindings.ClassKey;
 import dagger.multibindings.IntoMap;
 
 /**

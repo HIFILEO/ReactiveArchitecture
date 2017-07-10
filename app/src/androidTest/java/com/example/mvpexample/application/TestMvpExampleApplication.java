@@ -24,11 +24,6 @@ import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.dagger.DaggerTestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationComponent;
 import com.example.mvpexample.dagger.TestApplicationModule;
-import com.example.mvpexample.util.BaseTest;
-
-import javax.inject.Inject;
-
-import dagger.android.DispatchingAndroidInjector;
 
 /**
  * Test class for {@link MvpExampleApplication}

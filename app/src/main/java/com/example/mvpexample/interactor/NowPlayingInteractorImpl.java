@@ -42,9 +42,10 @@ import timber.log.Timber;
  */
 @ActivityScope
 public class NowPlayingInteractorImpl implements NowPlayingInteractor {
+    private static final int SLEEP_TIME = 3;
     private NowPlayingResponseModel nowPlayingResponseModel;
     private ServiceGateway serviceGateway;
-    private int sleepSeconds = 3;
+    private int sleepSeconds = SLEEP_TIME;
 
     @Inject
     public NowPlayingInteractorImpl(ServiceGateway serviceGateway) {
