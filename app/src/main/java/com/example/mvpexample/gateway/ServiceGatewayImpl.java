@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.mvpexample.gateway;
 
 import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.mvpexample.model.MovieInfo;
@@ -31,15 +30,18 @@ import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.service.ServiceResponse;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import retrofit2.Call;
-import retrofit2.Response;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
@@ -64,27 +66,33 @@ public class ServiceGatewayImpl implements ServiceGateway {
     }
 
     @Override
-    public NowPlayingInfo getNowPlaying(int pageNumber) throws Exception {
+    public Observable<NowPlayingInfo> getNowPlaying(int pageNumber) {
         Map<String, Integer> mapToSend = new HashMap<>();
         mapToSend.put("page", pageNumber);
 
-        Call<ServiceResponse> serviceResponseCall = serviceApi.nowPlaying(apiKey, mapToSend);
-        Response<ServiceResponse> response = serviceResponseCall.execute();
-
-        if (response.isSuccessful()) {
-            TranslateNowPlaying translateNowPlaying = new TranslateNowPlaying(imageUrlPath);
-            return translateNowPlaying.translate(response.body());
-        } else {
-            Timber.e("Failed to get data from service. %s", response.errorBody().toString());
-            throw new Exception("Service failed to get data from API.");
-        }
+        /*
+        Notes - Load data from web on scheduler thread. Translate the web response to our
+        internal business response on computation thread. Return observable.
+         */
+        return serviceApi.nowPlaying(apiKey, mapToSend)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .flatMap(new TranslateNowPlayingSubscriptionFunc(imageUrlPath))
+                .doOnError(new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@io.reactivex.annotations.NonNull Throwable throwable) throws Exception {
+                        Timber.e("Failed to get data from service. %s", throwable.toString());
+                        throw new Exception("Service failed to get data from API.");
+                    }
+                });
     }
 
     /**
      * Class to translate external {@link ServiceResponse} to internal data for {@link NowPlayingInfo}.
      */
     @VisibleForTesting
-    static class TranslateNowPlaying {
+    static class TranslateNowPlayingSubscriptionFunc
+            implements Function<ServiceResponse, ObservableSource<NowPlayingInfo>> {
         @SuppressLint("SimpleDateFormat")
         private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -94,17 +102,12 @@ public class ServiceGatewayImpl implements ServiceGateway {
          * Constructor.
          * @param imageUrlPath - base path to downloading images.
          */
-        TranslateNowPlaying(String imageUrlPath) {
+        TranslateNowPlayingSubscriptionFunc(String imageUrlPath) {
             this.imageUrlPath = imageUrlPath;
         }
 
-        /**
-         * Translate the {@link ServiceResponse} into {@link NowPlayingInfo}.
-         * @param serviceResponse -
-         * @return NowPlayingInfo object containing all data.
-         * @throws ParseException fails to parse data.
-         */
-        NowPlayingInfo translate(@NonNull ServiceResponse serviceResponse) throws ParseException {
+        @Override
+        public Observable<NowPlayingInfo> apply(@NonNull ServiceResponse serviceResponse) throws Exception {
             List<MovieInfo> movieInfoList = new ArrayList<>();
 
             for (int i = 0; i < serviceResponse.getResults().length; i++) {
@@ -117,10 +120,9 @@ public class ServiceGatewayImpl implements ServiceGateway {
                 movieInfoList.add(movieInfo);
             }
 
-            return new NowPlayingInfoImpl(movieInfoList,
+            return Observable.just((NowPlayingInfo) new NowPlayingInfoImpl(movieInfoList,
                     serviceResponse.getPage(),
-                    serviceResponse.getTotal_pages());
+                    serviceResponse.getTotal_pages()));
         }
     }
-
 }

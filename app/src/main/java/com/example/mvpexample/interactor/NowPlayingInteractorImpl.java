@@ -27,8 +27,13 @@ import com.example.mvpexample.gateway.ServiceGateway;
 import com.example.mvpexample.model.NowPlayingInfo;
 
 import java.lang.ref.WeakReference;
+
 import javax.inject.Inject;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import timber.log.Timber;
 
 /**
@@ -170,32 +175,44 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
             //
             //Call Service
             //
-            try {
-                nowPlayingInfo = serviceGateway.getNowPlaying(pageNumberToLoad);
-            } catch (Exception e) {
-                Timber.e(e, "Failed to fetch data:");
-            }
+            Disposable disposable = serviceGateway.getNowPlaying(pageNumberToLoad)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<NowPlayingInfo>() {
+                        @Override
+                        public void accept(@NonNull final NowPlayingInfo nowPlayingInfo) throws Exception {
 
-            //
-            //Process Results - use cache when needed
-            //
-            if (nowPlayingInfo == null || nowPlayingInfo.getPageNumber() != pageNumberToLoad) {
-                runnableCache = new Runnable() {
-                    @Override
-                    public void run() {
-                        nowPlayingResponseModelWeakReference.get().errorLoadingInfoData();
-                    }
-                };
-            } else {
-                runnableCache = new Runnable() {
-                    @Override
-                    public void run() {
-                        nowPlayingResponseModelWeakReference.get().infoLoaded(
-                                nowPlayingInfo.getMovies());
-                    }
-                };
-            }
+                            runnableCache = new Runnable() {
+                                @Override
+                                public void run() {
+                                    nowPlayingResponseModelWeakReference.get().infoLoaded(
+                                            nowPlayingInfo.getMovies());
+                                }
+                            };
 
+                            triggerCallback();
+
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(@NonNull Throwable throwable) throws Exception {
+                            Timber.e(throwable, "Failed to fetch data:");
+
+                            runnableCache = new Runnable() {
+                                @Override
+                                public void run() {
+                                    nowPlayingResponseModelWeakReference.get().errorLoadingInfoData();
+                                }
+                            };
+
+                            triggerCallback();
+                        }
+                    });
+        }
+
+        /**
+         * Trigger the thread callback.
+         */
+        private void triggerCallback() {
             synchronized (this) {
                 if (nowPlayingResponseModelWeakReference != null
                         && nowPlayingResponseModelWeakReference.get() != null) {

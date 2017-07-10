@@ -261,7 +261,7 @@
         <module name="VisibilityModifier">
             <property name="ignoreAnnotationCanonicalNames"
                 value="android.support.annotation.VisibleForTesting, org.junit.Rule, javax.inject.Inject, Bind,
-                      BindString, BindInt, BindBool, BindColor, BindDimen, BindDrawable, Mock"
+                      BindString, BindInt, BindBool, BindColor, BindDimen, BindDrawable, Mock, BindView"
             />
         </module>
         <module name="OneTopLevelClass"/>

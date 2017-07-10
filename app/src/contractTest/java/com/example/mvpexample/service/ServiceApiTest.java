@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.service;
 
+import com.example.mvpexample.rx.RxJavaTest;
 import com.google.gson.Gson;
 
 import org.junit.Before;
@@ -29,29 +30,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.example.mvpexample.categories.ContractTest;
-import retrofit2.Call;
-import retrofit2.Response;
+
+import io.reactivex.observers.TestObserver;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-@Category(ContractTest.class)
 /**
  * Run {@link ServiceApi} Tests.
  */
-public class ServiceApiTest {
+@Category(ContractTest.class)
+public class ServiceApiTest extends RxJavaTest {
     private static final String API_TOKEN = "6efc30f1fdcbe7425ab08503f07e2762";
     private ServiceApi serviceApi;
 
     @Before
     public void setUp() {
+        super.setUp();
         initMocks(this);
 
         Retrofit rest = new Retrofit.Builder()
                 .baseUrl("https://api.themoviedb.org/3/movie/")
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
 
         serviceApi = rest.create(ServiceApi.class);
@@ -64,19 +68,22 @@ public class ServiceApiTest {
         //
         Map<String, Integer> mapToSend = new HashMap<>();
         mapToSend.put("page", 1);
-        Call<ServiceResponse> serviceResponseCall = serviceApi.nowPlaying(API_TOKEN, mapToSend);
 
         //
         //Act
         //
-        Response<ServiceResponse> response = serviceResponseCall.execute();
+        TestObserver<ServiceResponse> testObserver
+                = serviceApi.nowPlaying(API_TOKEN, mapToSend).test();
+        testScheduler.triggerActions();
 
         //
         //Assert
         //
-        assertThat(response.isSuccessful()).isEqualTo(true);
+        testObserver.assertComplete();
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
 
-        ServiceResponse serviceResponse = response.body();
+        ServiceResponse serviceResponse = (ServiceResponse) testObserver.getEvents().get(0).get(0);
         assertThat(serviceResponse.getPage()).isEqualTo(1);
         assertThat(serviceResponse.getResults()).isNotNull();
         assertThat(serviceResponse.getDates()).isNotNull();
