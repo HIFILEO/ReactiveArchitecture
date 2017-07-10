@@ -22,6 +22,7 @@ package com.example.mvpexample.application;
 import android.app.Activity;
 import android.app.Application;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.BuildConfig;
 import android.util.Log;
 
 import com.example.mvpexample.dagger.ApplicationComponent;
@@ -60,7 +61,11 @@ public class MvpExampleApplication extends Application implements HasActivityInj
      * Setup the Timber logging tree.
      */
     void setupTimber() {
-        Timber.plant(new CrashReportingTree());
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new CrashReportingTree());
+        } else {
+            Timber.plant(new Timber.DebugTree());
+        }
     }
 
     /**

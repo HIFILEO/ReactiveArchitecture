@@ -5,35 +5,30 @@ import android.os.Bundle;
 import com.example.mvpexample.categories.UnitTest;
 import com.example.mvpexample.interactor.NowPlayingInteractor;
 import com.example.mvpexample.model.MovieInfo;
-import com.example.mvpexample.model.MovieInfoImpl;
 import com.example.mvpexample.model.MovieViewInfo;
+import com.example.mvpexample.rx.RxJavaTest;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.observers.TestObserver;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @Category(UnitTest.class)
-public class NowPlayingPresenterImplTest {
-    private MovieInfoImpl movieInfo = new MovieInfoImpl(
-            "www.pictureurl.com",
-            "title",
-            new Date(),
-            8.2
-    );
-
+public class NowPlayingPresenterImplTest extends RxJavaTest {
     @Mock
     NowPlayingViewModel mockNowPlayingViewModel;
     @Mock
@@ -41,104 +36,180 @@ public class NowPlayingPresenterImplTest {
 
     @Before
     public void setUp() {
+        super.setUp();
         initMocks(this);
     }
 
     @Test
-    public void start_firstLaunch() {
+    public void onCreate_firstLaunch() {
         //
         //Arrange
         //
-        NowPlayingPresenterImpl nowPlayingPresenter =
-                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor);
+        NowPlayingPresenterImpl spyNowPlayingPresenterImpl = Mockito.spy(
+                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor));
+        doNothing().when(spyNowPlayingPresenterImpl).loadMoreInfo();
 
         //
         //Act
         //
-        nowPlayingPresenter.start(null);
+        spyNowPlayingPresenterImpl.onCreate(null);
 
         //
         //Assert
         //
-        verify(mockNowPlayingInteractor).setNowPlayingResponseModel(nowPlayingPresenter);
-        verify(mockNowPlayingInteractor).loadMoreInfo();
+        verify(mockNowPlayingInteractor).setNowPlayingResponseModel(spyNowPlayingPresenterImpl);
         verify(mockNowPlayingViewModel).showInProgress(true);
         verify(mockNowPlayingViewModel).createAdapter(null);
+
+        verify(spyNowPlayingPresenterImpl).loadMoreInfo();
+        assertThat(NowPlayingPresenterImpl.requestCache).isNull();
+        assertThat(NowPlayingPresenterImpl.pageNumber).isEqualTo(0);
     }
 
     @Test
-    public void start_restore() {
+    public void onCreate_restore_noSubscribe() {
         //
         //Arrange
         //
-        NowPlayingPresenterImpl nowPlayingPresenter =
-                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor);
+        NowPlayingPresenterImpl spyNowPlayingPresenterImpl = Mockito.spy(
+                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor));
+
         Bundle mockBundle = Mockito.mock(Bundle.class);
 
         //
         //Act
         //
-        nowPlayingPresenter.start(mockBundle);
+        spyNowPlayingPresenterImpl.onCreate(mockBundle);
 
         //
         //Assert
         //
-        verify(mockNowPlayingInteractor).setNowPlayingResponseModel(nowPlayingPresenter);
-        verify(mockNowPlayingInteractor, never()).loadMoreInfo();
+        verify(mockNowPlayingInteractor).setNowPlayingResponseModel(spyNowPlayingPresenterImpl);
         verify(mockNowPlayingViewModel).showInProgress(true);
         verify(mockNowPlayingViewModel).createAdapter(mockBundle);
         verify(mockNowPlayingViewModel).restoreState(mockBundle);
+
+        verify(spyNowPlayingPresenterImpl, never()).loadMoreInfo();
+        verify(spyNowPlayingPresenterImpl, never()).subscribeToData();
     }
 
     @Test
-    public void infoLoaded() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void onCreate_restore_subscribe() {
         //
         //Arrange
         //
-        NowPlayingPresenterImpl nowPlayingPresenter =
-                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor);
+        NowPlayingPresenterImpl spyNowPlayingPresenterImpl = Mockito.spy(
+                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor));
+        doNothing().when(spyNowPlayingPresenterImpl).subscribeToData();
 
-        List<MovieInfo> movieInfoList = new ArrayList<>();
-        movieInfoList.add(movieInfo);
-
-        ArgumentCaptor<List<MovieViewInfo>> argumentCaptor = ArgumentCaptor.forClass(List.class);
+        Bundle mockBundle = Mockito.mock(Bundle.class);
+        NowPlayingPresenterImpl.requestCache = Mockito.mock(Observable.class);
 
         //
         //Act
         //
-        nowPlayingPresenter.infoLoaded(movieInfoList);
+        spyNowPlayingPresenterImpl.onCreate(mockBundle);
 
         //
         //Assert
         //
-        verify(mockNowPlayingViewModel).addToAdapter(anyListOf(MovieViewInfo.class));
+        verify(mockNowPlayingInteractor).setNowPlayingResponseModel(spyNowPlayingPresenterImpl);
+        verify(mockNowPlayingViewModel).showInProgress(true);
+        verify(mockNowPlayingViewModel).createAdapter(mockBundle);
+        verify(mockNowPlayingViewModel).restoreState(mockBundle);
+
+        verify(spyNowPlayingPresenterImpl, never()).loadMoreInfo();
+        verify(spyNowPlayingPresenterImpl).subscribeToData();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void TranslateForPresenterFunctionTest() throws Exception {
+        //
+        //Arrange
+        //
+        TestObserver<List<MovieViewInfo>> testObserver;
+
+        NowPlayingPresenterImpl.TranslateForPresenterFunction translateForPresenterFunction =
+                new NowPlayingPresenterImpl.TranslateForPresenterFunction();
+
+        MovieInfo mockMovieInfo1 = Mockito.mock(MovieInfo.class);
+        when(mockMovieInfo1.getTitle()).thenReturn("Dan");
+
+        MovieInfo mockMovieInfo2 = Mockito.mock(MovieInfo.class);
+        when(mockMovieInfo2.getTitle()).thenReturn("Leo");
+
+        List<MovieInfo> movieInfoList = new ArrayList<>();
+        movieInfoList.add(mockMovieInfo1);
+        movieInfoList.add(mockMovieInfo2);
+
+        //
+        //Act
+        //
+        testObserver = ((Observable<List<MovieViewInfo>>)  translateForPresenterFunction.apply(movieInfoList)).test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertComplete();
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+
+        List<MovieViewInfo> movieViewInfoList = (List<MovieViewInfo>) testObserver.getEvents().get(0).get(0);
+        assertThat(movieViewInfoList.size()).isEqualTo(2);
+        assertThat(movieViewInfoList.get(0).getTitle()).isEqualToIgnoringCase("Dan");
+        assertThat(movieViewInfoList.get(1).getTitle()).isEqualToIgnoringCase("Leo");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void UiUpdateConsumerTest() throws Exception {
+        //
+        //Arrange
+        //
+        NowPlayingPresenterImpl.UiUpdateConsumer uiUpdateConsumer =
+                new NowPlayingPresenterImpl.UiUpdateConsumer(mockNowPlayingViewModel);
+
+        List<MovieViewInfo> mockMovieViewInfoList = Mockito.mock(List.class);
+
+        //
+        //Act
+        //
+        uiUpdateConsumer.accept(mockMovieViewInfoList);
+
+        //
+        //Assert
+        //
+        verify(mockNowPlayingViewModel).addToAdapter(mockMovieViewInfoList);
         verify(mockNowPlayingViewModel).showInProgress(false);
-
-        verify(mockNowPlayingViewModel).addToAdapter(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue().size()).isEqualTo(1);
     }
 
     @Test
-    public void errorLoadingInfoData() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void UiUpdateOnErrorConsumerTest() throws Exception {
         //
         //Arrange
         //
-        NowPlayingPresenterImpl nowPlayingPresenter =
-                new NowPlayingPresenterImpl(mockNowPlayingViewModel, mockNowPlayingInteractor);
+        NowPlayingPresenter mockNowPlayingPresenter = Mockito.mock(NowPlayingPresenter.class);
 
-        List<MovieInfo> movieInfoList = new ArrayList<>();
-        movieInfoList.add(movieInfo);
+        NowPlayingPresenterImpl.UiUpdateOnErrorConsumer uiUpdateOnErrorConsumer =
+                new NowPlayingPresenterImpl.UiUpdateOnErrorConsumer(mockNowPlayingPresenter, mockNowPlayingViewModel);
+
+        NowPlayingPresenterImpl.requestCache = Mockito.mock(Observable.class);
 
         //
         //Act
         //
-        nowPlayingPresenter.errorLoadingInfoData();
+        uiUpdateOnErrorConsumer.accept(Mockito.mock(Throwable.class));
 
         //
         //Assert
         //
+        assertThat(NowPlayingPresenterImpl.requestCache).isNull();
         verify(mockNowPlayingViewModel).showError();
-        verify(mockNowPlayingInteractor).loadMoreInfo();
+        verify(mockNowPlayingPresenter).loadMoreInfo();
     }
 
 }

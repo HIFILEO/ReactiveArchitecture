@@ -19,17 +19,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.interactor;
 
+import com.example.mvpexample.model.MovieInfo;
+
+import java.util.List;
+
+import io.reactivex.Observable;
+
 /**
  * Now Playing Interactor Interface.
  */
 public interface NowPlayingInteractor {
     void setNowPlayingResponseModel(NowPlayingResponseModel nowPlayingResponseModel);
 
-    void setFirstLaunch();
-
-    void registerCallbacks();
-
-    void unregisterCallbacks();
-
-    void loadMoreInfo();
+    Observable<List<MovieInfo>> loadMoreInfo(int pageNumber);
 }

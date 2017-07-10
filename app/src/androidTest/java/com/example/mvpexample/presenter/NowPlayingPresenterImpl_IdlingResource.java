@@ -22,9 +22,8 @@ package com.example.mvpexample.presenter;
 import android.support.test.espresso.IdlingResource;
 
 import com.example.mvpexample.interactor.NowPlayingInteractor;
-import com.example.mvpexample.model.MovieInfo;
 
-import java.util.List;
+import io.reactivex.functions.Action;
 
 /**
  * Espresso needs "hand-made" resources to know when an activity is idle. This is that "hand-made" resource.
@@ -54,19 +53,21 @@ public class NowPlayingPresenterImpl_IdlingResource extends NowPlayingPresenterI
     }
 
     @Override
-    public void loadMoreInfo() {
-        super.loadMoreInfo();
+    void subscribeToData() {
         idle = false;
-    }
 
-    @Override
-    public void infoLoaded(List<MovieInfo> movieInfoList) {
-        super.infoLoaded(movieInfoList);
-        idle = true;
+        requestCache.doOnComplete(new Action() {
+            @Override
+            public void run() throws Exception {
+                idle = true;
 
-        if (resourceCallback != null) {
-            //Called when the resource goes from busy to idle.
-            resourceCallback.onTransitionToIdle();
-        }
+                if (resourceCallback != null) {
+                    //Called when the resource goes from busy to idle.
+                    resourceCallback.onTransitionToIdle();
+                }
+            }
+        });
+
+        super.subscribeToData();
     }
 }

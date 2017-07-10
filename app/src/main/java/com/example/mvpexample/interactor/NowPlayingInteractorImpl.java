@@ -19,21 +19,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.interactor;
 
-import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.mvpexample.dagger.ActivityScope;
 import com.example.mvpexample.gateway.ServiceGateway;
+import com.example.mvpexample.model.MovieInfo;
 import com.example.mvpexample.model.NowPlayingInfo;
 
-import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import timber.log.Timber;
 
 /**
@@ -41,18 +42,13 @@ import timber.log.Timber;
  */
 @ActivityScope
 public class NowPlayingInteractorImpl implements NowPlayingInteractor {
-    @VisibleForTesting
-    protected static LoadDataThread loadDataThread;
-
     private NowPlayingResponseModel nowPlayingResponseModel;
     private ServiceGateway serviceGateway;
-    private Handler mainUiHandler;
-    private static int pageNumber = 0;
+    private int sleepSeconds = 3;
 
     @Inject
-    public NowPlayingInteractorImpl(ServiceGateway serviceGateway, Handler mainUiHandler) {
+    public NowPlayingInteractorImpl(ServiceGateway serviceGateway) {
         this.serviceGateway = serviceGateway;
-        this.mainUiHandler = mainUiHandler;
     }
 
     public void setNowPlayingResponseModel(NowPlayingResponseModel nowPlayingResponseModel) {
@@ -60,172 +56,30 @@ public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     }
 
     @Override
-    public void setFirstLaunch() {
-        if (loadDataThread != null) {
-            loadDataThread.unregisterCallback();
-        }
-        loadDataThread = null;
-        pageNumber = 0;
+    public Observable<List<MovieInfo>> loadMoreInfo(int pageNumber) {
+        return serviceGateway.getNowPlaying(pageNumber)
+                //Delay for 3 seconds to show spinner on screen.
+                .delay(sleepSeconds, TimeUnit.SECONDS)
+                .flatMap(new MovieListFetcher());
     }
 
-    @Override
-    public void registerCallbacks() {
-        if (loadDataThread != null) {
-            loadDataThread.registerCallback(nowPlayingResponseModel);
-        }
-    }
-
-    @Override
-    public void unregisterCallbacks() {
-        if (loadDataThread != null) {
-            loadDataThread.unregisterCallback();
-        }
-    }
-
-    @Override
-    public void loadMoreInfo() {
-        if (loadDataThread == null) {
-            loadDataThread = new LoadDataThread(
-                    ++pageNumber,
-                    mainUiHandler,
-                    serviceGateway,
-                    nowPlayingResponseModel);
-            (new Thread(loadDataThread)).start();
-        } else {
-            loadDataThread.registerCallback(nowPlayingResponseModel);
-        }
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    protected void setSleepSeconds(int sleepSeconds) {
+        this.sleepSeconds = sleepSeconds;
     }
 
     /**
-     * Thread to load data from service.
+     * Fetch movies list from {@link NowPlayingInfo}.
      */
-    static class LoadDataThread implements Runnable {
-        private static final int SLEEP_MSEC = 3000;
-
-        @VisibleForTesting
-        protected Runnable runnableCache;
-
-        @VisibleForTesting
-        protected WeakReference<NowPlayingResponseModel> nowPlayingResponseModelWeakReference;
-
-        private final int pageNumberToLoad;
-        private final Handler mainUiHandler;
-        private final ServiceGateway serviceGateway;
-        private int sleepMsec = SLEEP_MSEC;
-        private NowPlayingInfo nowPlayingInfo = null;
-
-        /**
-         * Constructor.
-         * @param pageNumberToLoad - page number to load
-         * @param mainUiHandler - handler for responses
-         * @param serviceGateway - gateway to call
-         * @param nowPlayingResponseModel - response model to call
-         */
-        LoadDataThread(int pageNumberToLoad, Handler mainUiHandler, ServiceGateway serviceGateway,
-                       NowPlayingResponseModel nowPlayingResponseModel) {
-            this.pageNumberToLoad = pageNumberToLoad;
-            this.mainUiHandler = mainUiHandler;
-            this.serviceGateway = serviceGateway;
-            this.nowPlayingResponseModelWeakReference =
-                    new WeakReference<>(nowPlayingResponseModel);
-        }
-
-        /**
-         * Register callback.
-         * @param nowPlayingResponseModel - callback to register
-         */
-        @VisibleForTesting
-        public void registerCallback(NowPlayingResponseModel nowPlayingResponseModel) {
-            synchronized (this) {
-                this.nowPlayingResponseModelWeakReference =
-                        new WeakReference<>(nowPlayingResponseModel);
-
-                if (runnableCache != null) {
-                    mainUiHandler.post(runnableCache);
-                    NowPlayingInteractorImpl.loadDataThread = null;
-                    runnableCache = null;
-                }
-            }
-        }
-
-        /**
-         * Unregister callback.
-         */
-        @VisibleForTesting
-        public void unregisterCallback() {
-            synchronized (this) {
-                if (nowPlayingResponseModelWeakReference != null) {
-                    this.nowPlayingResponseModelWeakReference.clear();
-                }
-                this.nowPlayingResponseModelWeakReference = null;
-            }
-        }
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    static class MovieListFetcher implements Function<NowPlayingInfo, ObservableSource<List<MovieInfo>>> {
 
         @Override
-        public void run() {
-            //
-            //Delay for 3 seconds to show spinner on screen.
-            //
-            try {
-                Thread.sleep(sleepMsec);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            //
-            //Call Service
-            //
-            Disposable disposable = serviceGateway.getNowPlaying(pageNumberToLoad)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<NowPlayingInfo>() {
-                        @Override
-                        public void accept(@NonNull final NowPlayingInfo nowPlayingInfo) throws Exception {
-
-                            runnableCache = new Runnable() {
-                                @Override
-                                public void run() {
-                                    nowPlayingResponseModelWeakReference.get().infoLoaded(
-                                            nowPlayingInfo.getMovies());
-                                }
-                            };
-
-                            triggerCallback();
-
-                        }
-                    }, new Consumer<Throwable>() {
-                        @Override
-                        public void accept(@NonNull Throwable throwable) throws Exception {
-                            Timber.e(throwable, "Failed to fetch data:");
-
-                            runnableCache = new Runnable() {
-                                @Override
-                                public void run() {
-                                    nowPlayingResponseModelWeakReference.get().errorLoadingInfoData();
-                                }
-                            };
-
-                            triggerCallback();
-                        }
-                    });
-        }
-
-        /**
-         * Trigger the thread callback.
-         */
-        private void triggerCallback() {
-            synchronized (this) {
-                if (nowPlayingResponseModelWeakReference != null
-                        && nowPlayingResponseModelWeakReference.get() != null) {
-                    mainUiHandler.post(runnableCache);
-                    NowPlayingInteractorImpl.loadDataThread = null;
-                    runnableCache = null;
-                }
-            }
-        }
-
-        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-        public void setSleepMsec(int sleepMsec) {
-            this.sleepMsec = sleepMsec;
+        public ObservableSource<List<MovieInfo>> apply(@NonNull NowPlayingInfo nowPlayingInfo) throws Exception {
+            Timber.i("Thread name: %s for class %s",
+                    Thread.currentThread().getName(),
+                    "Interactor - " + getClass().getSimpleName());
+            return Observable.just(nowPlayingInfo.getMovies());
         }
     }
 }
