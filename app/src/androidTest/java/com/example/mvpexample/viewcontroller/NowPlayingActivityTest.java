@@ -38,7 +38,6 @@ import com.example.mvpexample.dagger.InjectionProcessor;
 import com.example.mvpexample.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpexample.service.ServiceApi;
 import com.example.mvpexample.service.ServiceResponse;
-import com.example.mvpexample.util.BaseTest;
 import com.example.mvpexample.util.EspressoTestRule;
 import com.example.mvpexample.util.RecyclerViewItemCountAssertion;
 import com.example.mvpexample.util.RecyclerViewMatcher;
@@ -64,8 +63,6 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import retrofit2.Call;
-import retrofit2.Response;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -79,7 +76,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class NowPlayingActivityTest extends BaseTest {
+public class NowPlayingActivityTest {
     private static TestMvpExampleApplication testMvpExampleApplication;
     private static ServiceResponse serviceResponse1;
     private static ServiceResponse serviceResponse2;

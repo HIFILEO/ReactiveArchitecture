@@ -22,8 +22,16 @@ package com.example.mvpexample.presenter;
 import android.support.test.espresso.IdlingResource;
 
 import com.example.mvpexample.interactor.NowPlayingInteractor;
+import com.example.mvpexample.model.MovieViewInfo;
 
+import java.util.List;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import timber.log.Timber;
 
 /**
  * Espresso needs "hand-made" resources to know when an activity is idle. This is that "hand-made" resource.
@@ -56,18 +64,27 @@ public class NowPlayingPresenterImpl_IdlingResource extends NowPlayingPresenterI
     void subscribeToData() {
         idle = false;
 
-        requestCache.doOnComplete(new Action() {
-            @Override
-            public void run() throws Exception {
-                idle = true;
+        //TODO - introduce RxIdlingResource
+        Disposable disposable = requestCache
+                //observe down - update UI on main thread.
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete(new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        requestCache = null;
 
-                if (resourceCallback != null) {
-                    //Called when the resource goes from busy to idle.
-                    resourceCallback.onTransitionToIdle();
-                }
-            }
-        });
+                        idle = true;
 
-        super.subscribeToData();
+                        if (resourceCallback != null) {
+                            //Called when the resource goes from busy to idle.
+                            resourceCallback.onTransitionToIdle();
+                        }
+                    }
+                })
+                .subscribe(new UiUpdateConsumer(nowPlayingViewModel),
+                        new UiUpdateOnErrorConsumer(this, nowPlayingViewModel));
+
+        //add disposable to list.
+        disposables.add(disposable);
     }
 }

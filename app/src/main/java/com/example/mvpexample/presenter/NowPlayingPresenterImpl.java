@@ -57,9 +57,14 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     static int pageNumber = 0;
 
-    private final CompositeDisposable disposables = new CompositeDisposable();
-    private NowPlayingViewModel nowPlayingViewModel;
-    private NowPlayingInteractor nowPlayingInteractor;
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    final CompositeDisposable disposables = new CompositeDisposable();
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    final NowPlayingViewModel nowPlayingViewModel;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    final NowPlayingInteractor nowPlayingInteractor;
 
     @Inject
     public NowPlayingPresenterImpl(NowPlayingViewModel nowPlayingViewModel,
@@ -126,12 +131,13 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
                     public void run() throws Exception {
                         Timber.i("Thread name: %s for class %s",
                                 Thread.currentThread().getName(),
-                                getClass().getSimpleName().isEmpty() ? "Presenter Sub Complete" : getClass().getSimpleName());
+                                getClass().getSimpleName().isEmpty()
+                                        ? "Presenter Sub Complete" : getClass().getSimpleName());
                         requestCache = null;
                     }
                 })
-                .subscribe(new UiUpdateConsumer(nowPlayingViewModel)
-                        , new UiUpdateOnErrorConsumer(this, nowPlayingViewModel));
+                .subscribe(new UiUpdateConsumer(nowPlayingViewModel),
+                        new UiUpdateOnErrorConsumer(this, nowPlayingViewModel));
 
         //add disposable to list.
         disposables.add(disposable);
@@ -141,7 +147,8 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
      * Translate the internal business logic to one that the UI understands.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    protected static class TranslateForPresenterFunction implements Function<List<MovieInfo>, ObservableSource<List<MovieViewInfo>>> {
+    protected static class TranslateForPresenterFunction
+            implements Function<List<MovieInfo>, ObservableSource<List<MovieViewInfo>>> {
 
         @Override
         public ObservableSource<List<MovieViewInfo>> apply(@NonNull List<MovieInfo> movieInfoList) throws Exception {
@@ -194,7 +201,8 @@ public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingR
          * @param nowPlayingPresenter -
          * @param nowPlayingViewModel -
          */
-        public UiUpdateOnErrorConsumer(NowPlayingPresenter nowPlayingPresenter, NowPlayingViewModel nowPlayingViewModel) {
+        public UiUpdateOnErrorConsumer(NowPlayingPresenter nowPlayingPresenter,
+                                       NowPlayingViewModel nowPlayingViewModel) {
             /*
             Note - no weak references here since these are CONSUMER type of objects that are disposed of during
             activity lifecycle events.
