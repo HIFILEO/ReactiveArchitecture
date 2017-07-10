@@ -75,7 +75,9 @@ public class ServiceGatewayImpl implements ServiceGateway {
         internal business response on computation thread. Return observable.
          */
         return serviceApi.nowPlaying(apiKey, mapToSend)
+                //subscribe up - call api using io scheduler.
                 .subscribeOn(Schedulers.io())
+                //observe down - translate on computation scheduler.
                 .observeOn(Schedulers.computation())
                 .flatMap(new TranslateNowPlayingSubscriptionFunc(imageUrlPath))
                 .doOnError(new Consumer<Throwable>() {
@@ -108,6 +110,9 @@ public class ServiceGatewayImpl implements ServiceGateway {
 
         @Override
         public Observable<NowPlayingInfo> apply(@NonNull ServiceResponse serviceResponse) throws Exception {
+            Timber.i("Thread name: %s for class %s",
+                    Thread.currentThread().getName(),
+                    getClass().getSimpleName());
             List<MovieInfo> movieInfoList = new ArrayList<>();
 
             for (int i = 0; i < serviceResponse.getResults().length; i++) {

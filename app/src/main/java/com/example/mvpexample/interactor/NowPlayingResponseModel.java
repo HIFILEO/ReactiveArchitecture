@@ -19,15 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvpexample.interactor;
 
-import com.example.mvpexample.model.MovieInfo;
-
-import java.util.List;
-
 /**
  * Response Model - how the Interactor communicates with presenter.
  */
 public interface NowPlayingResponseModel {
-    void infoLoaded(List<MovieInfo> infoList);
-
-    void errorLoadingInfoData();
 }

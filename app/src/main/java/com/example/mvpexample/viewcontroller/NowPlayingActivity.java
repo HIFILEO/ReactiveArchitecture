@@ -75,14 +75,9 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
         setSupportActionBar(toolbar);
 
         //Start Presenter so Interactor response model is setup correctly.
-        nowPlayingPresenter.start(savedInstanceState);
+        nowPlayingPresenter.onCreate(savedInstanceState);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        nowPlayingPresenter.onStart();
-    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -92,9 +87,9 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        nowPlayingPresenter.onStop();
+    public void onDestroy() {
+        super.onDestroy();
+        nowPlayingPresenter.onDestroy();
     }
 
     @Override
