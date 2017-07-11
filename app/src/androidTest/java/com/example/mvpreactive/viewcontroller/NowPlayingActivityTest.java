@@ -41,6 +41,7 @@ import com.example.mvpreactive.service.ServiceResponse;
 import com.example.mvpreactive.util.EspressoTestRule;
 import com.example.mvpreactive.util.RecyclerViewItemCountAssertion;
 import com.example.mvpreactive.util.RecyclerViewMatcher;
+import com.example.mvpreactive.util.RxEspressoScheduleHandler;
 import com.example.mvpreactive.util.TestEspressoAssetFileHelper;
 import com.example.mvpreactive.util.TestInjectionProcessor;
 import com.google.gson.Gson;
@@ -63,6 +64,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.plugins.RxJavaPlugins;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -136,6 +138,13 @@ public class NowPlayingActivityTest {
 
         mapToSend1.put("page", 1);
         mapToSend2.put("page", 2);
+
+        //
+        //Register Rx Idling
+        //
+        RxEspressoScheduleHandler rxEspressoScheduleHandler = new RxEspressoScheduleHandler();
+        RxJavaPlugins.setScheduleHandler(rxEspressoScheduleHandler);
+        Espresso.registerIdlingResources(rxEspressoScheduleHandler.getIdlingResource());
     }
 
     @Before
@@ -201,26 +210,26 @@ public class NowPlayingActivityTest {
         //Arrange
         //
         //Create a component provider that can be used for testing. One part we setup the injections including
-        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
-        //under test continues.
-        final InjectionProcessor injectionProcessorForTest = new TestInjectionProcessor() {
-            @Override
-            public void setupMocksOrFakes(Activity activity) {
-                NowPlayingActivity nowPlayingActivity = (NowPlayingActivity) activity;
-
-                //Note - this works because our presenter is a SPY which wraps a NowPlayingPresenterImpl_IdlingResource
-                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingActivity.nowPlayingPresenter);
-            }
-        };
-
-        //When activity under test fetches the InjectionProcessor, we use our TestInjectionProcessor instead.
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                injectionProcessorForTest.processInjection((Activity) (invocation.getArguments())[0]);
-                return null;
-            }
-        }).when(spyInjectionProvider).processInjection(any(NowPlayingActivity.class));
+//        //the activity scope on this test class. Second part where we setup our mocks before onCreate() in activity
+//        //under test continues.
+//        final InjectionProcessor injectionProcessorForTest = new TestInjectionProcessor() {
+//            @Override
+//            public void setupMocksOrFakes(Activity activity) {
+//                NowPlayingActivity nowPlayingActivity = (NowPlayingActivity) activity;
+//
+//                //Note - this works because our presenter is a SPY which wraps a NowPlayingPresenterImpl_IdlingResource
+//                Espresso.registerIdlingResources((NowPlayingPresenterImpl_IdlingResource) nowPlayingActivity.nowPlayingPresenter);
+//            }
+//        };
+//
+//        //When activity under test fetches the InjectionProcessor, we use our TestInjectionProcessor instead.
+//        Mockito.doAnswer(new Answer() {
+//            @Override
+//            public Object answer(InvocationOnMock invocation) throws Throwable {
+//                injectionProcessorForTest.processInjection((Activity) (invocation.getArguments())[0]);
+//                return null;
+//            }
+//        }).when(spyInjectionProvider).processInjection(any(NowPlayingActivity.class));
 
         //
         //Act
