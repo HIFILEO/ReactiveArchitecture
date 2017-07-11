@@ -14,7 +14,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner 'com.example.mvpexample.application.MvpExampleTestRunner'
+        testInstrumentationRunner 'com.example.mvpreactive.application.MvpExampleTestRunner'
     }
     buildTypes {
         release {
