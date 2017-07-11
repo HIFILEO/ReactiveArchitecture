@@ -22,15 +22,11 @@ import com.example.mvpreactive.interactor.NowPlayingInteractor;
 import com.example.mvpreactive.interactor.NowPlayingInteractorImpl;
 import com.example.mvpreactive.presenter.NowPlayingPresenter;
 import com.example.mvpreactive.presenter.NowPlayingPresenterImpl;
-import com.example.mvpreactive.presenter.NowPlayingPresenterImpl_IdlingResource;
 import com.example.mvpreactive.presenter.NowPlayingViewModel;
 import com.example.mvpreactive.viewcontroller.NowPlayingActivity;
 
-import org.mockito.Mockito;
-
 import dagger.Binds;
 import dagger.Module;
-import dagger.Provides;
 
 /**
  * Mock {@link NowPlayingActivityModule}
@@ -45,13 +41,6 @@ public abstract class TestNowPlayingActivityModule {
     @Binds
     abstract NowPlayingInteractor provideNowPlayingInteractor(NowPlayingInteractorImpl nowPlayingInteractor);
 
-    @Provides
-    @ActivityScope
-    public static NowPlayingPresenter providesNowPlayingPresenter(NowPlayingInteractor nowPlayingInteractor,
-                                                           NowPlayingViewModel nowPlayingViewModel) {
-
-        //In order to make sure espresso idles the view checks, we put the IdlingResource on the presenter.
-        //return Mockito.spy(new NowPlayingPresenterImpl_IdlingResource(nowPlayingViewModel, nowPlayingInteractor));
-        return Mockito.spy(new NowPlayingPresenterImpl(nowPlayingViewModel, nowPlayingInteractor));
-    }
+    @Binds
+    abstract NowPlayingPresenter provideNowPlayingPresenter(NowPlayingPresenterImpl nowPlayingPresenter);
 }

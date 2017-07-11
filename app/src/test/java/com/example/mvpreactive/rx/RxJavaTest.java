@@ -58,7 +58,6 @@ public abstract class RxJavaTest {
      * Setup the Rx java schedulers.
      */
     private void setupJavaSchedulers() {
-
         RxJavaPlugins.setIoSchedulerHandler(new Function<Scheduler, Scheduler>() {
             @Override
             public Scheduler apply(@NonNull Scheduler scheduler) throws Exception {

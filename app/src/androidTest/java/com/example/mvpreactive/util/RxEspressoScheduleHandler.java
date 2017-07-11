@@ -11,6 +11,9 @@ import io.reactivex.functions.Function;
  *
  * Inspired from:
  * https://github.com/ReactiveX/RxAndroid/issues/149
+ *
+ * Modified to tell espresso we are busy the instant any task is scheduled and only idle once
+ * all scheduled tasks are completed.
  */
 public class RxEspressoScheduleHandler implements Function<Runnable, Runnable> {
 
@@ -19,10 +22,14 @@ public class RxEspressoScheduleHandler implements Function<Runnable, Runnable> {
 
     @Override
     public Runnable apply(@NonNull final Runnable runnable) throws Exception {
+        //resource to be busy from the instant the task is scheduled
+        countingIdlingResource.increment();
+
         return new Runnable() {
             @Override
             public void run() {
-                countingIdlingResource.increment();
+                //Note: left for understanding - resource was busy only while executing the task
+                //countingIdlingResource.increment();
 
                 try {
                     runnable.run();
