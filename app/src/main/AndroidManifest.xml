@@ -1,17 +1,17 @@
-<manifest package="com.example.mvpreactive"
+<manifest package="com.example.mvvmreactive"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name="com.example.mvpreactive.application.MvpExampleApplication"
+        android:name="com.example.mvvmreactive.application.MvpExampleApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.example.mvpreactive.viewcontroller.NowPlayingActivity">
+            android:name="com.example.mvvmreactive.viewcontroller.NowPlayingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

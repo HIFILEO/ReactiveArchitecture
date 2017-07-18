@@ -1,9 +1,9 @@
-# MVP 'Reactive' Example
-This app is nothing more than an example of how to create a MVP (Model View Presenter) application 
+# MVVM 'Reactive' Example
+This app is nothing more than an example of how to create a MVVM (Model View ViewModel) application 
 using  [Reactive](https://github.com/ReactiveX/RxAndroid) style programming. This is a fork from
-the original [MVPExample](https://github.com/HIFILEO/MVPExample)
+the original [MVPReactive](https://github.com/HIFILEO/MVPReactive)
 
-MVP breaks down an application into more testable components keeping your internal business objects and data separate from
+MVVM breaks down an application into more testable components keeping your internal business objects and data separate from
 the external UI or external data.
 
 The app simply loads a list of "Now Playing" movies based on [The Movie Database API](https://developers.themoviedb.org/3/movies/get-now-playing).
