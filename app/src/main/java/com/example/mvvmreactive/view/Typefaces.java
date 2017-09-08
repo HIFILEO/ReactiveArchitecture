@@ -32,7 +32,6 @@ class Typefaces {
     private static final String TAG = "Typefaces";
     private static final Hashtable<String, Typeface> CACHE = new Hashtable<>();
 
-
     private Typefaces() {
 
     }

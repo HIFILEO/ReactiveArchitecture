@@ -21,7 +21,6 @@ package com.example.mvvmreactive.interactor;
 
 import android.support.annotation.VisibleForTesting;
 
-import com.example.mvvmreactive.dagger.ActivityScope;
 import com.example.mvvmreactive.gateway.ServiceGateway;
 import com.example.mvvmreactive.model.MovieInfo;
 import com.example.mvvmreactive.model.NowPlayingInfo;
@@ -40,7 +39,6 @@ import timber.log.Timber;
 /**
  * Info Interactor Implementation.
  */
-@ActivityScope
 public class NowPlayingInteractorImpl implements NowPlayingInteractor {
     private static final int SLEEP_TIME = 3;
     private NowPlayingResponseModel nowPlayingResponseModel;

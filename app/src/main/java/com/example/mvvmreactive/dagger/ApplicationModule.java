@@ -21,16 +21,18 @@ package com.example.mvvmreactive.dagger;
 
 import android.app.Activity;
 import android.app.Application;
+import android.arch.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.mvvmreactive.R;
-import com.example.mvvmreactive.application.MvpExampleApplication;
+import com.example.mvvmreactive.application.MvvmExampleApplication;
 import com.example.mvvmreactive.gateway.ServiceGateway;
 import com.example.mvvmreactive.gateway.ServiceGatewayImpl;
 import com.example.mvvmreactive.service.ServiceApi;
+import com.example.mvvmreactive.viewmodel.MvvmExampleViewModelFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -47,36 +49,36 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Dagger2 {@link Module} providing application-level dependency bindings.
  */
-@Module
+@Module(includes = ViewModelModule.class)
 public class ApplicationModule {
-    private MvpExampleApplication application;
+//    private MvvmExampleApplication application;
+//
+//    public ApplicationModule(MvvmExampleApplication application) {
+//        this.application = application;
+//    }
 
-    public ApplicationModule(MvpExampleApplication application) {
-        this.application = application;
-    }
+//    @Provides
+//    @Singleton
+//    Context context() {
+//        return application;
+//    }
+//
+//    /**
+//     * Getter for the Application class.
+//     *
+//     * @return the Application
+//     */
+//    @Provides
+//    @Singleton
+//    public Application providesApplication() {
+//        return application;
+//    }
 
-    @Provides
-    @Singleton
-    Context context() {
-        return application;
-    }
-
-    /**
-     * Getter for the Application class.
-     *
-     * @return the Application
-     */
-    @Provides
-    @Singleton
-    public Application providesApplication() {
-        return application;
-    }
-
-    @Provides
-    @Singleton
-    public Resources providesResources() {
-        return application.getResources();
-    }
+//    @Provides
+//    @Singleton
+//    public Resources providesResources() {
+//        return application.getResources();
+//    }
 
     @Singleton
     @Provides
@@ -133,7 +135,7 @@ public class ApplicationModule {
 
     @Provides
     @Singleton
-    public ServiceGateway providesGatewayInfo(ServiceApi serviceApi) {
+    public ServiceGateway providesGatewayInfo(ServiceApi serviceApi, Application application) {
         return new ServiceGatewayImpl(serviceApi,
                 application.getString(R.string.api_key),
                 application.getString(R.string.image_url_path));

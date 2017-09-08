@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.viewcontroller;
 
+import android.arch.lifecycle.ViewModelProvider;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -31,9 +33,10 @@ import android.widget.Toast;
 import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.adapter.NowPlayingListAdapter;
 import com.example.mvvmreactive.model.MovieViewInfo;
-import com.example.mvvmreactive.presenter.NowPlayingPresenter;
-import com.example.mvvmreactive.presenter.NowPlayingViewModel;
+
+
 import com.example.mvvmreactive.view.DividerItemDecoration;
+import com.example.mvvmreactive.viewmodel.NowPlayingViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,20 +44,25 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 
 
 /**
  * This is the only activity for the application that links into the MVP architecture.
  */
-public class NowPlayingActivity extends BaseActivity implements NowPlayingViewModel,
-        NowPlayingListAdapter.OnLoadMoreListener {
+public class NowPlayingActivity extends BaseActivity implements NowPlayingListAdapter.OnLoadMoreListener {
     private static final String LAST_SCROLL_POSITION = "LAST_SCROLL_POSITION";
     private static final String LOADING_DATA = "LOADING_DATA";
-    private static List<MovieViewInfo> movieViewInfoList = new ArrayList<>();
     private NowPlayingListAdapter nowPlayingListAdapter;
+    private NowPlayingViewModel nowPlayingViewModel;
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Inject
-    NowPlayingPresenter nowPlayingPresenter;
+    ViewModelProvider.Factory viewModelFactory;
 
     //Bind Views
     @BindView(R.id.progressBar)
@@ -74,10 +82,23 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
         toolbar.setTitle(getString(R.string.now_playing));
         setSupportActionBar(toolbar);
 
-        //Start Presenter so Interactor response model is setup correctly.
-        nowPlayingPresenter.onCreate(savedInstanceState);
+        //Retrieve ViewModel
+        nowPlayingViewModel = ViewModelProviders.of(this, viewModelFactory).get(NowPlayingViewModel.class);
+
+        //Create Adapter
+        createAdapter(savedInstanceState);
+
+        //restore adapter
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bind();
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -87,13 +108,18 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        nowPlayingPresenter.onDestroy();
+    public void onStop() {
+        super.onStop();
+
+        //un-subscribe
+        compositeDisposable.clear();
     }
 
-    @Override
-    public void showInProgress(boolean show) {
+    /**
+     * Show in progress.
+     * @param show - true to show, false otherwise.
+     */
+    private void showInProgress(boolean show) {
         if (show) {
             progressBar.setVisibility(View.VISIBLE);
         } else {
@@ -101,12 +127,14 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
         }
     }
 
-    @Override
-    public void showError() {
+    private void showError() {
         Toast.makeText(this, R.string.error_msg, Toast.LENGTH_LONG).show();
     }
 
-    @Override
+    /**
+     * Add list to adapter.
+     * @param movieViewInfoList - list to add.
+     */
     public void addToAdapter(List<MovieViewInfo> movieViewInfoList) {
         if (!movieViewInfoList.isEmpty()) {
             nowPlayingListAdapter.addList(movieViewInfoList);
@@ -115,35 +143,82 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingViewMo
         }
     }
 
-    @Override
+    /**
+     * Restore the state of the screen.
+     * @param savedInstanceState
+     */
     public void restoreState(Bundle savedInstanceState) {
         Parcelable savedRecyclerLayoutState =
                 savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
         recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
-
-        if (!movieViewInfoList.isEmpty()) {
-            nowPlayingPresenter.dataRestored();
-        }
     }
 
-    @Override
-    public void createAdapter(Bundle savedInstanceState) {
-        if (savedInstanceState == null) {
-            movieViewInfoList.clear();
-        }
-
+    /**
+     * Create the adapter for {@link RecyclerView}.
+     */
+    private void createAdapter(Bundle savedInstanceState) {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(
                 this,
                 DividerItemDecoration.VERTICAL_LIST,
                 getResources().getColor(android.R.color.black, null)));
-        nowPlayingListAdapter = new NowPlayingListAdapter(movieViewInfoList, this, recyclerView,
+        nowPlayingListAdapter = new NowPlayingListAdapter(
+                //shallow-copy
+                new ArrayList<>(nowPlayingViewModel.getMovieViewInfoList()),
+                this,
+                recyclerView,
                 savedInstanceState != null && savedInstanceState.getBoolean(LOADING_DATA));
         recyclerView.setAdapter(nowPlayingListAdapter);
     }
 
     @Override
     public void onLoadMore() {
-        nowPlayingPresenter.loadMoreInfo();
+        subscribeToMovieData(nowPlayingViewModel.loadMoreInfo());
+    }
+
+    /**
+     * Bind to all data in {@link NowPlayingViewModel}.
+     */
+    private void bind() {
+        compositeDisposable.add(
+                nowPlayingViewModel.isFirstLoadInProgress()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Consumer<Boolean>() {
+                            @Override
+                            public void accept(@NonNull Boolean aBoolean) throws Exception {
+                                showInProgress(aBoolean);
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(@NonNull Throwable throwable) throws Exception {
+                                showError();
+                            }
+                        }));
+
+        subscribeToMovieData(nowPlayingViewModel.getMovieViewInfo());
+    }
+
+    /**
+     * Subscribe to {@link MovieViewInfo}.
+     * @param movieDataObservable
+     */
+    private void subscribeToMovieData(Observable<List<MovieViewInfo>> movieDataObservable) {
+        compositeDisposable.add(movieDataObservable
+                //observe down
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<List<MovieViewInfo>>() {
+                    @Override
+                    public void accept(@NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
+                        addToAdapter(movieViewInfos);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        showError();
+
+                        //try again
+                        onLoadMore();
+                    }
+                }));
     }
 }

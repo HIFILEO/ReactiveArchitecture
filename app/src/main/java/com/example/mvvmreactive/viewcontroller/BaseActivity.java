@@ -22,20 +22,19 @@ package com.example.mvvmreactive.viewcontroller;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.mvvmreactive.dagger.HasInjectionProcessor;
-import com.example.mvvmreactive.dagger.InjectionProcessor;
+import com.example.mvvmreactive.dagger.Injectable;
 
 import butterknife.ButterKnife;
-import dagger.android.AndroidInjection;
 
 /**
  * Base class for all {@link AppCompatActivity}.
  */
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity implements Injectable {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        injectDaggerMembers();
+        //Note - injection is no longer needed here. It's handled by the AppInjector with lifecycle
+        //callbacks.
         super.onCreate(savedInstanceState);
     }
 
@@ -44,21 +43,4 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.setContentView(layoutResId);
         ButterKnife.bind(this);
     }
-
-    /**
-     * Injects members into activity.
-     */
-    public void injectDaggerMembers() {
-        AndroidInjection.inject(this);
-
-        //Process Injections before activity start.
-        if ((getApplication() instanceof HasInjectionProcessor)) {
-            InjectionProcessor injectionProcessor =
-                    ((HasInjectionProcessor) getApplication()).injectionProcessor();
-            if (injectionProcessor != null) {
-                injectionProcessor.processInjection(this);
-            }
-        }
-    }
-
 }

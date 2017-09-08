@@ -32,7 +32,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.example.mvvmreactive.R;
 
-import com.example.mvvmreactive.application.TestMvpExampleApplication;
+import com.example.mvvmreactive.application.TestMvvmExampleApplication;
 import com.example.mvvmreactive.service.ServiceApi;
 import com.example.mvvmreactive.service.ServiceResponse;
 import com.example.mvvmreactive.util.EspressoTestRule;
@@ -72,7 +72,7 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class NowPlayingActivityTest {
-    private static TestMvpExampleApplication testMvpExampleApplication;
+    private static TestMvvmExampleApplication testMvpExampleApplication;
     private static ServiceResponse serviceResponse1;
     private static ServiceResponse serviceResponse2;
     private static Map<String, Integer> mapToSend1 = new HashMap<>();
@@ -105,7 +105,7 @@ public class NowPlayingActivityTest {
         //Before the activity is launched, get the componentProvider so we can provide our own
         //module for the activity under test.
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-        testMvpExampleApplication = (TestMvpExampleApplication)
+        testMvpExampleApplication = (TestMvvmExampleApplication)
                 instrumentation.getTargetContext().getApplicationContext();
 
         //Load JSON data you plan to test with
@@ -133,7 +133,7 @@ public class NowPlayingActivityTest {
     @Before
     public void setup() {
         //Inject all the application level objects into this test class
-        testMvpExampleApplication.getComponent().inject(this);
+        //testMvpExampleApplication.getComponent().inject(this);
 
         //Every test uses the same JSON response so set it up here once.
         try {

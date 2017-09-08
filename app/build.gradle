@@ -6,12 +6,12 @@ apply from: '../gradle/lint.gradle'
 apply from: '../gradle/jacoco.gradle'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.0"
     defaultConfig {
         applicationId "com.example.mvpexample"
         minSdkVersion 23
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner 'com.example.mvpreactive.application.MvpExampleTestRunner'
@@ -28,7 +28,7 @@ android {
 //https://github.com/JakeWharton/u2020/blob/05a57bf43b9b61f16d32cbe8717af77cd608b0fb/build.gradle#L136-L140
 configurations.all {
     resolutionStrategy {
-        force 'com.android.support:support-annotations:25.3.1'
+        force 'com.android.support:support-annotations:26.0.0'
     }
 }
 
@@ -36,22 +36,25 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
     //Support Libs
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:recyclerview-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
+    compile 'com.android.support:appcompat-v7:26.0.0'
+    compile 'com.android.support:recyclerview-v7:26.0.0'
+    compile 'com.android.support:design:26.0.0'
+    compile 'com.android.support:support-annotations:26.0.0'
+    compile "android.arch.lifecycle:runtime:1.0.0-alpha9"
+    compile "android.arch.lifecycle:extensions:1.0.0-alpha9"
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0-alpha9"
 
     //Butterknife (Note apt is obsolete, and butterknife requires annotation processing)
     compile 'com.jakewharton:butterknife:8.6.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.6.0'
 
     //Dagger
-    annotationProcessor "com.google.dagger:dagger-compiler:2.11-rc1"
+    annotationProcessor "com.google.dagger:dagger-compiler:2.11"
     provided 'javax.annotation:jsr250-api:1.0'
-    compile 'com.google.dagger:dagger:2.11-rc1'
-    compile "com.google.dagger:dagger-android-support:2.11-rc1" // because we use the support libraries
-    compile "com.google.dagger:dagger-android:2.11-rc1"
-    annotationProcessor "com.google.dagger:dagger-android-processor:2.11-rc1"
+    compile 'com.google.dagger:dagger:2.11'
+    compile "com.google.dagger:dagger-android-support:2.11" // because we use the support libraries
+    compile "com.google.dagger:dagger-android:2.11"
+    annotationProcessor "com.google.dagger:dagger-android-processor:2.11"
 
     //okhttp
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
@@ -104,8 +107,8 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude module: 'recyclerview-v7'
     }
-    androidTestCompile "com.google.dagger:dagger-android:2.11-rc1"
+    androidTestCompile "com.google.dagger:dagger-android:2.11"
     androidTestCompile 'com.squareup.retrofit2:retrofit-mock:2.2.0'
     androidTestCompile 'org.mockito:mockito-android:2.6.2'
-    androidTestAnnotationProcessor 'com.google.dagger:dagger-compiler:2.11-rc1'
+    androidTestAnnotationProcessor 'com.google.dagger:dagger-compiler:2.11'
 }

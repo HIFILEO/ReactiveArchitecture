@@ -25,9 +25,9 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.BuildConfig;
 import android.util.Log;
 
+import com.example.mvvmreactive.dagger.AppInjector;
 import com.example.mvvmreactive.dagger.ApplicationComponent;
 import com.example.mvvmreactive.dagger.ApplicationModule;
-import com.example.mvvmreactive.dagger.DaggerApplicationComponent;
 import com.example.mvvmreactive.dagger.InjectionProcessor;
 
 import javax.inject.Inject;
@@ -41,7 +41,7 @@ import timber.log.Timber;
 /**
  * This is the MVP application class for setting up Dagger 2 and Timber.
  */
-public class MvpExampleApplication extends Application implements HasActivityInjector {
+public class MvvmExampleApplication extends Application implements HasActivityInjector {
     private ApplicationComponent component;
 
     @Inject
@@ -55,6 +55,14 @@ public class MvpExampleApplication extends Application implements HasActivityInj
         super.onCreate();
         setupComponent();
         setupTimber();
+    }
+
+    /**
+     * Get application module.
+     * @return - ApplicationModule
+     */
+    public ApplicationModule getApplicationModule() {
+        return new ApplicationModule();
     }
 
     /**
@@ -74,22 +82,11 @@ public class MvpExampleApplication extends Application implements HasActivityInj
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     void setupComponent() {
         if (component == null) {
-            component = DaggerApplicationComponent.builder()
-                    .applicationModule(getApplicationModule())
-                    .build();
-            component.inject(this);
+            component = AppInjector.init(this);
         } else {
-            Log.d(MvpExampleApplication.class.getSimpleName(), "setupComponent() called.  "
+            Log.d(MvvmExampleApplication.class.getSimpleName(), "setupComponent() called.  "
                     + "ApplicationComponent already set.");
         }
-    }
-
-    /**
-     * Get application module.
-     * @return - ApplicationModule
-     */
-    protected ApplicationModule getApplicationModule() {
-        return new ApplicationModule(this);
     }
 
     @Override

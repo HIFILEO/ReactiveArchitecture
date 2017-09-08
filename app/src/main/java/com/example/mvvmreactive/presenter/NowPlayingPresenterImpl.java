@@ -22,7 +22,6 @@ package com.example.mvvmreactive.presenter;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 
-import com.example.mvvmreactive.dagger.ActivityScope;
 import com.example.mvvmreactive.interactor.NowPlayingInteractor;
 import com.example.mvvmreactive.interactor.NowPlayingResponseModel;
 import com.example.mvvmreactive.model.MovieInfo;
@@ -49,7 +48,6 @@ import timber.log.Timber;
 /**
  * Implements the Presenter interface.
  */
-@ActivityScope
 public class NowPlayingPresenterImpl implements NowPlayingPresenter, NowPlayingResponseModel {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     static Observable<List<MovieViewInfo>> requestCache;

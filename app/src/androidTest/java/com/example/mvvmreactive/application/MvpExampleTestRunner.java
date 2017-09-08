@@ -24,13 +24,13 @@ import android.content.Context;
 import android.support.test.runner.AndroidJUnitRunner;
 
 /**
- * Custom test runner so Espresso can utilize {@link TestMvpExampleApplication} and inject
+ * Custom test runner so Espresso can utilize {@link TestMvvmExampleApplication} and inject
  * {@link com.example.mvvmreactive.dagger.TestApplicationModule}
  */
 public class MvpExampleTestRunner extends AndroidJUnitRunner {
     @Override
     public Application newApplication(ClassLoader cl, String className, Context context)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return super.newApplication(cl, TestMvpExampleApplication.class.getName(), context);
+        return super.newApplication(cl, TestMvvmExampleApplication.class.getName(), context);
     }
 }

@@ -15,39 +15,29 @@ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PA
 PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Inspired from:
+https://github.com/googlesamples/android-architecture-components/tree/master/GithubBrowserSample
  */
+package com.example.mvvmreactive.dagger;
 
-package com.example.mvvmreactive.application;
+import android.arch.lifecycle.ViewModel;
 
-import com.example.mvvmreactive.dagger.HasInjectionProcessor;
-import com.example.mvvmreactive.dagger.InjectionProcessor;
-import com.example.mvvmreactive.dagger.DaggerTestApplicationComponent;
-import com.example.mvvmreactive.dagger.TestApplicationComponent;
-import com.example.mvvmreactive.dagger.TestApplicationModule;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import dagger.MapKey;
 
 /**
- * Test class for {@link MvpExampleApplication}
+ * Sets an annotation so {@link ViewModel} are mapped to {@link dagger.android.AndroidInjection}
  */
-public class TestMvpExampleApplication extends MvpExampleApplication implements HasInjectionProcessor {
-    private TestApplicationComponent component;
-
-    @Override
-    void setupComponent() {
-        component = DaggerTestApplicationComponent.builder()
-                .testApplicationModule(new TestApplicationModule(getApplicationModule()))
-                .build();
-        component.inject(this);
-
-        int a = 0;
-        a++;
-    }
-
-    public TestApplicationComponent getComponent() {
-        return component;
-    }
-
-    @Override
-    public InjectionProcessor injectionProcessor() {
-        return injectionProvider;
-    }
+@Documented
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@MapKey
+@interface ViewModelKey {
+    Class<? extends ViewModel> value();
 }

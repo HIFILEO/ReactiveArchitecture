@@ -19,12 +19,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.dagger;
 
-import com.example.mvvmreactive.application.MvpExampleApplication;
-import com.example.mvvmreactive.service.ServiceApi;
+import android.app.Application;
+
+import com.example.mvvmreactive.application.MvvmExampleApplication;
 
 import javax.inject.Singleton;
 
+import dagger.BindsInstance;
 import dagger.Component;
+import dagger.android.AndroidInjectionModule;
 
 /**
  * Application-level Dagger2 {@link Component}.
@@ -32,15 +35,27 @@ import dagger.Component;
 @Singleton
 @Component(
         modules = {
+                AndroidInjectionModule.class,
                 ApplicationModule.class,
-                ActivitySubComponentBuilderModule.class
+                ActivityComponentBuilder.class
         })
 public interface ApplicationComponent {
-    /*
-    VERY VERY IMPORTANT - You need this if you have any sub scoped components that require singleton scope access.
-    In other words, the NowPlayingActivityModule required the ServiceApi object that sat in ApplicationModule.
-     */
-    ServiceApi getServiceApi();
 
-    void inject(MvpExampleApplication application);
+    //
+    //Note - this is the custom builder for injecting the ApplicationModule with objects that it needs.
+    //This eliminates the need for a constructor in the module.
+    //
+    //Help from - https://proandroiddev.com/dagger-2-component-builder-1f2b91237856
+    @Component.Builder
+    interface Builder {
+
+        //Note - If you want to pass Application to constructors of provide methods this is what you do.
+        //Note - If you want to pass MvvmApplication to constructors of provide methods, you'll need to add it or cast.
+        @BindsInstance
+        Builder application(Application application);
+
+        ApplicationComponent build();
+
+    }
+    void inject(MvvmExampleApplication application);
 }
