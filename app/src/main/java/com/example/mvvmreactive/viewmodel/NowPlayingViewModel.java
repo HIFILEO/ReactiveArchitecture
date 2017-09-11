@@ -68,22 +68,38 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private final BehaviorSubject<Boolean> firstLoadSubject = BehaviorSubject.create();
 
+    /**
+     * Constructor. Members are injected.
+     * @param serviceGateway -
+     */
     @Inject
     public NowPlayingViewModel(@NonNull ServiceGateway serviceGateway) {
         this.serviceGateway = serviceGateway;
         firstLoadSubject.onNext(true);
     }
 
+    /**
+     * Is first load in progress.
+     * @return {@link Observable<Boolean>} - true when loading, false otherwise.
+     */
     @NonNull
     public Observable<Boolean> isFirstLoadInProgress() {
         return firstLoadSubject;
     }
 
+    /**
+     * Get {@link List<MovieViewInfo>} that the back the {@link android.support.v7.widget.RecyclerView.Adapter}
+     * @return - list of {@link MovieViewInfo}
+     */
     @NonNull
     public List<MovieViewInfo> getMovieViewInfoList() {
         return movieViewInfoList;
     }
 
+    /**
+     * Load more information to the screen.
+     * @return - {@link Observable<List<MovieViewInfo>>}
+     */
     @NonNull
     public Observable<List<MovieViewInfo>> loadMoreInfo() {
         if (!isLoading) {
@@ -94,6 +110,11 @@ public class NowPlayingViewModel extends ViewModel {
         }
     }
 
+    /**
+     * Get the {@link List<MovieViewInfo>} that is currently loading.
+     * @return - {@link Observable<List<MovieViewInfo>>}when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true
+     * or {@link Observable#empty()}.
+     */
     @NonNull
     public Observable<List<MovieViewInfo>> getMovieViewInfo() {
         //
@@ -123,9 +144,9 @@ public class NowPlayingViewModel extends ViewModel {
                 //Delay for 3 seconds to show spinner on screen.
                 .delay(sleepSeconds, TimeUnit.SECONDS)
                 //translate external to internal business logic (Example if we wanted to save to prefs)
-                .flatMap(new NowPlayingViewModel.MovieListFetcher())
+                .flatMap(createNewMovieListFetcher())
                 //translate internal business logic to UI represented
-                .flatMap(new NowPlayingViewModel.TranslateForPresenterFunction())
+                .flatMap(createNewTranslateForPresenterFunction())
                 //During error, decrement page number on BGT
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -145,6 +166,10 @@ public class NowPlayingViewModel extends ViewModel {
                     @Override
                     public void accept(@io.reactivex.annotations.NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
                         movieViewInfoList.addAll(movieViewInfos);
+
+                        if (!movieViewInfos.isEmpty()) {
+                            firstLoadSubject.onNext(false);
+                        }
                     }
                 })
                 //Set loading to false when completed or error (aka -terminated)
@@ -152,7 +177,6 @@ public class NowPlayingViewModel extends ViewModel {
                     @Override
                     public void run() throws Exception {
                         isLoading = false;
-                        firstLoadSubject.onNext(false);
 
                         //clear cache map, value was loaded.
                         cacheMap.remove(pageNumber);
@@ -165,11 +189,21 @@ public class NowPlayingViewModel extends ViewModel {
         return observableCache;
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    NowPlayingViewModel.MovieListFetcher createNewMovieListFetcher() {
+        return new NowPlayingViewModel.MovieListFetcher();
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    NowPlayingViewModel.TranslateForPresenterFunction createNewTranslateForPresenterFunction() {
+        return new NowPlayingViewModel.TranslateForPresenterFunction();
+    }
+
     /**
      * Fetch movies list from {@link NowPlayingInfo}.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    static class MovieListFetcher implements Function<NowPlayingInfo, ObservableSource<List<MovieInfo>>> {
+    protected static class MovieListFetcher implements Function<NowPlayingInfo, ObservableSource<List<MovieInfo>>> {
 
         @Override
         public ObservableSource<List<MovieInfo>> apply(@io.reactivex.annotations.NonNull NowPlayingInfo nowPlayingInfo) throws Exception {
