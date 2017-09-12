@@ -98,7 +98,7 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Load more information to the screen.
-     * @return - {@link Observable<List<MovieViewInfo>>}
+     * @return - {@link Observable<List<MovieViewInfo>>} or {@link Observable#empty()} if previously loading.
      */
     @NonNull
     public Observable<List<MovieViewInfo>> loadMoreInfo() {
@@ -112,8 +112,8 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Get the {@link List<MovieViewInfo>} that is currently loading.
-     * @return - {@link Observable<List<MovieViewInfo>>}when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true
-     * or {@link Observable#empty()}.
+     * @return - {@link Observable<List<MovieViewInfo>>} when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true.
+     * {@link Observable#empty()} otherwise.
      */
     @NonNull
     public Observable<List<MovieViewInfo>> getMovieViewInfo() {
@@ -144,9 +144,9 @@ public class NowPlayingViewModel extends ViewModel {
                 //Delay for 3 seconds to show spinner on screen.
                 .delay(sleepSeconds, TimeUnit.SECONDS)
                 //translate external to internal business logic (Example if we wanted to save to prefs)
-                .flatMap(createNewMovieListFetcher())
+                .flatMap(new NowPlayingViewModel.MovieListFetcher())
                 //translate internal business logic to UI represented
-                .flatMap(createNewTranslateForPresenterFunction())
+                .flatMap(new NowPlayingViewModel.TranslateForPresenterFunction())
                 //During error, decrement page number on BGT
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -187,16 +187,6 @@ public class NowPlayingViewModel extends ViewModel {
         cacheMap.put(pageNumber, observableCache);
 
         return observableCache;
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    NowPlayingViewModel.MovieListFetcher createNewMovieListFetcher() {
-        return new NowPlayingViewModel.MovieListFetcher();
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    NowPlayingViewModel.TranslateForPresenterFunction createNewTranslateForPresenterFunction() {
-        return new NowPlayingViewModel.TranslateForPresenterFunction();
     }
 
     /**
