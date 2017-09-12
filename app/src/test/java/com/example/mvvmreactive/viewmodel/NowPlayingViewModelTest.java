@@ -131,23 +131,35 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<List<MovieViewInfo>> testObserver;
+        TestObserver<Boolean> firstLoadTestObserver;
+
         NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
 
         //
         //Act
         //
+        firstLoadTestObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
+
+        nowPlayingViewModel.loadMoreInfo().test();
         testObserver = nowPlayingViewModel.loadMoreInfo().test();
         testScheduler.triggerActions();
 
         //
         //Assert
         //
-        testObserver.assertNoErrors();
-        testObserver.assertEmpty();
         testObserver.assertComplete();
+        testObserver.assertNoErrors();
+        testObserver.assertNoValues();
+
+        firstLoadTestObserver.assertNoErrors();
+        firstLoadTestObserver.assertValueCount(1);
+
+        Boolean isFirstLoadInProgress = (Boolean) firstLoadTestObserver.getEvents().get(0).get(0);
+        assertThat(isFirstLoadInProgress).isTrue();
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void loadMoreInfo_hasValue() throws Exception {
         //
         //Arrange
@@ -205,4 +217,93 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         assertThat(isFirstLoadInProgress).isTrue();
     }
 
+    @Test
+    public void getMovieViewInfo_isEmpty() throws Exception {
+        //
+        //Arrange
+        //
+        TestObserver<List<MovieViewInfo>> testObserver;
+        TestObserver<Boolean> firstLoadTestObserver;
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+
+        //
+        //Act
+        //
+        firstLoadTestObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
+        nowPlayingViewModel.getMovieViewInfo().test();
+        testScheduler.triggerActions();
+        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
+
+        testObserver = nowPlayingViewModel.getMovieViewInfo().test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        firstLoadTestObserver.assertNoErrors();
+        firstLoadTestObserver.assertValueCount(2);
+        testObserver.assertNoErrors();
+        testObserver.assertEmpty();
+
+        Boolean isFirstLoadInProgress = (Boolean) firstLoadTestObserver.getEvents().get(0).get(1);
+        assertThat(isFirstLoadInProgress).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void getMovieViewInfo_usesCache() throws Exception {
+        //
+        //Arrange
+        //
+        TestObserver<List<MovieViewInfo>> testObserver1;
+        TestObserver<List<MovieViewInfo>> testObserver2;
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+
+        //
+        //Act
+        //
+        testObserver1 = nowPlayingViewModel.getMovieViewInfo().test();
+        testObserver2 = nowPlayingViewModel.getMovieViewInfo().test();
+
+        testScheduler.triggerActions();
+        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
+
+
+        //
+        //Assert
+        //
+        testObserver1.assertNoErrors();
+        testObserver1.assertComplete();
+        testObserver1.assertValueCount(1);
+
+        testObserver2.assertNoErrors();
+        testObserver2.assertComplete();
+        testObserver2.assertValueCount(1);
+
+        ArrayList<MovieViewInfo> arrayList = (ArrayList<MovieViewInfo>) testObserver1.getEvents().get(0).get(0);
+        MovieViewInfo movieViewInfo = arrayList.get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase("www.mypicture.com");
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase("title");
+
+        arrayList = (ArrayList<MovieViewInfo>) testObserver2.getEvents().get(0).get(0);
+        movieViewInfo = arrayList.get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase("www.mypicture.com");
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase("title");
+    }
+
+    @Test
+    public void translateForUiFunction() throws Exception {
+        //
+        //Arrange
+        //
+
+
+        //
+        //Act
+        //
+
+        //
+        //Assert
+        //
+    }
 }
