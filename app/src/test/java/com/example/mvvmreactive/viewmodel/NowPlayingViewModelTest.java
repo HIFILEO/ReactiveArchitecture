@@ -2,38 +2,28 @@ package com.example.mvvmreactive.viewmodel;
 
 import com.example.mvvmreactive.categories.UnitTest;
 import com.example.mvvmreactive.gateway.ServiceGateway;
-import com.example.mvvmreactive.gateway.ServiceGatewayImpl;
 import com.example.mvvmreactive.model.MovieInfo;
 import com.example.mvvmreactive.model.MovieInfoImpl;
 import com.example.mvvmreactive.model.MovieViewInfo;
 import com.example.mvvmreactive.model.NowPlayingInfo;
 import com.example.mvvmreactive.model.NowPlayingInfoImpl;
 import com.example.mvvmreactive.rx.RxJavaTest;
-import com.example.mvvmreactive.service.ServiceResponse;
-import com.example.mvvmreactive.util.TestResourceFileHelper;
-import com.google.gson.Gson;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.observers.TestObserver;
 
-import static com.ibm.icu.impl.Assert.fail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -136,6 +126,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Act
         //
+        nowPlayingViewModel.loadMoreInfo().test();
         testObserver = nowPlayingViewModel.loadMoreInfo().test();
         testScheduler.triggerActions();
 
@@ -143,7 +134,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Assert
         //
         testObserver.assertNoErrors();
-        testObserver.assertEmpty();
         testObserver.assertComplete();
     }
 

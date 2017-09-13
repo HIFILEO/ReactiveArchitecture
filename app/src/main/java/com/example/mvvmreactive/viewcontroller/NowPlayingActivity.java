@@ -52,7 +52,7 @@ import io.reactivex.functions.Consumer;
 
 
 /**
- * This is the only activity for the application that links into the MVP architecture.
+ * This is the only activity for the application.
  */
 public class NowPlayingActivity extends BaseActivity implements NowPlayingListAdapter.OnLoadMoreListener {
     private static final String LAST_SCROLL_POSITION = "LAST_SCROLL_POSITION";

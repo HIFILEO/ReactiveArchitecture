@@ -17,19 +17,20 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.mvvmreactive.presenter;
+package com.example.mvvmreactive.application;
 
-import android.os.Bundle;
+import android.app.Application;
+import android.content.Context;
+import android.support.test.runner.AndroidJUnitRunner;
 
 /**
- * P is for Presenter.
+ * Custom test runner so Espresso can utilize {@link TestMvvmExampleApplication} and inject
+ * {@link com.example.mvvmreactive.dagger.TestApplicationModule}
  */
-public interface NowPlayingPresenter {
-    void loadMoreInfo();
-
-    void onDestroy();
-
-    void onCreate(Bundle savedInstanceState);
-
-    void dataRestored();
+public class MvvmExampleTestRunner extends AndroidJUnitRunner {
+    @Override
+    public Application newApplication(ClassLoader cl, String className, Context context)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        return super.newApplication(cl, TestMvvmExampleApplication.class.getName(), context);
+    }
 }

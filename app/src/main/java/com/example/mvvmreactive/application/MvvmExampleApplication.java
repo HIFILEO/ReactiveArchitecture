@@ -27,8 +27,6 @@ import android.util.Log;
 
 import com.example.mvvmreactive.dagger.AppInjector;
 import com.example.mvvmreactive.dagger.ApplicationComponent;
-import com.example.mvvmreactive.dagger.ApplicationModule;
-import com.example.mvvmreactive.dagger.InjectionProcessor;
 
 import javax.inject.Inject;
 
@@ -39,7 +37,7 @@ import dagger.android.HasActivityInjector;
 import timber.log.Timber;
 
 /**
- * This is the MVP application class for setting up Dagger 2 and Timber.
+ * This is the application class for setting up Dagger 2 and Timber.
  */
 public class MvvmExampleApplication extends Application implements HasActivityInjector {
     private ApplicationComponent component;
@@ -47,22 +45,11 @@ public class MvvmExampleApplication extends Application implements HasActivityIn
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingActivityInjector;
 
-    @Inject
-    InjectionProcessor injectionProvider;
-
     @Override
     public void onCreate() {
         super.onCreate();
         setupComponent();
         setupTimber();
-    }
-
-    /**
-     * Get application module.
-     * @return - ApplicationModule
-     */
-    public ApplicationModule getApplicationModule() {
-        return new ApplicationModule();
     }
 
     /**

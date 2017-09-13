@@ -9,12 +9,12 @@ android {
     compileSdkVersion 26
     buildToolsVersion "26.0.0"
     defaultConfig {
-        applicationId "com.example.mvpexample"
+        applicationId "com.example.mvvmexample"
         minSdkVersion 23
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner 'com.example.mvpreactive.application.MvpExampleTestRunner'
+        testInstrumentationRunner 'com.example.mvvmreactive.application.MvvmExampleTestRunner'
     }
     buildTypes {
         release {

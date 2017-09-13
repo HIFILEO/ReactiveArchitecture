@@ -19,31 +19,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.application;
 
-import com.example.mvvmreactive.dagger.InjectionProcessor;
-//import com.example.mvvmreactive.dagger.DaggerTestApplicationComponent;
-//import com.example.mvvmreactive.dagger.TestApplicationComponent;
-//import com.example.mvvmreactive.dagger.TestApplicationModule;
+import com.example.mvvmreactive.dagger.TestAppInjector;
+import com.example.mvvmreactive.dagger.TestApplicationComponent;
+import com.example.mvvmreactive.service.ServiceApi;
+
+import javax.inject.Inject;
 
 /**
  * Test class for {@link MvvmExampleApplication}
  */
 public class TestMvvmExampleApplication extends MvvmExampleApplication {
-//    private TestApplicationComponent component;
-//
-//    @Override
-//    void setupComponent() {
-//        component = DaggerTestApplicationComponent.builder()
-//                .testApplicationModule(new TestApplicationModule(getApplicationModule()))
-//                .build();
-//        component.inject(this);
-//    }
-//
-//    public TestApplicationComponent getComponent() {
-//        return component;
-//    }
-//
-//    @Override
-//    public InjectionProcessor injectionProcessor() {
-//        return injectionProvider;
-//    }
+    @Inject
+    ServiceApi serviceApi;
+    private TestApplicationComponent component;
+
+    @Override
+    void setupComponent() {
+        component = TestAppInjector.init(this);
+    }
+
+    public TestApplicationComponent getComponent() {
+        return component;
+    }
+
 }
