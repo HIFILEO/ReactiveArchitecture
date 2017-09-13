@@ -146,7 +146,7 @@ public class NowPlayingViewModel extends ViewModel {
                 //translate external to internal business logic (Example if we wanted to save to prefs)
                 .flatMap(new NowPlayingViewModel.MovieListFetcher())
                 //translate internal business logic to UI represented
-                .flatMap(new NowPlayingViewModel.TranslateForPresenterFunction())
+                .flatMap(new TranslateForUiFunction())
                 //During error, decrement page number on BGT
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -208,7 +208,7 @@ public class NowPlayingViewModel extends ViewModel {
      * Translate the internal business logic to one that the UI understands.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    protected static class TranslateForPresenterFunction
+    protected static class TranslateForUiFunction
             implements Function<List<MovieInfo>, ObservableSource<List<MovieViewInfo>>> {
 
         @Override
