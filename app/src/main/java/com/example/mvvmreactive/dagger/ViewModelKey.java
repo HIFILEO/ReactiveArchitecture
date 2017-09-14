@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 Inspired from:
 https://github.com/googlesamples/android-architecture-components/tree/master/GithubBrowserSample
  */
+
 package com.example.mvvmreactive.dagger;
 
 import android.arch.lifecycle.ViewModel;
@@ -32,7 +33,7 @@ import java.lang.annotation.Target;
 import dagger.MapKey;
 
 /**
- * Sets an annotation so {@link ViewModel} are mapped to {@link dagger.android.AndroidInjection}
+ * Sets an annotation so {@link ViewModel} are mapped to {@link dagger.android.AndroidInjection}.
  */
 @Documented
 @Target({ElementType.METHOD})

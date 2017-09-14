@@ -6,6 +6,9 @@ import com.example.mvvmreactive.viewcontroller.NowPlayingActivity;
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
 
+/**
+ * Activity Components are setup here.
+ */
 @Module
 public abstract class ActivityComponentBuilder {
 

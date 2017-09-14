@@ -19,14 +19,14 @@
 
 package com.example.mvvmreactive.dagger;
 
-import com.example.mvvmreactive.application.MvvmExampleApplication;
-
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+
+import com.example.mvvmreactive.application.MvvmExampleApplication;
 
 import dagger.android.AndroidInjection;
 import dagger.android.support.AndroidSupportInjection;
@@ -36,7 +36,15 @@ import dagger.android.support.HasSupportFragmentInjector;
  * Helper class to automatically inject fragments if they implement {@link Injectable}.
  */
 public class AppInjector {
-    private AppInjector() {}
+    private AppInjector() {
+        //No-Op
+    }
+
+    /**
+     * Initialize injection for android components.
+     * @param mvvmExampleApplication - application
+     * @return create {@link ApplicationComponent}
+     */
     public static ApplicationComponent init(MvvmExampleApplication mvvmExampleApplication) {
 
         //Notice the app module piece is no longer required. Unless you're creating a custom
@@ -88,7 +96,7 @@ public class AppInjector {
     }
 
     /**
-     * Handle the injection on the activity and any fragment that implements {link @Injectable}
+     * Handle the injection on the activity and any fragment that implements {link @Injectable}.
      * @param activity - activity to inject.
      */
     private static void handleActivity(Activity activity) {
@@ -103,10 +111,10 @@ public class AppInjector {
                     .registerFragmentLifecycleCallbacks(
                             new FragmentManager.FragmentLifecycleCallbacks() {
                                 @Override
-                                public void onFragmentCreated(FragmentManager fm, Fragment f,
+                                public void onFragmentCreated(FragmentManager fragmentManager, Fragment fragment,
                                         Bundle savedInstanceState) {
-                                    if (f instanceof Injectable) {
-                                        AndroidSupportInjection.inject(f);
+                                    if (fragmentManager instanceof Injectable) {
+                                        AndroidSupportInjection.inject(fragment);
                                     }
                                 }
                             }, true);

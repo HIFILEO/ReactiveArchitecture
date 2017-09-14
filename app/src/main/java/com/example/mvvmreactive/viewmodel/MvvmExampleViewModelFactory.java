@@ -31,7 +31,9 @@ import javax.inject.Singleton;
  * Factory to handle the creation of {@link ViewModel}. This allows us to use dependency injection
  * to create our {@link ViewModel} which normally do not contain constructors.
  *
+ * <p>
  * Note - Factory works. A new instance of ViewModel is only created when bundle is null.
+ * </p>
  */
 @Singleton
 public class MvvmExampleViewModelFactory implements ViewModelProvider.Factory {

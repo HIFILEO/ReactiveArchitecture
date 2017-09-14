@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.mvvmreactive.dagger;
 
 import android.app.Application;
-import android.os.Handler;
 
 import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.gateway.ServiceGateway;

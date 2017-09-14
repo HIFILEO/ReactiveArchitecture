@@ -10,6 +10,9 @@ import dagger.Binds;
 import dagger.Module;
 import dagger.multibindings.IntoMap;
 
+/**
+ * Module for ViewModels used throughout the {@link android.app.Application}.
+ */
 @Module
 public abstract class ViewModelModule {
     @Binds

@@ -41,11 +41,14 @@ import dagger.android.AndroidInjectionModule;
         })
 public interface ApplicationComponent {
 
-    //
-    //Note - this is the custom builder for injecting the ApplicationModule with objects that it needs.
-    //This eliminates the need for a constructor in the module.
-    //
-    //Help from - https://proandroiddev.com/dagger-2-component-builder-1f2b91237856
+    /**
+     * This is the custom builder for injecting the ApplicationModule with objects that it needs.
+     * This eliminates the need for a constructor in the module.
+     *
+     * <p>
+     * Help from - https://proandroiddev.com/dagger-2-component-builder-1f2b91237856
+     * </p>
+     */
     @Component.Builder
     interface Builder {
 
@@ -57,5 +60,6 @@ public interface ApplicationComponent {
         ApplicationComponent build();
 
     }
+
     void inject(MvvmExampleApplication application);
 }

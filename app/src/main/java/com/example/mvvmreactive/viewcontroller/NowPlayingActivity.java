@@ -145,7 +145,7 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
 
     /**
      * Restore the state of the screen.
-     * @param savedInstanceState
+     * @param savedInstanceState -
      */
     public void restoreState(Bundle savedInstanceState) {
         Parcelable savedRecyclerLayoutState =
@@ -185,8 +185,8 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new Consumer<Boolean>() {
                             @Override
-                            public void accept(@NonNull Boolean aBoolean) throws Exception {
-                                showInProgress(aBoolean);
+                            public void accept(@NonNull Boolean status) throws Exception {
+                                showInProgress(status);
                             }
                         }, new Consumer<Throwable>() {
                             @Override
@@ -200,7 +200,7 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
 
     /**
      * Subscribe to {@link MovieViewInfo}.
-     * @param movieDataObservable
+     * @param movieDataObservable -
      */
     private void subscribeToMovieData(Observable<List<MovieViewInfo>> movieDataObservable) {
         compositeDisposable.add(movieDataObservable

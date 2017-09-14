@@ -80,7 +80,7 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Is first load in progress.
-     * @return {@link Observable<Boolean>} - true when loading, false otherwise.
+     * @return - {@link Observable} true when loading, false otherwise.
      */
     @NonNull
     public Observable<Boolean> isFirstLoadInProgress() {
@@ -88,7 +88,7 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     /**
-     * Get {@link List<MovieViewInfo>} that the back the {@link android.support.v7.widget.RecyclerView.Adapter}
+     * Get {@link List} that the back the {@link android.support.v7.widget.RecyclerView.Adapter}.
      * @return - list of {@link MovieViewInfo}
      */
     @NonNull
@@ -98,7 +98,7 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Load more information to the screen.
-     * @return - {@link Observable<List<MovieViewInfo>>} or {@link Observable#empty()} if previously loading.
+     * @return - {@link Observable} or {@link Observable#empty()} if previously loading.
      */
     @NonNull
     public Observable<List<MovieViewInfo>> loadMoreInfo() {
@@ -111,8 +111,8 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     /**
-     * Get the {@link List<MovieViewInfo>} that is currently loading.
-     * @return - {@link Observable<List<MovieViewInfo>>} when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true.
+     * Get the {@link List} that is currently loading.
+     * @return - {@link Observable} when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true.
      * {@link Observable#empty()} otherwise.
      */
     @NonNull
@@ -196,7 +196,8 @@ public class NowPlayingViewModel extends ViewModel {
     protected static class MovieListFetcher implements Function<NowPlayingInfo, ObservableSource<List<MovieInfo>>> {
 
         @Override
-        public ObservableSource<List<MovieInfo>> apply(@io.reactivex.annotations.NonNull NowPlayingInfo nowPlayingInfo) throws Exception {
+        public ObservableSource<List<MovieInfo>> apply(@io.reactivex.annotations.NonNull NowPlayingInfo nowPlayingInfo)
+                throws Exception {
             Timber.i("Thread name: %s for class %s",
                     Thread.currentThread().getName(),
                     "Interactor - " + getClass().getSimpleName());
@@ -212,7 +213,8 @@ public class NowPlayingViewModel extends ViewModel {
             implements Function<List<MovieInfo>, ObservableSource<List<MovieViewInfo>>> {
 
         @Override
-        public ObservableSource<List<MovieViewInfo>> apply(@io.reactivex.annotations.NonNull List<MovieInfo> movieInfoList) throws Exception {
+        public ObservableSource<List<MovieViewInfo>> apply(@io.reactivex.annotations.NonNull List<MovieInfo> movieInfoList)
+                throws Exception {
             /*
             Note - translate internal business logic to presenter logic
             */
