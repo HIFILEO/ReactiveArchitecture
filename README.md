@@ -33,9 +33,9 @@ Please review all documentation in **docs/**. The following summaries describe t
 | Name                                                                                          | Summary                                                     |
 | :--------------------------------------------------------------------------------------------:|:------------------------------------------------------------|
 | [AUTHORS.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/AUTHORS.md)                | History of past and present contributors                    |
-| [BUILDS.md](https://github.com/HIFILEO/MVVMReactive/blob/master/docs/BUILDS.md)                 | Description of official builds                              |
-| [DEPENDENCIES.md](https://github.com/HIFILEO/MVVMReactive/blob/master/docs/DEPENDENCIES.md)     | How to generate a list of all major third party dependencies|
-| [STYLE.md](https://github.com/HIFILEO/MVVMReactive/blob/master/docs/STYLE.md)                   | Description of Code Style and Static Analysis tools         |
+| [BUILDS.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/BUILDS.md)                  | Description of official builds                              |
+| [DEPENDENCIES.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/DEPENDENCIES.md)      | How to generate a list of all major third party dependencies|
+| [STYLE.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/STYLE.md)                    | Description of Code Style and Static Analysis tools         |
 
 ### Build Types and Flavors
 
