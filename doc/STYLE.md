@@ -12,7 +12,7 @@ The general code style for this project can be read in detail on the [wiki](http
 
 The project has [checkstyle](http://checkstyle.sourceforge.net/) configured to ensure the code conforms to formatting and style standards.
 The specific checkstyle rules and constraints for this project are found
-in [config/checkstyle/checkstyle.xml](https://github.com/HIFILEO/MVPExample/blob/master/config/checkstyle/checkstyle.xml) file that is in git for this project.
+in [config/checkstyle/checkstyle.xml](https://github.com/HIFILEO/MVVMReactive/blob/master/config/checkstyle/checkstyle.xml) file that is in git for this project.
 
 To run checkstyle against your project
 
