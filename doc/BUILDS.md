@@ -25,8 +25,3 @@ ProGuard is enabled.
 The build's environment flavor specifies which set of endpoints the app will use for various services. For this 
 example there are no flavors.
 
-#####
-1. NA
-
-**NA** is intended for ...
-

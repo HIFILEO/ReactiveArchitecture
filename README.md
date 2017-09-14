@@ -37,17 +37,17 @@ Please review all documentation in **docs/**. The following summaries describe t
 | [DEPENDENCIES.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/DEPENDENCIES.md)     | How to generate a list of all major third party dependencies|
 | [STYLE.md](https://github.com/HIFILEO/MVPExample/blob/master/docs/STYLE.md)                   | Description of Code Style and Static Analysis tools         |
 
-### Build Flavors
+### Build Types and Flavors
 
-Only the original build flavors release / debug. Use Debug since this
-not an app for the google play store.
+Only the original build types are release / debug. Use Debug since this
+not an app for the google play store. There are no flavors.
 
 ### Tests
 
 This project supports the following type of tests:
 
 1. Java Unit Test
-2. Robolectric(There are none - and that was intentional to show how you can test without this when you use MVP)
+2. Robolectric(There are none - and that was intentional to show how you can test without this when you use MVVM)
 3. Contract Test (Testing API end point / Restful API contracts)
 4. Espresso UI Test (Written from engineering perspective)
 
@@ -69,5 +69,11 @@ There are style standards in this app as examples of how to maintain clean code.
 
 #### Checkstyle
 
-Ro run all checkstyle:
+To run all checkstyle:
 ./gradlew checkstyle
+
+#### Lint
+
+To run all lint:
+./gradlew lintDebug
+
