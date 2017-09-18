@@ -55,13 +55,6 @@ import timber.log.Timber;
  */
 public class NowPlayingViewModel extends ViewModel {
     private static final int SLEEP_TIME = 3;
-
-    @NonNull
-    private final ObservableField<String> toolbarTitle = new ObservableField<>();
-
-    @NonNull
-    private final ObservableBoolean firstLoad = new ObservableBoolean(true);
-
     private int sleepSeconds = SLEEP_TIME;
     private boolean isLoading;
     private int pageNumber = 0;
@@ -77,6 +70,12 @@ public class NowPlayingViewModel extends ViewModel {
 
     @NonNull
     private Map<Integer, Observable<List<MovieViewInfo>>> cacheMap = new HashMap<>();
+
+    @NonNull
+    private final ObservableField<String> toolbarTitle = new ObservableField<>();
+
+    @NonNull
+    private final ObservableBoolean firstLoad = new ObservableBoolean(true);
 
     /**
      * Constructor. Members are injected.
