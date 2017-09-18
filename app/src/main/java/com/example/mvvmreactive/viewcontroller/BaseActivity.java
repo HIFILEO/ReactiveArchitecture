@@ -24,8 +24,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.example.mvvmreactive.dagger.Injectable;
 
-import butterknife.ButterKnife;
-
 /**
  * Base class for all {@link AppCompatActivity}.
  */
@@ -38,9 +36,4 @@ public abstract class BaseActivity extends AppCompatActivity implements Injectab
         super.onCreate(savedInstanceState);
     }
 
-    @Override
-    public void setContentView(int layoutResId) {
-        super.setContentView(layoutResId);
-        ButterKnife.bind(this);
-    }
 }

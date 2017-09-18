@@ -1,5 +1,7 @@
 package com.example.mvvmreactive.viewmodel;
 
+import android.app.Application;
+
 import com.example.mvvmreactive.categories.UnitTest;
 import com.example.mvvmreactive.gateway.ServiceGateway;
 import com.example.mvvmreactive.model.MovieInfo;
@@ -32,6 +34,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
     @Mock
     ServiceGateway mockServiceGateway;
 
+    @Mock
+    Application mockApplication;
+
     @Before
     public void setUp() {
         super.setUp();
@@ -52,23 +57,16 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Arrange
         //
-        TestObserver<Boolean> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
         //
-        testObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
-        testScheduler.triggerActions();
 
         //
         //Assert
         //
-        testObserver.assertNoErrors();
-        testObserver.assertValueCount(1);
-
-        Boolean isFirstLoadInProgress = (Boolean) testObserver.getEvents().get(0).get(0);
-        assertThat(isFirstLoadInProgress).isTrue();
+        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
     }
 
     @Test
@@ -76,13 +74,11 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Arrange
         //
-        TestObserver<Boolean> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
         //
-        testObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
         nowPlayingViewModel.getMovieViewInfo().test();
         testScheduler.triggerActions();
         testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
@@ -90,11 +86,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
-        testObserver.assertNoErrors();
-        testObserver.assertValueCount(2);
-
-        Boolean isFirstLoadInProgress = (Boolean) testObserver.getEvents().get(0).get(1);
-        assertThat(isFirstLoadInProgress).isFalse();
+        assertThat(nowPlayingViewModel.firstLoad.get()).isFalse();
     }
 
     @Test
@@ -102,7 +94,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Arrange
         //
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
@@ -121,15 +113,12 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<List<MovieViewInfo>> testObserver;
-        TestObserver<Boolean> firstLoadTestObserver;
 
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
         //
-        firstLoadTestObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
-
         nowPlayingViewModel.loadMoreInfo().test();
         testObserver = nowPlayingViewModel.loadMoreInfo().test();
         testScheduler.triggerActions();
@@ -141,11 +130,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         testObserver.assertNoErrors();
         testObserver.assertNoValues();
 
-        firstLoadTestObserver.assertNoErrors();
-        firstLoadTestObserver.assertValueCount(1);
-
-        Boolean isFirstLoadInProgress = (Boolean) firstLoadTestObserver.getEvents().get(0).get(0);
-        assertThat(isFirstLoadInProgress).isTrue();
+        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
     }
 
     @Test
@@ -155,7 +140,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<List<MovieViewInfo>> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
@@ -185,26 +170,21 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<List<MovieViewInfo>> testObserver;
-        TestObserver<Boolean> firstLoadTestObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
         //
-        firstLoadTestObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
         testObserver = nowPlayingViewModel.getMovieViewInfo().test();
         testScheduler.triggerActions();
 
         //
         //Assert
         //
-        firstLoadTestObserver.assertNoErrors();
-        firstLoadTestObserver.assertValueCount(1);
         testObserver.assertNoErrors();
         testObserver.assertNotComplete();
 
-        Boolean isFirstLoadInProgress = (Boolean) firstLoadTestObserver.getEvents().get(0).get(0);
-        assertThat(isFirstLoadInProgress).isTrue();
+        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
     }
 
     @Test
@@ -213,13 +193,11 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<List<MovieViewInfo>> testObserver;
-        TestObserver<Boolean> firstLoadTestObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act
         //
-        firstLoadTestObserver = nowPlayingViewModel.isFirstLoadInProgress().test();
         nowPlayingViewModel.getMovieViewInfo().test();
         testScheduler.triggerActions();
         testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
@@ -230,13 +208,10 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
-        firstLoadTestObserver.assertNoErrors();
-        firstLoadTestObserver.assertValueCount(2);
         testObserver.assertNoErrors();
         testObserver.assertEmpty();
 
-        Boolean isFirstLoadInProgress = (Boolean) firstLoadTestObserver.getEvents().get(0).get(1);
-        assertThat(isFirstLoadInProgress).isFalse();
+        assertThat(nowPlayingViewModel.firstLoad.get()).isFalse();
     }
 
     @Test
@@ -247,7 +222,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<List<MovieViewInfo>> testObserver1;
         TestObserver<List<MovieViewInfo>> testObserver2;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockServiceGateway);
+        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
 
         //
         //Act

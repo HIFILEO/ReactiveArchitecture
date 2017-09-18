@@ -22,11 +22,8 @@ package com.example.mvvmreactive.adapter;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import butterknife.ButterKnife;
-
 /**
- * Base class for {@link android.support.v7.widget.RecyclerView.ViewHolder} so we automatically
- * use butterknife.
+ * Base class for {@link android.support.v7.widget.RecyclerView.ViewHolder}.
  */
 public abstract class BaseViewHolder extends RecyclerView.ViewHolder {
 
@@ -36,7 +33,5 @@ public abstract class BaseViewHolder extends RecyclerView.ViewHolder {
      */
     public BaseViewHolder(View itemView) {
         super(itemView);
-        ButterKnife.bind(this, itemView);
     }
-
 }

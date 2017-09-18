@@ -20,19 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.mvvmreactive.adapter;
 
 import android.view.View;
-import android.widget.ProgressBar;
-
-
-import com.example.mvvmreactive.R;
-
-import butterknife.BindView;
 
 /**
  * View holder for Progress Item.
  */
 public class ProgressViewHolder extends BaseViewHolder {
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
 
     public ProgressViewHolder(View view) {
         super(view);

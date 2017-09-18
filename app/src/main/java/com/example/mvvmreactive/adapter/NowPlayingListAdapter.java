@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.adapter;
 
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.support.annotation.VisibleForTesting;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -72,14 +74,14 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
 
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        BaseViewHolder baseViewHolder;
+        BaseViewHolder baseViewHolder = null;
+        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
 
         if (viewType == VIEW_ITEM) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_item, parent, false);
-            baseViewHolder = new MovieViewHolder(view);
+            ViewDataBinding binding = DataBindingUtil.inflate(layoutInflater, R.layout.movie_item, parent, false);
+            baseViewHolder = new MovieViewHolder(binding);
         } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.progress_item, parent, false);
-
+            View view = layoutInflater.inflate(R.layout.progress_item, parent, false);
             baseViewHolder = new ProgressViewHolder(view);
         }
 

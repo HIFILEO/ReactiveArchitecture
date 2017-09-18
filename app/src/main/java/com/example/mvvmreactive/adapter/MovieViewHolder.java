@@ -19,33 +19,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.adapter;
 
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.databinding.ViewDataBinding;
 
-import com.example.mvvmreactive.R;
+import com.example.mvvmreactive.databinding.MovieItemBinding;
 import com.example.mvvmreactive.model.MovieViewInfo;
 import com.squareup.picasso.Picasso;
-
-import butterknife.BindView;
 
 /**
  * {@link MovieViewInfo} holder.
  */
 public class MovieViewHolder extends BaseViewHolder {
-    @BindView(R.id.nameTextView)
-    TextView nameTextView;
-    @BindView(R.id.moviePosterImageView)
-    ImageView moviePosterImageView;
-    @BindView(R.id.releaseDateTextView)
-    TextView releaseDateTextView;
-    @BindView(R.id.ratingTextView)
-    TextView ratingTextView;
-    @BindView(R.id.highRatingImageView)
-    ImageView highRatingImageView;
+    private final MovieItemBinding movieItemBinding;
 
-    public MovieViewHolder(View itemView) {
-        super(itemView);
+    /**
+     * Constructor.
+     * @param viewDataBinding - View to bind data to in {@link MovieViewHolder#bind(MovieViewInfo)}.
+     */
+    public  MovieViewHolder(ViewDataBinding viewDataBinding) {
+        super(viewDataBinding.getRoot());
+        this.movieItemBinding = (MovieItemBinding) viewDataBinding;
     }
 
     /**
@@ -53,20 +45,11 @@ public class MovieViewHolder extends BaseViewHolder {
      * @param movieViewInfo - data to bind with.
      */
     public void bind(MovieViewInfo movieViewInfo) {
-        nameTextView.setText(movieViewInfo.getTitle());
-        releaseDateTextView.setText(movieViewInfo.getReleaseDate());
-        ratingTextView.setText(movieViewInfo.getRating());
-
-        //Rating
-        if (movieViewInfo.isHighRating()) {
-            highRatingImageView.setVisibility(View.VISIBLE);
-        } else {
-            highRatingImageView.setVisibility(View.GONE);
-        }
+        movieItemBinding.setMovieViewInfo(movieViewInfo);
 
         //Picasso
-        Picasso.with(moviePosterImageView.getContext())
+        Picasso.with(movieItemBinding.moviePosterImageView.getContext())
                 .load(movieViewInfo.getPictureUrl())
-                .into(moviePosterImageView);
+                .into(movieItemBinding.moviePosterImageView);
     }
 }

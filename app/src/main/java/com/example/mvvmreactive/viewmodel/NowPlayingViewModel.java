@@ -19,10 +19,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.mvvmreactive.viewmodel;
 
+import android.app.Application;
 import android.arch.lifecycle.ViewModel;
+import android.databinding.ObservableBoolean;
+import android.databinding.ObservableField;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.gateway.ServiceGateway;
 import com.example.mvvmreactive.model.MovieInfo;
 import com.example.mvvmreactive.model.MovieViewInfo;
@@ -44,7 +48,6 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
 import timber.log.Timber;
 
 /**
@@ -52,9 +55,19 @@ import timber.log.Timber;
  */
 public class NowPlayingViewModel extends ViewModel {
     private static final int SLEEP_TIME = 3;
+
+    @NonNull
+    public final ObservableField<String> toolbarTitle = new ObservableField<>();
+
+    @NonNull
+    public final ObservableBoolean firstLoad = new ObservableBoolean(true);
+
     private int sleepSeconds = SLEEP_TIME;
     private boolean isLoading;
     private int pageNumber = 0;
+
+    @NonNull
+    private Application application;
 
     @NonNull
     private ServiceGateway serviceGateway;
@@ -65,26 +78,15 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private Map<Integer, Observable<List<MovieViewInfo>>> cacheMap = new HashMap<>();
 
-    @NonNull
-    private final BehaviorSubject<Boolean> firstLoadSubject = BehaviorSubject.create();
-
     /**
      * Constructor. Members are injected.
      * @param serviceGateway -
      */
     @Inject
-    public NowPlayingViewModel(@NonNull ServiceGateway serviceGateway) {
+    public NowPlayingViewModel(@NonNull Application application, @NonNull ServiceGateway serviceGateway) {
         this.serviceGateway = serviceGateway;
-        firstLoadSubject.onNext(true);
-    }
-
-    /**
-     * Is first load in progress.
-     * @return - {@link Observable} true when loading, false otherwise.
-     */
-    @NonNull
-    public Observable<Boolean> isFirstLoadInProgress() {
-        return firstLoadSubject;
+        this.application = application;
+        toolbarTitle.set(application.getString(R.string.now_playing));
     }
 
     /**
@@ -112,7 +114,7 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Get the {@link List} that is currently loading.
-     * @return - {@link Observable} when {@link NowPlayingViewModel#isFirstLoadInProgress()} is true.
+     * @return - {@link Observable} when {@link NowPlayingViewModel#firstLoad} is true.
      * {@link Observable#empty()} otherwise.
      */
     @NonNull
@@ -168,7 +170,7 @@ public class NowPlayingViewModel extends ViewModel {
                         movieViewInfoList.addAll(movieViewInfos);
 
                         if (!movieViewInfos.isEmpty()) {
-                            firstLoadSubject.onNext(false);
+                            firstLoad.set(false);
                         }
                     }
                 })

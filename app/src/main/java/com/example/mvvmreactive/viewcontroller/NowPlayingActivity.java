@@ -21,17 +21,16 @@ package com.example.mvvmreactive.viewcontroller;
 
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.adapter.NowPlayingListAdapter;
+import com.example.mvvmreactive.databinding.ActivityNowPlayingBinding;
 import com.example.mvvmreactive.model.MovieViewInfo;
 
 
@@ -43,7 +42,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
@@ -60,30 +58,27 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
     private NowPlayingListAdapter nowPlayingListAdapter;
     private NowPlayingViewModel nowPlayingViewModel;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
+    private ActivityNowPlayingBinding nowPlayingBinding;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
-
-    //Bind Views
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
-    @BindView(R.id.recyclerView)
-    RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_now_playing);
 
-        // Sets the Toolbar to act as the ActionBar for this Activity window.
-        // Make sure the toolbar exists in the activity and is not null
-        toolbar.setTitle(getString(R.string.now_playing));
-        setSupportActionBar(toolbar);
-
         //Retrieve ViewModel
         nowPlayingViewModel = ViewModelProviders.of(this, viewModelFactory).get(NowPlayingViewModel.class);
+
+        //Create Binding
+        nowPlayingBinding = DataBindingUtil.setContentView(this, R.layout.activity_now_playing);
+        nowPlayingBinding.setViewModel(nowPlayingViewModel);
+
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        //toolbar.setTitle(getString(R.string.now_playing));
+        setSupportActionBar(nowPlayingBinding.toolbar);
 
         //Create Adapter
         createAdapter(savedInstanceState);
@@ -103,7 +98,7 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(LAST_SCROLL_POSITION, recyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putParcelable(LAST_SCROLL_POSITION, nowPlayingBinding.recyclerView.getLayoutManager().onSaveInstanceState());
         outState.putBoolean(LOADING_DATA, nowPlayingListAdapter.isLoadingMoreShowing());
     }
 
@@ -113,18 +108,9 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
 
         //un-subscribe
         compositeDisposable.clear();
-    }
 
-    /**
-     * Show in progress.
-     * @param show - true to show, false otherwise.
-     */
-    private void showInProgress(boolean show) {
-        if (show) {
-            progressBar.setVisibility(View.VISIBLE);
-        } else {
-            progressBar.setVisibility(View.GONE);
-        }
+        //un-bind
+        nowPlayingBinding.unbind();
     }
 
     private void showError() {
@@ -150,15 +136,15 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
     public void restoreState(Bundle savedInstanceState) {
         Parcelable savedRecyclerLayoutState =
                 savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
-        recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+        nowPlayingBinding.recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
     }
 
     /**
      * Create the adapter for {@link RecyclerView}.
      */
     private void createAdapter(Bundle savedInstanceState) {
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new DividerItemDecoration(
+        nowPlayingBinding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        nowPlayingBinding.recyclerView.addItemDecoration(new DividerItemDecoration(
                 this,
                 DividerItemDecoration.VERTICAL_LIST,
                 getResources().getColor(android.R.color.black, null)));
@@ -166,9 +152,9 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
                 //shallow-copy
                 new ArrayList<>(nowPlayingViewModel.getMovieViewInfoList()),
                 this,
-                recyclerView,
+                nowPlayingBinding.recyclerView,
                 savedInstanceState != null && savedInstanceState.getBoolean(LOADING_DATA));
-        recyclerView.setAdapter(nowPlayingListAdapter);
+        nowPlayingBinding.recyclerView.setAdapter(nowPlayingListAdapter);
     }
 
     @Override
@@ -180,21 +166,6 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
      * Bind to all data in {@link NowPlayingViewModel}.
      */
     private void bind() {
-        compositeDisposable.add(
-                nowPlayingViewModel.isFirstLoadInProgress()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Consumer<Boolean>() {
-                            @Override
-                            public void accept(@NonNull Boolean status) throws Exception {
-                                showInProgress(status);
-                            }
-                        }, new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) throws Exception {
-                                showError();
-                            }
-                        }));
-
         subscribeToMovieData(nowPlayingViewModel.getMovieViewInfo());
     }
 
