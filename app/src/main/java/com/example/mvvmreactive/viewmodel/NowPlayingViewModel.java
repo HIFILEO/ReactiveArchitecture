@@ -57,10 +57,10 @@ public class NowPlayingViewModel extends ViewModel {
     private static final int SLEEP_TIME = 3;
 
     @NonNull
-    public final ObservableField<String> toolbarTitle = new ObservableField<>();
+    private final ObservableField<String> toolbarTitle = new ObservableField<>();
 
     @NonNull
-    public final ObservableBoolean firstLoad = new ObservableBoolean(true);
+    private final ObservableBoolean firstLoad = new ObservableBoolean(true);
 
     private int sleepSeconds = SLEEP_TIME;
     private boolean isLoading;
@@ -80,6 +80,7 @@ public class NowPlayingViewModel extends ViewModel {
 
     /**
      * Constructor. Members are injected.
+     * @param application -
      * @param serviceGateway -
      */
     @Inject
@@ -189,6 +190,16 @@ public class NowPlayingViewModel extends ViewModel {
         cacheMap.put(pageNumber, observableCache);
 
         return observableCache;
+    }
+
+    @NonNull
+    public ObservableField<String> getToolbarTitle() {
+        return toolbarTitle;
+    }
+
+    @NonNull
+    public ObservableBoolean getFirstLoad() {
+        return firstLoad;
     }
 
     /**

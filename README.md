@@ -77,3 +77,8 @@ To run all checkstyle:
 To run all lint:
 ./gradlew lintDebug
 
+#### Run All
+
+The following command works for API emulator version 25.
+./gradlew checkstyle lintDebug jacocoTestReport contractTest -Pcontract=true connectedDebugAndroidTest
+

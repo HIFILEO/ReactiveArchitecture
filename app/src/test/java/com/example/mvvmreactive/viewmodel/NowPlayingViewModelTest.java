@@ -66,7 +66,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
-        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
+        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
     }
 
     @Test
@@ -86,7 +86,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
-        assertThat(nowPlayingViewModel.firstLoad.get()).isFalse();
+        assertThat(nowPlayingViewModel.getFirstLoad().get()).isFalse();
     }
 
     @Test
@@ -130,7 +130,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         testObserver.assertNoErrors();
         testObserver.assertNoValues();
 
-        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
+        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
     }
 
     @Test
@@ -184,7 +184,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         testObserver.assertNoErrors();
         testObserver.assertNotComplete();
 
-        assertThat(nowPlayingViewModel.firstLoad.get()).isTrue();
+        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
     }
 
     @Test
@@ -211,7 +211,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         testObserver.assertNoErrors();
         testObserver.assertEmpty();
 
-        assertThat(nowPlayingViewModel.firstLoad.get()).isFalse();
+        assertThat(nowPlayingViewModel.getFirstLoad().get()).isFalse();
     }
 
     @Test
