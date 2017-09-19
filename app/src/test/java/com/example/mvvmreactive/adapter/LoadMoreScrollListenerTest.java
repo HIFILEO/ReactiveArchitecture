@@ -9,12 +9,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Category(UnitTest.class)
-public class NowPlayingListAdapterTest {
+public class LoadMoreScrollListenerTest {
 
     @Test
     public void testLoadMoreScrollListener() {
@@ -22,17 +22,12 @@ public class NowPlayingListAdapterTest {
         //Arrange
         //
         LinearLayoutManager mockLinearLayoutManager = Mockito.mock(LinearLayoutManager.class);
-        NowPlayingListAdapter.OnLoadMoreListener mockOnLoadMoreListener =
-                Mockito.mock(NowPlayingListAdapter.OnLoadMoreListener.class);
-        NowPlayingListAdapter mockNowPlayingListAdapter = Mockito.mock(NowPlayingListAdapter.class);
+        LoadMoreScrollListener.OnLoadMoreListener mockOnLoadMoreListener =
+                Mockito.mock(LoadMoreScrollListener.OnLoadMoreListener.class);
         RecyclerView mockRecyclerView = Mockito.mock(RecyclerView.class);
 
-        NowPlayingListAdapter.LoadMoreScrollListener loadMoreScrollListener =
-                new NowPlayingListAdapter.LoadMoreScrollListener(
-                        mockLinearLayoutManager,
-                        mockOnLoadMoreListener,
-                        mockNowPlayingListAdapter
-                );
+        LoadMoreScrollListener loadMoreScrollListener =
+                new LoadMoreScrollListener(mockLinearLayoutManager, mockOnLoadMoreListener);
 
         when(mockLinearLayoutManager.getItemCount()).thenReturn(50);
         when(mockLinearLayoutManager.findLastVisibleItemPosition()).thenReturn(50);
@@ -45,9 +40,6 @@ public class NowPlayingListAdapterTest {
         //
         //Assert
         //
-        verify(mockNowPlayingListAdapter).add(null);
         verify(mockOnLoadMoreListener).onLoadMore();
-
-        assertThat(loadMoreScrollListener.isLoading()).isTrue();
     }
 }

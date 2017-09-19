@@ -29,7 +29,7 @@ public abstract class BaseViewHolder extends RecyclerView.ViewHolder {
 
     /**
      * Constructor.
-     * @param itemView - View holding items to bind on butterknife.
+     * @param itemView -
      */
     public BaseViewHolder(View itemView) {
         super(itemView);

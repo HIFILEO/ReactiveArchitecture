@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -48,6 +49,7 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.BehaviorSubject;
 import timber.log.Timber;
 
 /**
@@ -77,6 +79,9 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private final ObservableBoolean firstLoad = new ObservableBoolean(true);
 
+    @NonNull
+    private final BehaviorSubject<Boolean> loadMoreEnabledBehaviorSubject = BehaviorSubject.create();
+
     /**
      * Constructor. Members are injected.
      * @param application -
@@ -87,6 +92,7 @@ public class NowPlayingViewModel extends ViewModel {
         this.serviceGateway = serviceGateway;
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
+        loadMoreEnabledBehaviorSubject.onNext(true);
     }
 
     /**
@@ -141,8 +147,15 @@ public class NowPlayingViewModel extends ViewModel {
         Although using subjects is an easy solution, a subject cannot handle errors. So to show
         a different type of setup, a cache is being used.
          */
-        Observable<List<MovieViewInfo>> observableCache =  serviceGateway
-                .getNowPlaying(++pageNumber)
+        Observable<List<MovieViewInfo>> observableCache = updateUiWhenLoadingMovies()
+                //subscribe up - do on main thread
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Boolean, Observable<NowPlayingInfo>>() {
+                    @Override
+                    public Observable<NowPlayingInfo> apply(@io.reactivex.annotations.NonNull Boolean status) throws Exception {
+                        return serviceGateway.getNowPlaying(++pageNumber);
+                    }
+                })
                 //Delay for 3 seconds to show spinner on screen.
                 .delay(sleepSeconds, TimeUnit.SECONDS)
                 //translate external to internal business logic (Example if we wanted to save to prefs)
@@ -167,10 +180,17 @@ public class NowPlayingViewModel extends ViewModel {
                 .doOnNext(new Consumer<List<MovieViewInfo>>() {
                     @Override
                     public void accept(@io.reactivex.annotations.NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
+                        if (!firstLoad.get()) {
+                            movieViewInfoList.remove(movieViewInfoList.size() - 1);
+                        }
                         movieViewInfoList.addAll(movieViewInfos);
 
                         if (!movieViewInfos.isEmpty()) {
                             firstLoad.set(false);
+                        }
+
+                        if (!movieViewInfoList.isEmpty()) {
+                            loadMoreEnabledBehaviorSubject.onNext(true);
                         }
                     }
                 })
@@ -199,6 +219,26 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     public ObservableBoolean getFirstLoad() {
         return firstLoad;
+    }
+
+    @NonNull
+    public BehaviorSubject<Boolean> getLoadMoreEnabledBehaviorSubject() {
+            return loadMoreEnabledBehaviorSubject;
+    }
+
+    private Observable<Boolean> updateUiWhenLoadingMovies() {
+        return Observable.fromCallable(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                loadMoreEnabledBehaviorSubject.onNext(false);
+
+                if (!firstLoad.get()) {
+                    movieViewInfoList.add(null);
+                }
+
+                return true;
+            }
+        });
     }
 
     /**

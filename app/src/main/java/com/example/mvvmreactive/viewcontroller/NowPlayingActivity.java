@@ -29,6 +29,7 @@ import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
 
 import com.example.mvvmreactive.R;
+import com.example.mvvmreactive.adapter.LoadMoreScrollListener;
 import com.example.mvvmreactive.adapter.NowPlayingListAdapter;
 import com.example.mvvmreactive.databinding.ActivityNowPlayingBinding;
 import com.example.mvvmreactive.model.MovieViewInfo;
@@ -39,26 +40,30 @@ import com.example.mvvmreactive.viewmodel.NowPlayingViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import timber.log.Timber;
 
 
 /**
  * This is the only activity for the application.
  */
-public class NowPlayingActivity extends BaseActivity implements NowPlayingListAdapter.OnLoadMoreListener {
+public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollListener.OnLoadMoreListener {
     private static final String LAST_SCROLL_POSITION = "LAST_SCROLL_POSITION";
-    private static final String LOADING_DATA = "LOADING_DATA";
     private NowPlayingListAdapter nowPlayingListAdapter;
     private NowPlayingViewModel nowPlayingViewModel;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private ActivityNowPlayingBinding nowPlayingBinding;
+    private LoadMoreScrollListener loadMoreScrollListener;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -68,16 +73,15 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_now_playing);
 
-        //Retrieve ViewModel
+        //Create / Retrieve ViewModel
         nowPlayingViewModel = ViewModelProviders.of(this, viewModelFactory).get(NowPlayingViewModel.class);
 
-        //Create Binding
+        //Create & Set Binding
         nowPlayingBinding = DataBindingUtil.setContentView(this, R.layout.activity_now_playing);
         nowPlayingBinding.setViewModel(nowPlayingViewModel);
 
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
-        //toolbar.setTitle(getString(R.string.now_playing));
         setSupportActionBar(nowPlayingBinding.toolbar);
 
         //Create Adapter
@@ -99,7 +103,6 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(LAST_SCROLL_POSITION, nowPlayingBinding.recyclerView.getLayoutManager().onSaveInstanceState());
-        outState.putBoolean(LOADING_DATA, nowPlayingListAdapter.isLoadingMoreShowing());
     }
 
     @Override
@@ -108,6 +111,11 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
 
         //un-subscribe
         compositeDisposable.clear();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
 
         //un-bind
         nowPlayingBinding.unbind();
@@ -115,18 +123,6 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
 
     private void showError() {
         Toast.makeText(this, R.string.error_msg, Toast.LENGTH_LONG).show();
-    }
-
-    /**
-     * Add list to adapter.
-     * @param movieViewInfoList - list to add.
-     */
-    public void addToAdapter(List<MovieViewInfo> movieViewInfoList) {
-        if (!movieViewInfoList.isEmpty()) {
-            nowPlayingListAdapter.addList(movieViewInfoList);
-        } else {
-            nowPlayingListAdapter.disableLoadMore();
-        }
     }
 
     /**
@@ -143,23 +139,46 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
      * Create the adapter for {@link RecyclerView}.
      */
     private void createAdapter(Bundle savedInstanceState) {
-        nowPlayingBinding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+
+        nowPlayingBinding.recyclerView.setLayoutManager(linearLayoutManager);
         nowPlayingBinding.recyclerView.addItemDecoration(new DividerItemDecoration(
                 this,
                 DividerItemDecoration.VERTICAL_LIST,
                 getResources().getColor(android.R.color.black, null)));
         nowPlayingListAdapter = new NowPlayingListAdapter(
                 //shallow-copy
-                new ArrayList<>(nowPlayingViewModel.getMovieViewInfoList()),
-                this,
-                nowPlayingBinding.recyclerView,
-                savedInstanceState != null && savedInstanceState.getBoolean(LOADING_DATA));
+                new ArrayList<>(nowPlayingViewModel.getMovieViewInfoList()));
         nowPlayingBinding.recyclerView.setAdapter(nowPlayingListAdapter);
+
+        loadMoreScrollListener = new LoadMoreScrollListener(
+                (LinearLayoutManager) nowPlayingBinding.recyclerView.getLayoutManager(),
+                this);
     }
 
     @Override
     public void onLoadMore() {
-        subscribeToMovieData(nowPlayingViewModel.loadMoreInfo());
+        Observable<Boolean> updateUiObservable = Observable.fromCallable(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                Timber.i("Thread name: %s for in %s",
+                        Thread.currentThread().getName(),
+                        "onLoadMore()");
+                nowPlayingBinding.recyclerView.removeOnScrollListener(loadMoreScrollListener);
+                if (!nowPlayingViewModel.getFirstLoad().get()) {
+                    nowPlayingListAdapter.add(null);
+                }
+                return true;
+            }
+        });
+
+        subscribeToMovieData(updateUiObservable
+                .flatMap(new Function<Boolean, ObservableSource<List<MovieViewInfo>>>() {
+                    @Override
+                    public ObservableSource<List<MovieViewInfo>> apply(@NonNull Boolean result) throws Exception {
+                        return nowPlayingViewModel.loadMoreInfo();
+                    }
+                }));
     }
 
     /**
@@ -167,6 +186,23 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
      */
     private void bind() {
         subscribeToMovieData(nowPlayingViewModel.getMovieViewInfo());
+
+        compositeDisposable.add(nowPlayingViewModel.getLoadMoreEnabledBehaviorSubject()
+                .subscribe(new Consumer<Boolean>() {
+                    @Override
+                    public void accept(@NonNull Boolean enabled) throws Exception {
+                        if (enabled) {
+                            nowPlayingBinding.recyclerView.addOnScrollListener(loadMoreScrollListener);
+                        } else {
+                            nowPlayingBinding.recyclerView.removeOnScrollListener(loadMoreScrollListener);
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        //No-OP
+                    }
+                }));
     }
 
     /**
@@ -180,11 +216,18 @@ public class NowPlayingActivity extends BaseActivity implements NowPlayingListAd
                 .subscribe(new Consumer<List<MovieViewInfo>>() {
                     @Override
                     public void accept(@NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
-                        addToAdapter(movieViewInfos);
+                        if (nowPlayingListAdapter.getItemCount() > 0) {
+                            nowPlayingListAdapter.remove(nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                        }
+                        nowPlayingListAdapter.addList(movieViewInfos);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
+                        if (nowPlayingListAdapter.getItemCount() > 0) {
+                            nowPlayingListAdapter.remove(nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                        }
+
                         showError();
 
                         //try again

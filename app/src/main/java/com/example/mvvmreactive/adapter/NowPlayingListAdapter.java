@@ -21,9 +21,6 @@ package com.example.mvvmreactive.adapter;
 
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.support.annotation.VisibleForTesting;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,37 +36,14 @@ import java.util.List;
 public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, BaseViewHolder> {
     private static final int VIEW_PROGRESS = 0;
     private static final int VIEW_ITEM = 1;
-    private final LoadMoreScrollListener loadMoreScrollListener;
 
     /**
      * Constructor.
      *
      * @param objects            - list of {@link MovieViewInfo}
-     * @param onLoadMoreListener - listener for when to load more information
-     * @param recyclerView       - {@link RecyclerView} using this adapter.
-     * @param showLoadMore       - true to show load more spinner, false otherwise.
      */
-    public NowPlayingListAdapter(List<MovieViewInfo> objects,
-                                 OnLoadMoreListener onLoadMoreListener,
-                                 RecyclerView recyclerView,
-                                 boolean showLoadMore) {
+    public NowPlayingListAdapter(List<MovieViewInfo> objects) {
         super(objects);
-
-        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
-            loadMoreScrollListener =
-                    new LoadMoreScrollListener(
-                            (LinearLayoutManager) recyclerView.getLayoutManager(),
-                            onLoadMoreListener,
-                            this
-                    );
-            recyclerView.addOnScrollListener(loadMoreScrollListener);
-
-            if (showLoadMore) {
-                loadMoreScrollListener.setLoading(true);
-            }
-        } else {
-            loadMoreScrollListener = null;
-        }
     }
 
     @Override
@@ -107,87 +81,8 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
      * @param movieViewInfoList - list to add
      */
     public void addList(List<MovieViewInfo> movieViewInfoList) {
-        if (getItemCount() != 0) {
-            remove(getItem(getItemCount() - 1));
-        }
-
         for (MovieViewInfo movieViewInfo : movieViewInfoList) {
             add(movieViewInfo);
-        }
-        loadMoreScrollListener.setLoading(false);
-    }
-
-    public void disableLoadMore() {
-        loadMoreScrollListener.setOnLoadMoreListener(null);
-    }
-
-    public boolean isLoadingMoreShowing() {
-        return loadMoreScrollListener.isLoading();
-    }
-
-    /**
-     * Listener when scrolling requires more data to be loaded.
-     */
-    public interface OnLoadMoreListener {
-        /**
-         * Load more data for adapter.
-         */
-        void onLoadMore();
-    }
-
-    /**
-     * Class for handling when the adapter should insert progress item and trigger load more
-     * interface.
-     */
-    @VisibleForTesting
-    static class LoadMoreScrollListener extends RecyclerView.OnScrollListener {
-        private final LinearLayoutManager linearLayoutManager;
-        private final NowPlayingListAdapter nowPlayingListAdapter;
-        private OnLoadMoreListener onLoadMoreListener;
-        private boolean loading;
-
-        /**
-         * Constructor.
-         * @param linearLayoutManager -
-         * @param onLoadMoreListener -
-         * @param nowPlayingListAdapter -
-         */
-        LoadMoreScrollListener(LinearLayoutManager linearLayoutManager,
-                                      OnLoadMoreListener onLoadMoreListener,
-                                      NowPlayingListAdapter nowPlayingListAdapter) {
-            this.linearLayoutManager = linearLayoutManager;
-            this.onLoadMoreListener = onLoadMoreListener;
-            this.nowPlayingListAdapter = nowPlayingListAdapter;
-        }
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            super.onScrolled(recyclerView, dx, dy);
-
-            int totalItemCount = linearLayoutManager.getItemCount();
-            int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-
-            if (onLoadMoreListener != null
-                    && !loading && totalItemCount <= (lastVisibleItem + 2)) {
-
-                //Add spinner
-                nowPlayingListAdapter.add(null);
-
-                loading = true;
-                onLoadMoreListener.onLoadMore();
-            }
-        }
-
-        public void setOnLoadMoreListener(OnLoadMoreListener onLoadMoreListener) {
-            this.onLoadMoreListener = onLoadMoreListener;
-        }
-
-        public void setLoading(boolean loading) {
-            this.loading = loading;
-        }
-
-        public boolean isLoading() {
-            return loading;
         }
     }
 }
