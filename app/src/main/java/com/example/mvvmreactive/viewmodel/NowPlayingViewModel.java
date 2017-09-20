@@ -28,29 +28,33 @@ import android.support.annotation.VisibleForTesting;
 
 import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.gateway.ServiceGateway;
+import com.example.mvvmreactive.model.AdapterUiCommand;
+import com.example.mvvmreactive.model.LoadMoreCommand;
 import com.example.mvvmreactive.model.MovieInfo;
 import com.example.mvvmreactive.model.MovieViewInfo;
 import com.example.mvvmreactive.model.MovieViewInfoImpl;
 import com.example.mvvmreactive.model.NowPlayingInfo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Action;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
+import io.reactivex.subjects.PublishSubject;
 import timber.log.Timber;
+
+import static com.example.mvvmreactive.model.LoadMoreCommand.LoadMoreType.RESTORE;
+import static com.example.mvvmreactive.model.LoadMoreCommand.LoadMoreType.SCROLL;
 
 /**
  * View interface to be implemented by the forward facing UI part of android. An activity or fragment.
@@ -58,7 +62,6 @@ import timber.log.Timber;
 public class NowPlayingViewModel extends ViewModel {
     private static final int SLEEP_TIME = 3;
     private int sleepSeconds = SLEEP_TIME;
-    private boolean isLoading;
     private int pageNumber = 0;
 
     @NonNull
@@ -71,9 +74,6 @@ public class NowPlayingViewModel extends ViewModel {
     private List<MovieViewInfo> movieViewInfoList = new ArrayList<>();
 
     @NonNull
-    private Map<Integer, Observable<List<MovieViewInfo>>> cacheMap = new HashMap<>();
-
-    @NonNull
     private final ObservableField<String> toolbarTitle = new ObservableField<>();
 
     @NonNull
@@ -81,6 +81,18 @@ public class NowPlayingViewModel extends ViewModel {
 
     @NonNull
     private final BehaviorSubject<Boolean> loadMoreEnabledBehaviorSubject = BehaviorSubject.create();
+
+    @NonNull
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+    @NonNull
+    private final PublishSubject<AdapterUiCommand> adapterDataPublishSubject = PublishSubject.create();
+
+    @NonNull
+    private final PublishSubject<LoadMoreCommand> loadMorePublishSubject = PublishSubject.create();
+
+    @NonNull
+    private final PublishSubject<Boolean> showErrorPublishSubject = PublishSubject.create();
 
     /**
      * Constructor. Members are injected.
@@ -93,6 +105,17 @@ public class NowPlayingViewModel extends ViewModel {
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
         loadMoreEnabledBehaviorSubject.onNext(true);
+
+        bind();
+        loadMorePublishSubject.onNext(new LoadMoreCommand(RESTORE));
+    }
+
+    @Override
+    public void onCleared() {
+        super.onCleared();
+
+        //unbind all
+        compositeDisposable.clear();
     }
 
     /**
@@ -105,110 +128,15 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     /**
-     * Load more information to the screen.
-     * @return - {@link Observable} or {@link Observable#empty()} if previously loading.
+     * Load more Now Playing movies.
      */
-    @NonNull
-    public Observable<List<MovieViewInfo>> loadMoreInfo() {
-        if (!isLoading) {
-            isLoading = true;
-            return getMovieViewInfo();
-        } else {
-            return Observable.empty();
-        }
+    public void loadMoreNowPlayingInfo() {
+       loadMorePublishSubject.onNext(new LoadMoreCommand(SCROLL));
     }
 
-    /**
-     * Get the {@link List} that is currently loading.
-     * @return - {@link Observable} when {@link NowPlayingViewModel#firstLoad} is true.
-     * {@link Observable#empty()} otherwise.
-     */
     @NonNull
-    public Observable<List<MovieViewInfo>> getMovieViewInfo() {
-        //
-        //Return empty if not loading and not first call
-        //
-        if (!isLoading && pageNumber != 0) {
-            Observable.empty();
-        }
-
-        //
-        //Return Cache if available
-        //
-        if (cacheMap.containsKey(pageNumber)) {
-            return cacheMap.get(pageNumber);
-        }
-
-        //
-        //Fetch new
-        //
-
-        /*
-        Although using subjects is an easy solution, a subject cannot handle errors. So to show
-        a different type of setup, a cache is being used.
-         */
-        Observable<List<MovieViewInfo>> observableCache = updateUiWhenLoadingMovies()
-                //subscribe up - do on main thread
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<Boolean, Observable<NowPlayingInfo>>() {
-                    @Override
-                    public Observable<NowPlayingInfo> apply(@io.reactivex.annotations.NonNull Boolean status) throws Exception {
-                        return serviceGateway.getNowPlaying(++pageNumber);
-                    }
-                })
-                //Delay for 3 seconds to show spinner on screen.
-                .delay(sleepSeconds, TimeUnit.SECONDS)
-                //translate external to internal business logic (Example if we wanted to save to prefs)
-                .flatMap(new NowPlayingViewModel.MovieListFetcher())
-                //translate internal business logic to UI represented
-                .flatMap(new TranslateForUiFunction())
-                //During error, decrement page number on BGT
-                .doOnError(new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@io.reactivex.annotations.NonNull Throwable throwable) throws Exception {
-                        Timber.e(throwable);
-                        pageNumber--;
-                    }
-                })
-                //subscribe up - do on computation thread.
-                .subscribeOn(Schedulers.computation())
-                //cache for late use. Below code only runs when someone is subscribed to cache.
-                .cache()
-                //observe down - update list on main thread to avoid concurrency issues with List<>
-                .observeOn(AndroidSchedulers.mainThread())
-                //Data coming in should be saved in ViewModel
-                .doOnNext(new Consumer<List<MovieViewInfo>>() {
-                    @Override
-                    public void accept(@io.reactivex.annotations.NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
-                        if (!firstLoad.get()) {
-                            movieViewInfoList.remove(movieViewInfoList.size() - 1);
-                        }
-                        movieViewInfoList.addAll(movieViewInfos);
-
-                        if (!movieViewInfos.isEmpty()) {
-                            firstLoad.set(false);
-                        }
-
-                        if (!movieViewInfoList.isEmpty()) {
-                            loadMoreEnabledBehaviorSubject.onNext(true);
-                        }
-                    }
-                })
-                //Set loading to false when completed or error (aka -terminated)
-                .doOnTerminate(new Action() {
-                    @Override
-                    public void run() throws Exception {
-                        isLoading = false;
-
-                        //clear cache map, value was loaded.
-                        cacheMap.remove(pageNumber);
-                    }
-                });
-
-        //store cache
-        cacheMap.put(pageNumber, observableCache);
-
-        return observableCache;
+    public Observable<Boolean> getShowErrorObserver() {
+        return showErrorPublishSubject;
     }
 
     @NonNull
@@ -226,19 +154,123 @@ public class NowPlayingViewModel extends ViewModel {
             return loadMoreEnabledBehaviorSubject;
     }
 
-    private Observable<Boolean> updateUiWhenLoadingMovies() {
-        return Observable.fromCallable(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                loadMoreEnabledBehaviorSubject.onNext(false);
+    @NonNull
+    public PublishSubject<AdapterUiCommand> getAdapterDataPublishSubject() {
+        return adapterDataPublishSubject;
+    }
 
-                if (!firstLoad.get()) {
-                    movieViewInfoList.add(null);
-                }
+    @SuppressWarnings("checkstyle:magicnumber")
+    private void bind() {
+        //bind on main UI thread
+        compositeDisposable.add(loadMorePublishSubject
+                //Filter any multiple on scrolls that happened before 250MS
+                .debounce(new Function<LoadMoreCommand, ObservableSource<LoadMoreCommand>>() {
+                    @Override
+                    public ObservableSource<LoadMoreCommand> apply(
+                            @io.reactivex.annotations.NonNull LoadMoreCommand loadMoreCommand) throws Exception {
+                        if (loadMoreCommand.getLoadMoreType() == SCROLL) {
+                            return Observable.<LoadMoreCommand>empty().delay(250, TimeUnit.MILLISECONDS);
+                        } else {
+                            return Observable.empty();
+                        }
+                    }
+                })
+                //
+                //UPDATE UI -
+                //
+                .doOnNext(new Consumer<LoadMoreCommand>() {
+                    @Override
+                    public void accept(@io.reactivex.annotations.NonNull LoadMoreCommand loadMoreCommand) throws Exception {
+                        //
+                        //Update VM UI
+                        //
+                        loadMoreEnabledBehaviorSubject.onNext(false);
 
-                return true;
-            }
-        });
+                        if (loadMoreCommand.getLoadMoreType() == SCROLL) {
+                            adapterDataPublishSubject.onNext(AdapterUiCommand.createAddNull());
+                            movieViewInfoList.add(null);
+                        }
+                    }
+                })
+                //observe down - fetch list on computation thread
+                .observeOn(Schedulers.computation())
+                //
+                //Fetch Data
+                //
+                .flatMap(new Function<LoadMoreCommand, ObservableSource<NowPlayingInfo>>() {
+                     @Override
+                    public ObservableSource<NowPlayingInfo>  apply(
+                            @io.reactivex.annotations.NonNull LoadMoreCommand loadMoreCommand) throws Exception {
+                         return serviceGateway.getNowPlaying(++pageNumber);
+                    }
+                })
+                //Delay for 3 seconds to show spinner on screen.
+                .delay(sleepSeconds, TimeUnit.SECONDS)
+                //translate external to internal business logic (Example if we wanted to save to prefs)
+                .flatMap(new NowPlayingViewModel.MovieListFetcher())
+                //translate internal business logic to UI represented
+                .flatMap(new TranslateForUiFunction())
+                //error with fetching data, reset page number
+                .doOnError(new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@io.reactivex.annotations.NonNull Throwable throwable) throws Exception {
+                        pageNumber--;
+                    }
+                })
+                //
+                //UPDATE UI -
+                //
+                //observe down - handle subscription and updateUI on main thread
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<List<MovieViewInfo>>() {
+                    @Override
+                    public void accept(@io.reactivex.annotations.NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
+                        //remove null spinner (if present)
+                        if (!firstLoad.get()) {
+                            movieViewInfoList.remove(movieViewInfoList.size() - 1);
+                            adapterDataPublishSubject.onNext(AdapterUiCommand.createRemoveNull());
+                        }
+                    }
+                })
+                .onErrorResumeNext(new ObservableSource<List<MovieViewInfo>>() {
+                    @Override
+                    public void subscribe(@io.reactivex.annotations.NonNull Observer<? super List<MovieViewInfo>> observer) {
+                        //Error occurred but don't disengage from subject
+
+                        //show error
+                        showErrorPublishSubject.onNext(true);
+
+                        //try again
+                        loadMorePublishSubject.onNext(new LoadMoreCommand(SCROLL));
+                    }
+                })
+                .subscribe(
+                        //On-Next
+                        new Consumer<List<MovieViewInfo>>() {
+                               @Override
+                               public void accept(
+                                       @io.reactivex.annotations.NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
+                                   //add new data
+                                   movieViewInfoList.addAll(movieViewInfos);
+                                   adapterDataPublishSubject.onNext(
+                                           new AdapterUiCommand(AdapterUiCommand.CommandType.ADD, movieViewInfos));
+
+                                   //address first load
+                                   if (!movieViewInfos.isEmpty()) {
+                                       firstLoad.set(false);
+                                   }
+
+                                   //enable scroll
+                                   if (!movieViewInfoList.isEmpty()) {
+                                       loadMoreEnabledBehaviorSubject.onNext(true);
+                                   }
+                               }
+                           }, new Consumer<Throwable>() {
+                               @Override
+                               public void accept(@io.reactivex.annotations.NonNull Throwable throwable) throws Exception {
+                                   throw new RuntimeException("Subject Crashed!");
+                               }
+                           }));
     }
 
     /**

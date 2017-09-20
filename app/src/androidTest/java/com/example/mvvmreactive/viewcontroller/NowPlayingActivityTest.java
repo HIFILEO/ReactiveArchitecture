@@ -201,7 +201,7 @@ public class NowPlayingActivityTest {
     }
 
     @Test
-    public void progressBarShowsWhenLoadingMoreData() {
+    public void progressBarShowsWhenLoadingMoreData() throws InterruptedException {
         //
         //Arrange
         //
@@ -230,6 +230,10 @@ public class NowPlayingActivityTest {
                 RecyclerViewActions.scrollToPosition(19),//scroll to bottom so progress spinner gets added
                 RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
         );
+
+        //not ideal - wait until next frame since adapter now updates on a post to mainUI.
+        //TODO - create an espresso test and wait w/ backoff.
+        Thread.sleep(250);
 
         //Note - without idling resource, we can check for progress item while data loads.
         onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(21));

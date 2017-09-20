@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyInt;
@@ -79,7 +78,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Act
         //
-        nowPlayingViewModel.getMovieViewInfo().test();
         testScheduler.triggerActions();
         testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
 
@@ -105,170 +103,5 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Assert
         //
         assertThat(movieViewInfos.size()).isEqualTo(0);
-    }
-
-    @Test
-    public void loadMoreInfo_isEmpty() throws Exception {
-        //
-        //Arrange
-        //
-        TestObserver<List<MovieViewInfo>> testObserver;
-
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        nowPlayingViewModel.loadMoreInfo().test();
-        testObserver = nowPlayingViewModel.loadMoreInfo().test();
-        testScheduler.triggerActions();
-
-        //
-        //Assert
-        //
-        testObserver.assertComplete();
-        testObserver.assertNoErrors();
-        testObserver.assertNoValues();
-
-        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void loadMoreInfo_hasValue() throws Exception {
-        //
-        //Arrange
-        //
-        TestObserver<List<MovieViewInfo>> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        nowPlayingViewModel.getMovieViewInfo().test();
-        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
-
-        testObserver = nowPlayingViewModel.loadMoreInfo().test();
-        testScheduler.triggerActions();
-        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
-
-        //
-        //Assert
-        //
-        testObserver.assertNoErrors();
-        testObserver.assertValueCount(1);
-
-        ArrayList<MovieViewInfo> arrayList = (ArrayList<MovieViewInfo>) testObserver.getEvents().get(0).get(0);
-        MovieViewInfo movieViewInfo = arrayList.get(0);
-        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase("www.mypicture.com");
-        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase("title");
-    }
-
-    @Test
-    public void getMovieViewInfo_hasValue() throws Exception {
-        //
-        //Arrange
-        //
-        TestObserver<List<MovieViewInfo>> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        testObserver = nowPlayingViewModel.getMovieViewInfo().test();
-        testScheduler.triggerActions();
-
-        //
-        //Assert
-        //
-        testObserver.assertNoErrors();
-        testObserver.assertNotComplete();
-
-        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
-    }
-
-    @Test
-    public void getMovieViewInfo_isEmpty() throws Exception {
-        //
-        //Arrange
-        //
-        TestObserver<List<MovieViewInfo>> testObserver;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        nowPlayingViewModel.getMovieViewInfo().test();
-        testScheduler.triggerActions();
-        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
-
-        testObserver = nowPlayingViewModel.getMovieViewInfo().test();
-        testScheduler.triggerActions();
-
-        //
-        //Assert
-        //
-        testObserver.assertNoErrors();
-        testObserver.assertEmpty();
-
-        assertThat(nowPlayingViewModel.getFirstLoad().get()).isFalse();
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void getMovieViewInfo_usesCache() throws Exception {
-        //
-        //Arrange
-        //
-        TestObserver<List<MovieViewInfo>> testObserver1;
-        TestObserver<List<MovieViewInfo>> testObserver2;
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        testObserver1 = nowPlayingViewModel.getMovieViewInfo().test();
-        testObserver2 = nowPlayingViewModel.getMovieViewInfo().test();
-
-        testScheduler.triggerActions();
-        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
-
-
-        //
-        //Assert
-        //
-        testObserver1.assertNoErrors();
-        testObserver1.assertComplete();
-        testObserver1.assertValueCount(1);
-
-        testObserver2.assertNoErrors();
-        testObserver2.assertComplete();
-        testObserver2.assertValueCount(1);
-
-        ArrayList<MovieViewInfo> arrayList = (ArrayList<MovieViewInfo>) testObserver1.getEvents().get(0).get(0);
-        MovieViewInfo movieViewInfo = arrayList.get(0);
-        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase("www.mypicture.com");
-        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase("title");
-
-        arrayList = (ArrayList<MovieViewInfo>) testObserver2.getEvents().get(0).get(0);
-        movieViewInfo = arrayList.get(0);
-        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase("www.mypicture.com");
-        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase("title");
-    }
-
-    @Test
-    public void translateForUiFunction() throws Exception {
-        //
-        //Arrange
-        //
-
-
-        //
-        //Act
-        //
-
-        //
-        //Assert
-        //
     }
 }

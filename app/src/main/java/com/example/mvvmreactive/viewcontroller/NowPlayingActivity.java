@@ -32,25 +32,20 @@ import com.example.mvvmreactive.R;
 import com.example.mvvmreactive.adapter.LoadMoreScrollListener;
 import com.example.mvvmreactive.adapter.NowPlayingListAdapter;
 import com.example.mvvmreactive.databinding.ActivityNowPlayingBinding;
-import com.example.mvvmreactive.model.MovieViewInfo;
+import com.example.mvvmreactive.model.AdapterUiCommand;
 
 
 import com.example.mvvmreactive.view.DividerItemDecoration;
 import com.example.mvvmreactive.viewmodel.NowPlayingViewModel;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import timber.log.Timber;
 
 
@@ -85,7 +80,7 @@ public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollLi
         setSupportActionBar(nowPlayingBinding.toolbar);
 
         //Create Adapter
-        createAdapter(savedInstanceState);
+        createAdapter();
 
         //restore adapter
         if (savedInstanceState != null) {
@@ -121,10 +116,6 @@ public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollLi
         nowPlayingBinding.unbind();
     }
 
-    private void showError() {
-        Toast.makeText(this, R.string.error_msg, Toast.LENGTH_LONG).show();
-    }
-
     /**
      * Restore the state of the screen.
      * @param savedInstanceState -
@@ -138,7 +129,7 @@ public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollLi
     /**
      * Create the adapter for {@link RecyclerView}.
      */
-    private void createAdapter(Bundle savedInstanceState) {
+    private void createAdapter() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
 
         nowPlayingBinding.recyclerView.setLayoutManager(linearLayoutManager);
@@ -158,36 +149,16 @@ public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollLi
 
     @Override
     public void onLoadMore() {
-        Observable<Boolean> updateUiObservable = Observable.fromCallable(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                Timber.i("Thread name: %s for in %s",
-                        Thread.currentThread().getName(),
-                        "onLoadMore()");
-                nowPlayingBinding.recyclerView.removeOnScrollListener(loadMoreScrollListener);
-                if (!nowPlayingViewModel.getFirstLoad().get()) {
-                    nowPlayingListAdapter.add(null);
-                }
-                return true;
-            }
-        });
-
-        subscribeToMovieData(updateUiObservable
-                .flatMap(new Function<Boolean, ObservableSource<List<MovieViewInfo>>>() {
-                    @Override
-                    public ObservableSource<List<MovieViewInfo>> apply(@NonNull Boolean result) throws Exception {
-                        return nowPlayingViewModel.loadMoreInfo();
-                    }
-                }));
+        nowPlayingViewModel.loadMoreNowPlayingInfo();
     }
 
     /**
      * Bind to all data in {@link NowPlayingViewModel}.
      */
     private void bind() {
-        subscribeToMovieData(nowPlayingViewModel.getMovieViewInfo());
-
         compositeDisposable.add(nowPlayingViewModel.getLoadMoreEnabledBehaviorSubject()
+                //subscribe down - main UI to update views
+                .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Boolean>() {
                     @Override
                     public void accept(@NonNull Boolean enabled) throws Exception {
@@ -203,35 +174,48 @@ public class NowPlayingActivity extends BaseActivity implements LoadMoreScrollLi
                         //No-OP
                     }
                 }));
-    }
 
-    /**
-     * Subscribe to {@link MovieViewInfo}.
-     * @param movieDataObservable -
-     */
-    private void subscribeToMovieData(Observable<List<MovieViewInfo>> movieDataObservable) {
-        compositeDisposable.add(movieDataObservable
-                //observe down
+        compositeDisposable.add(nowPlayingViewModel.getAdapterDataPublishSubject()
+                //observer down - main UI to update views
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<List<MovieViewInfo>>() {
+                .subscribe(new Consumer<AdapterUiCommand>() {
                     @Override
-                    public void accept(@NonNull List<MovieViewInfo> movieViewInfos) throws Exception {
-                        if (nowPlayingListAdapter.getItemCount() > 0) {
-                            nowPlayingListAdapter.remove(nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                    public void accept(@NonNull AdapterUiCommand adapterUiCommand) throws Exception {
+                        Timber.i("Thread name: %s.", Thread.currentThread().getName());
+
+                        if (adapterUiCommand.getCommandType() == AdapterUiCommand.CommandType.ADD) {
+                            if (adapterUiCommand.getMovieViewInfoList().get(0) == null) {
+                                nowPlayingListAdapter.add(null);
+                                nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
+                            } else {
+                                nowPlayingListAdapter.addList(adapterUiCommand.getMovieViewInfoList());
+                            }
+
+                        } else {
+                            nowPlayingListAdapter.remove(adapterUiCommand.getMovieViewInfoList().get(0));
                         }
-                        nowPlayingListAdapter.addList(movieViewInfos);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
-                        if (nowPlayingListAdapter.getItemCount() > 0) {
-                            nowPlayingListAdapter.remove(nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                        Timber.e("Error on adapter subscription." + throwable.getLocalizedMessage());
+                    }
+                }));
+
+        compositeDisposable.add(nowPlayingViewModel.getShowErrorObserver()
+                //observer down
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Boolean>() {
+                    @Override
+                    public void accept(@NonNull Boolean showError) throws Exception {
+                        if (showError) {
+                            Toast.makeText(NowPlayingActivity.this, R.string.error_msg, Toast.LENGTH_LONG).show();
                         }
-
-                        showError();
-
-                        //try again
-                        onLoadMore();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        Timber.e("Error on error subscription." + throwable.getLocalizedMessage());
                     }
                 }));
     }
