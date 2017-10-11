@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <import type="android.view.View"/>
-        <variable name="viewModel" type="com.example.mvvmreactive.viewmodel.NowPlayingViewModel"/>
+        <variable name="viewModel" type="com.example.reactivearchitecture.viewmodel.NowPlayingViewModel"/>
     </data>
 
     <RelativeLayout

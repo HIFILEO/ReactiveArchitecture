@@ -1,10 +1,15 @@
-# MVVM 'Reactive' Example
-This app is nothing more than an example of how to create a MVVM (Model View ViewModel) application 
-using  [Reactive](https://github.com/ReactiveX/RxAndroid) style programming. This is a fork from
-the original [MVPReactive](https://github.com/HIFILEO/MVPReactive)
+# 'Reactive' Architecture Example
+This app is nothing more than an example of how to architect a mobile application to best use
+[Reactive](https://github.com/ReactiveX/RxAndroid) style programming. This is very close to
+a MVVM (Model View ViewModel) application. This is a fork from
+the original [MVVMReactive](https://github.com/HIFILEO/MVVMReactive)
 
-MVVM breaks down an application into more testable components keeping your internal business objects and data separate from
-the external UI or external data.
+Reactive architecture breaks an application's interactions into single stream events. Instead of creating impure
+side effects on a stream, reactive architecture focuses on slamming asynchronous events into synchronous state events that update
+the UI.
+
+Reactive architecture is built on MVVM. MVVM breaks down an application into more testable components keeping your internal
+business objects and data separate from the external UI or external data.
 
 The app simply loads a list of "Now Playing" movies based on [The Movie Database API](https://developers.themoviedb.org/3/movies/get-now-playing).
 
@@ -18,6 +23,7 @@ The requirements for the app:
 
 The application architecture is as followed: 
 
+FIXME - need new diagram
 ![Alt text](/doc/mvvm_detailed_architecture.png?raw=true "App MVVM Architecture")
 
 Note - the application packages are TYPE defined for ease of learning.
@@ -32,10 +38,10 @@ Please review all documentation in **docs/**. The following summaries describe t
 
 | Name                                                                                          | Summary                                                     |
 | :--------------------------------------------------------------------------------------------:|:------------------------------------------------------------|
-| [AUTHORS.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/AUTHORS.md)                | History of past and present contributors                    |
-| [BUILDS.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/BUILDS.md)                  | Description of official builds                              |
-| [DEPENDENCIES.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/DEPENDENCIES.md)      | How to generate a list of all major third party dependencies|
-| [STYLE.md](https://github.com/HIFILEO/MVVMReactive/blob/master/doc/STYLE.md)                    | Description of Code Style and Static Analysis tools         |
+| [AUTHORS.md](https://github.com/HIFILEO/ReactiveArchitecture/blob/master/doc/AUTHORS.md)                | History of past and present contributors                    |
+| [BUILDS.md](https://github.com/HIFILEO/ReactiveArchitecture/blob/master/doc/BUILDS.md)                  | Description of official builds                              |
+| [DEPENDENCIES.md](https://github.com/HIFILEO/ReactiveArchitecture/blob/master/doc/DEPENDENCIES.md)      | How to generate a list of all major third party dependencies|
+| [STYLE.md](https://github.com/HIFILEO/ReactiveArchitecture/blob/master/doc/STYLE.md)                    | Description of Code Style and Static Analysis tools         |
 
 ### Build Types and Flavors
 

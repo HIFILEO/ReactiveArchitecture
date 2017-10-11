@@ -22,12 +22,12 @@ android {
             if (contractTests.toBoolean()) {
                 println "Contract Tests Only for " + it.name
                 options {
-                    excludeCategories 'com.example.mvvmreactive.categories.UnitTest'
+                    excludeCategories 'com.example.reactivearchitecture.categories.UnitTest'
                 }
             } else {
                 println "Unit Tests Only for " + it.name
                 options {
-                    excludeCategories 'com.example.mvvmreactive.categories.ContractTest'
+                    excludeCategories 'com.example.reactivearchitecture.categories.ContractTest'
                 }
             }
         }
