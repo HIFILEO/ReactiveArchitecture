@@ -151,6 +151,7 @@ public class NowPlayingActivity extends BaseActivity {
      * Bind to all data in {@link NowPlayingViewModel}.
      */
     private void bind() {
+        //Scroll Event Binder
         compositeDisposable.add(nowPlayingViewModel.getLoadMoreEnabledBehaviorSubject()
                 //subscribe down - main UI to update views
                 .subscribeOn(AndroidSchedulers.mainThread())
@@ -173,6 +174,7 @@ public class NowPlayingActivity extends BaseActivity {
                     }
                 }));
 
+        //Adapter Data Binder
         compositeDisposable.add(nowPlayingViewModel.getAdapterDataPublishSubject()
                 //observer down - main UI to update views
                 .observeOn(AndroidSchedulers.mainThread())
@@ -200,6 +202,7 @@ public class NowPlayingActivity extends BaseActivity {
                     }
                 }));
 
+        //Error Binder
         compositeDisposable.add(nowPlayingViewModel.getShowErrorObserver()
                 //observer down
                 .observeOn(AndroidSchedulers.mainThread())
