@@ -156,7 +156,6 @@ public class NowPlayingActivityTest {
 
         //
         //Assert
-        //
         String name = getResourceString(R.string.now_playing);
         onView(withText(name)).check(matches(isDisplayed()));
     }

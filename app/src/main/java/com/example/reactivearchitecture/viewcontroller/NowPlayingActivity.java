@@ -26,32 +26,37 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.reactivearchitecture.R;
 import com.example.reactivearchitecture.adapter.NowPlayingListAdapter;
 import com.example.reactivearchitecture.adapter.ScrollEventCalculator;
 import com.example.reactivearchitecture.databinding.ActivityNowPlayingBinding;
-import com.example.reactivearchitecture.model.AdapterUiCommand;
+import com.example.reactivearchitecture.model.AdapterCommandType;
 
-
+import com.example.reactivearchitecture.model.MovieViewInfo;
+import com.example.reactivearchitecture.model.UiModel;
+import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.view.DividerItemDecoration;
 import com.example.reactivearchitecture.viewmodel.NowPlayingViewModel;
 import com.jakewharton.rxbinding2.support.v7.widget.RecyclerViewScrollEvent;
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.ObservableSource;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import timber.log.Timber;
-
 
 /**
  * This is the only activity for the application.
@@ -63,6 +68,8 @@ public class NowPlayingActivity extends BaseActivity {
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private ActivityNowPlayingBinding nowPlayingBinding;
     private Disposable scrollDisposable;
+    private Parcelable savedRecyclerLayoutState;
+    private int pageNumber;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -83,12 +90,9 @@ public class NowPlayingActivity extends BaseActivity {
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(nowPlayingBinding.toolbar);
 
-        //Create Adapter
-        createAdapter();
-
         //restore adapter
         if (savedInstanceState != null) {
-            restoreState(savedInstanceState);
+            savedRecyclerLayoutState = savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
         }
     }
 
@@ -116,24 +120,15 @@ public class NowPlayingActivity extends BaseActivity {
     public void onDestroy() {
         super.onDestroy();
 
-        //un-bind
+        //un-bind (Android Databinding)
         nowPlayingBinding.unbind();
     }
 
     /**
-     * Restore the state of the screen.
-     * @param savedInstanceState -
-     */
-    public void restoreState(Bundle savedInstanceState) {
-        Parcelable savedRecyclerLayoutState =
-                savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
-        nowPlayingBinding.recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
-    }
-
-    /**
      * Create the adapter for {@link RecyclerView}.
+     * @param adapterList - List that backs the adapter.
      */
-    private void createAdapter() {
+    private void createAdapter(List<MovieViewInfo> adapterList) {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
 
         nowPlayingBinding.recyclerView.setLayoutManager(linearLayoutManager);
@@ -141,9 +136,7 @@ public class NowPlayingActivity extends BaseActivity {
                 this,
                 DividerItemDecoration.VERTICAL_LIST,
                 getResources().getColor(android.R.color.black, null)));
-        nowPlayingListAdapter = new NowPlayingListAdapter(
-                //shallow-copy
-                new ArrayList<>(nowPlayingViewModel.getMovieViewInfoList()));
+        nowPlayingListAdapter = new NowPlayingListAdapter(adapterList);
         nowPlayingBinding.recyclerView.setAdapter(nowPlayingListAdapter);
     }
 
@@ -151,101 +144,161 @@ public class NowPlayingActivity extends BaseActivity {
      * Bind to all data in {@link NowPlayingViewModel}.
      */
     private void bind() {
-        //Scroll Event Binder
-        compositeDisposable.add(nowPlayingViewModel.getLoadMoreEnabledBehaviorSubject()
-                //subscribe down - main UI to update views
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Boolean>() {
+        //
+        //Bind to UiModel
+        //
+        compositeDisposable.add(nowPlayingViewModel.getUiModels()
+                .subscribe(new Consumer<UiModel>() {
                     @Override
-                    public void accept(@NonNull Boolean enabled) throws Exception {
-                        if (enabled) {
-                            bindScrollEvents();
-                        } else {
-                            if (scrollDisposable != null) {
-                                scrollDisposable.dispose();
-                                compositeDisposable.delete(scrollDisposable);
-                            }
-                        }
+                    public void accept(@NonNull UiModel uiModel) throws Exception {
+                        processUiModel(uiModel);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
-                        //No-OP
+                        throw new UnsupportedOperationException("Errors from Model Unsupported: "
+                                + throwable.getLocalizedMessage());
                     }
-                }));
-
-        //Adapter Data Binder
-        compositeDisposable.add(nowPlayingViewModel.getAdapterDataPublishSubject()
-                //observer down - main UI to update views
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<AdapterUiCommand>() {
-                    @Override
-                    public void accept(@NonNull AdapterUiCommand adapterUiCommand) throws Exception {
-                        Timber.i("Thread name: %s.", Thread.currentThread().getName());
-
-                        if (adapterUiCommand.getCommandType() == AdapterUiCommand.CommandType.ADD) {
-                            if (adapterUiCommand.getMovieViewInfoList().get(0) == null) {
-                                nowPlayingListAdapter.add(null);
-                                nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
-                            } else {
-                                nowPlayingListAdapter.addList(adapterUiCommand.getMovieViewInfoList());
-                            }
-
-                        } else {
-                            nowPlayingListAdapter.remove(adapterUiCommand.getMovieViewInfoList().get(0));
-                        }
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@NonNull Throwable throwable) throws Exception {
-                        Timber.e("Error on adapter subscription." + throwable.getLocalizedMessage());
-                    }
-                }));
-
-        //Error Binder
-        compositeDisposable.add(nowPlayingViewModel.getShowErrorObserver()
-                //observer down
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Boolean>() {
-                    @Override
-                    public void accept(@NonNull Boolean showError) throws Exception {
-                        if (showError) {
-                            Toast.makeText(NowPlayingActivity.this, R.string.error_msg, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@NonNull Throwable throwable) throws Exception {
-                        Timber.e("Error on error subscription." + throwable.getLocalizedMessage());
-                    }
-                }));
+                })
+        );
     }
 
     /**
-     * Bind Scroll Events to {@link RecyclerView}.
+     * Bind to scroll events.
      */
-    private void bindScrollEvents() {
-        Observable<RecyclerViewScrollEvent> scrollEventObservable = RxRecyclerView.scrollEvents(
-                nowPlayingBinding.recyclerView);
+    @SuppressWarnings("checkstyle:magicnumber")
+    private void bindToScrollEvent() {
+        scrollDisposable = RxRecyclerView.scrollEvents(nowPlayingBinding.recyclerView)
+                //Bind to RxBindings.
+                .flatMap(new Function<RecyclerViewScrollEvent, ObservableSource<ScrollEvent>>() {
+                    @Override
+                    public ObservableSource<ScrollEvent> apply(@NonNull RecyclerViewScrollEvent recyclerViewScrollEvent)
+                            throws Exception {
+                        ScrollEventCalculator scrollEventCalculator =
+                                new ScrollEventCalculator(recyclerViewScrollEvent);
 
-        scrollDisposable = scrollEventObservable.subscribe(new Consumer<RecyclerViewScrollEvent>() {
-            @Override
-            public void accept(@NonNull RecyclerViewScrollEvent recyclerViewScrollEvent) throws Exception {
+                        //Only handle 'is at end' of list scroll events
+                        if (scrollEventCalculator.isAtScrollEnd()) {
+                            ScrollEvent scrollEvent = new ScrollEvent();
+                            scrollEvent.setPageNumber(pageNumber + 1);
+                            return Observable.just(scrollEvent);
+                        } else {
+                            return Observable.empty();
+                        }
+                    }
+                })
+                //Filter any multiple events before 250MS
+                .debounce(new Function<ScrollEvent, ObservableSource<ScrollEvent>>() {
+                    @Override
+                    public ObservableSource<ScrollEvent> apply(@NonNull ScrollEvent scrollEvent) throws Exception {
+                        return Observable.<ScrollEvent>empty().delay(250, TimeUnit.MILLISECONDS);
+                    }
+                })
+                //Send ScrollEvent to ViewModel
+                .subscribe(new Consumer<ScrollEvent>() {
+                    @Override
+                    public void accept(@NonNull ScrollEvent scrollEvent) throws Exception {
+                        nowPlayingViewModel.processUiEvent(scrollEvent);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        throw new UnsupportedOperationException("Errors in scroll event unsupported. Crash app."
+                                + throwable.getLocalizedMessage());
+                    }
+                });
 
-                ScrollEventCalculator scrollEventCalculator =
-                        new ScrollEventCalculator(recyclerViewScrollEvent);
-
-                if (scrollEventCalculator.isAtScrollEnd()) {
-                    nowPlayingViewModel.loadMoreNowPlayingInfo();
-                }
-            }
-        }, new Consumer<Throwable>() {
-            @Override
-            public void accept(@NonNull Throwable throwable) throws Exception {
-                //this should never happen. Throw error.
-                throw new Error("RxBindings Error.");
-            }
-        });
         compositeDisposable.add(scrollDisposable);
+    }
+
+    /**
+     * Unbind from scroll events.
+     */
+    private void unbindFromScrollEvent() {
+        if (scrollDisposable != null) {
+            scrollDisposable.dispose();
+            compositeDisposable.delete(scrollDisposable);
+        }
+    }
+
+    /**
+     * Bind to {@link UiModel}.
+     * @param uiModel - the {@link UiModel} from {@link NowPlayingViewModel} that backs the UI.
+     */
+    private void processUiModel(UiModel uiModel) {
+        /*
+        Note - Keep the logic here as SIMPLE as possible.
+         */
+        Timber.i("Thread name: %s. Update UI based on UiModel.", Thread.currentThread().getName());
+
+        //
+        //Update progressBar
+        //
+        nowPlayingBinding.progressBar.setVisibility(
+                uiModel.isFirstTimeLoad() ? View.VISIBLE : View.GONE);
+
+        //
+        //Update page number
+        //
+        pageNumber = uiModel.getPageNumber();
+
+        //
+        //Scroll Listener
+        //
+        if (uiModel.isEnableScrollListener()) {
+            bindToScrollEvent();
+        } else {
+            unbindFromScrollEvent();
+        }
+
+        //
+        //Update adapter
+        //
+        if (nowPlayingListAdapter == null) {
+            //shallow-copy
+            ArrayList<MovieViewInfo> adapterData = new ArrayList<>(uiModel.getCurrentList());
+
+            //Process last adapter command
+            if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA) {
+                adapterData.addAll(uiModel.getResultList());
+            } else if (uiModel.getAdapterCommandType() == AdapterCommandType.SHOW_IN_PROGRESS) {
+                adapterData.add(null);
+            }
+
+            //create adapter
+            createAdapter(adapterData);
+
+            //Restore adapter state
+            if (savedRecyclerLayoutState != null) {
+                nowPlayingBinding.recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+            } else {
+                //Trigger first load.
+                ScrollEvent scrollEvent = new ScrollEvent();
+                scrollEvent.setPageNumber(pageNumber + 1);
+                nowPlayingViewModel.processUiEvent(scrollEvent);
+            }
+        } else {
+            if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA) {
+                //Remove Null Spinner
+                if (nowPlayingListAdapter.getItemCount() > 0) {
+                    nowPlayingListAdapter.remove(
+                            nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                }
+
+                //Add Data
+                nowPlayingListAdapter.addList(uiModel.getResultList());
+            } else if (uiModel.getAdapterCommandType() == AdapterCommandType.SHOW_IN_PROGRESS) {
+                //Add null to adapter. Null shows spinner in Adapter logic.
+                nowPlayingListAdapter.add(null);
+                nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
+            }
+        }
+
+        //
+        //Error Messages
+        //
+        if (uiModel.getFailureMsg() != null && !uiModel.getFailureMsg().isEmpty()) {
+            Toast.makeText(NowPlayingActivity.this, R.string.error_msg, Toast.LENGTH_LONG).show();
+        }
     }
 }

@@ -51,57 +51,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(nowPlayingInfoObservable);
     }
 
-    @Test
-    public void isFirstLoadInProgress_true() throws Exception {
-        //
-        //Arrange
-        //
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
+    //TODO - write tests for UiModel cases while mocking Interactor
 
-        //
-        //Act
-        //
 
-        //
-        //Assert
-        //
-        assertThat(nowPlayingViewModel.getFirstLoad().get()).isTrue();
-    }
-
-    @Test
-    public void isFirstLoadInProgress_false() throws Exception {
-        //
-        //Arrange
-        //
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        testScheduler.triggerActions();
-        testScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
-
-        //
-        //Assert
-        //
-        assertThat(nowPlayingViewModel.getFirstLoad().get()).isFalse();
-    }
-
-    @Test
-    public void getMovieViewInfoList() throws Exception {
-        //
-        //Arrange
-        //
-        NowPlayingViewModel nowPlayingViewModel = new NowPlayingViewModel(mockApplication, mockServiceGateway);
-
-        //
-        //Act
-        //
-        List<MovieViewInfo> movieViewInfos = nowPlayingViewModel.getMovieViewInfoList();
-
-        //
-        //Assert
-        //
-        assertThat(movieViewInfos.size()).isEqualTo(0);
-    }
 }

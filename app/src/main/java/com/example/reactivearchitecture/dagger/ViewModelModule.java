@@ -3,8 +3,8 @@ package com.example.reactivearchitecture.dagger;
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
 
-import com.example.reactivearchitecture.viewmodel.ReactiveArchitectureViewModelFactory;
 import com.example.reactivearchitecture.viewmodel.NowPlayingViewModel;
+import com.example.reactivearchitecture.viewmodel.ReactiveArchitectureViewModelFactory;
 
 import dagger.Binds;
 import dagger.Module;

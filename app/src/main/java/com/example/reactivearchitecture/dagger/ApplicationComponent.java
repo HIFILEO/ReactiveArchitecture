@@ -53,7 +53,8 @@ public interface ApplicationComponent {
     interface Builder {
 
         //Note - If you want to pass Application to constructors of provide methods this is what you do.
-        //Note - If you want to pass ReactiveArchitectureApplication to constructors of provide methods, you'll need to add it or cast.
+        //Note - If you want to pass ReactiveArchitectureApplication to constructors of provide methods,
+        // you'll need to add it or cast.
         @BindsInstance
         Builder application(Application application);
 
