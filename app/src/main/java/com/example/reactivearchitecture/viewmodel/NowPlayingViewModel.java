@@ -136,7 +136,7 @@ public class NowPlayingViewModel extends ViewModel {
                     }
                 })
                 //Scan Results to Update UiModel
-                .scan(UiModel.INITIAL_STATE, new BiFunction<UiModel, Result, UiModel>() {
+                .scan(UiModel.initState(), new BiFunction<UiModel, Result, UiModel>() {
                     @Override
                     public UiModel apply(UiModel uiModel, Result result) throws Exception {
                         Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());

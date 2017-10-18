@@ -279,6 +279,7 @@ public class NowPlayingActivity extends BaseActivity {
             }
         } else {
             if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA) {
+                Timber.i("Thread name: %s. Add adapter data on UiModel.", Thread.currentThread().getName());
                 //Remove Null Spinner
                 if (nowPlayingListAdapter.getItemCount() > 0) {
                     nowPlayingListAdapter.remove(

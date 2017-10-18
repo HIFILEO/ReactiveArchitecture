@@ -27,9 +27,6 @@ import java.util.List;
  * Note - fields in this class should be immutable for "Scan" safety.
  */
 public class UiModel {
-    public static final UiModel INITIAL_STATE = new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null,
-            AdapterCommandType.DO_NOTHING);
-
     private boolean firstTimeLoad;
     private String failureMsg;
     private int pageNumber;
@@ -37,6 +34,15 @@ public class UiModel {
     private List<MovieViewInfo> currentList;
     private List<MovieViewInfo> resultList;
     private @AdapterCommandType int adapterCommandType;
+
+    /**
+     * Create init state.
+     * Note - this can't be a static final becuase you write espresso tests and you'll end up duplicating data.
+     * @return - new UiModel in init state.
+     */
+    public static UiModel initState() {
+        return new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null, AdapterCommandType.DO_NOTHING);
+    }
 
     /**
      * Create success state.

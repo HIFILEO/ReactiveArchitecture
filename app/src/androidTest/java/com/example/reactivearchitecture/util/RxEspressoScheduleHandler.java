@@ -1,6 +1,5 @@
 package com.example.reactivearchitecture.util;
 
-import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.idling.CountingIdlingResource;
 
 import io.reactivex.annotations.NonNull;
@@ -16,20 +15,24 @@ import io.reactivex.functions.Function;
  * all scheduled tasks are completed.
  */
 public class RxEspressoScheduleHandler implements Function<Runnable, Runnable> {
+    private final CountingIdlingResource countingIdlingResource;
 
-    private final CountingIdlingResource countingIdlingResource =
-            new CountingIdlingResource("rxJava");
+    RxEspressoScheduleHandler(CountingIdlingResource countingIdlingResource) {
+        this.countingIdlingResource = countingIdlingResource;
+    }
 
     @Override
     public Runnable apply(@NonNull final Runnable runnable) throws Exception {
+        //Note - tasks can be scheduled but not run. Ex - creating a Transformer will schedule not not execute.
         //resource to be busy from the instant the task is scheduled
-        countingIdlingResource.increment();
+        //countingIdlingResource.increment();
 
         return new Runnable() {
             @Override
             public void run() {
-                //Note: left for understanding - resource was busy only while executing the task
-                //countingIdlingResource.increment();
+                //Note: left for understanding - resource was busy only while executing the task.
+                //Note: Calling delay() would not thread sleep but schedule a wake up. So running tasks = 0; Scheduled = 1;
+                countingIdlingResource.increment();
 
                 try {
                     runnable.run();
@@ -39,9 +42,4 @@ public class RxEspressoScheduleHandler implements Function<Runnable, Runnable> {
             }
         };
     }
-
-    public IdlingResource getIdlingResource() {
-        return countingIdlingResource;
-    }
-
 }

@@ -38,7 +38,7 @@ import com.example.reactivearchitecture.service.ServiceResponse;
 import com.example.reactivearchitecture.util.EspressoTestRule;
 import com.example.reactivearchitecture.util.RecyclerViewItemCountAssertion;
 import com.example.reactivearchitecture.util.RecyclerViewMatcher;
-import com.example.reactivearchitecture.util.RxEspressoScheduleHandler;
+import com.example.reactivearchitecture.util.RxEspressoHandler;
 import com.example.reactivearchitecture.util.TestEspressoAssetFileHelper;
 import com.google.gson.Gson;
 
@@ -58,6 +58,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.android.plugins.RxAndroidPlugins;
 import io.reactivex.plugins.RxJavaPlugins;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -141,6 +142,9 @@ public class NowPlayingActivityTest {
         } catch (IOException e) {
             fail(e.toString());
         }
+
+        //Clear RxHooks
+        RxJavaPlugins.reset();
     }
 
     @Test
@@ -178,15 +182,16 @@ public class NowPlayingActivityTest {
     }
 
     @Test
-    public void adapterHasData() {
+    public void adapterHasData() throws InterruptedException {
         //
         //Arrange
         //
 
         //Register Rx Idling (Only needed for specific tests that need to wait for data)
-        RxEspressoScheduleHandler rxEspressoScheduleHandler = new RxEspressoScheduleHandler();
-        RxJavaPlugins.setScheduleHandler(rxEspressoScheduleHandler);
-        Espresso.registerIdlingResources(rxEspressoScheduleHandler.getIdlingResource());
+        RxEspressoHandler rxEspressoHandler = new RxEspressoHandler();
+        RxJavaPlugins.setScheduleHandler(rxEspressoHandler.getRxEspressoScheduleHandler());
+        RxJavaPlugins.setOnObservableAssembly(rxEspressoHandler.getRxEspressoObserverHandler());
+        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
 
         //
         //Act
@@ -206,9 +211,10 @@ public class NowPlayingActivityTest {
         //
 
         //Register Rx Idling (Only needed for specific tests that need to wait for data)
-        RxEspressoScheduleHandler rxEspressoScheduleHandler = new RxEspressoScheduleHandler();
-        RxJavaPlugins.setScheduleHandler(rxEspressoScheduleHandler);
-        Espresso.registerIdlingResources(rxEspressoScheduleHandler.getIdlingResource());
+        RxEspressoHandler rxEspressoHandler = new RxEspressoHandler();
+        RxJavaPlugins.setScheduleHandler(rxEspressoHandler.getRxEspressoScheduleHandler());
+        RxJavaPlugins.setOnObservableAssembly(rxEspressoHandler.getRxEspressoObserverHandler());
+        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
 
         //
         //Act
@@ -222,7 +228,7 @@ public class NowPlayingActivityTest {
         onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
 
         //unregister so we can do checks without waiting for data
-        Espresso.unregisterIdlingResources(rxEspressoScheduleHandler.getIdlingResource());
+        Espresso.unregisterIdlingResources(rxEspressoHandler.getIdlingResource());
 
         //Scroll to the bottom to trigger the progress par.
         onView(withId(R.id.recyclerView)).perform(
@@ -230,7 +236,7 @@ public class NowPlayingActivityTest {
                 RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
         );
 
-        //not ideal - wait until next frame since adapter now updates on a post to mainUI.
+        //Not idea - need to wait until next frame to trigger load
         //TODO - create an espresso test and wait w/ backoff.
         Thread.sleep(250);
 
