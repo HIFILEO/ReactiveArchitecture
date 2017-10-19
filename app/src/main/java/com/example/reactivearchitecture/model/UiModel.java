@@ -19,6 +19,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,5 +135,41 @@ public class UiModel {
 
     public int getAdapterCommandType() {
         return adapterCommandType;
+    }
+
+    public static class UiModelSerialProxy implements Parcelable {
+        private final int pageNumber;
+
+        protected UiModelSerialProxy(UiModel uiModel) {
+            pageNumber = uiModel.getPageNumber();
+        }
+
+        protected UiModelSerialProxy(Parcel in) {
+            pageNumber = in.readInt();
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            out.writeInt(pageNumber);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        public UiModel
+
+        public static final Creator<UiModelSerialProxy> CREATOR = new Creator<UiModelSerialProxy>() {
+            @Override
+            public UiModelSerialProxy createFromParcel(Parcel in) {
+                return new UiModelSerialProxy(in);
+            }
+
+            @Override
+            public UiModelSerialProxy[] newArray(int size) {
+                return new UiModelSerialProxy[size];
+            }
+        };
     }
 }
