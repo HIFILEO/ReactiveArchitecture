@@ -23,6 +23,7 @@ import android.app.Application;
 import android.arch.lifecycle.ViewModel;
 import android.databinding.ObservableField;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.example.reactivearchitecture.R;
@@ -58,7 +59,6 @@ import timber.log.Timber;
  * View interface to be implemented by the forward facing UI part of android. An activity or fragment.
  */
 public class NowPlayingViewModel extends ViewModel {
-    private NowPlayingInteractor nowPlayingInteractor;
     private Observable<UiModel> uiModelObservable;
 
     @NonNull
@@ -74,6 +74,9 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private PublishRelay<UiEvent> publishRelayUiEvents = PublishRelay.create();
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected NowPlayingInteractor nowPlayingInteractor;
+
     /**
      * Constructor. Members are injected.
      * @param application -
@@ -84,9 +87,7 @@ public class NowPlayingViewModel extends ViewModel {
         this.serviceGateway = serviceGateway;
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
-
-        nowPlayingInteractor = new NowPlayingInteractor(serviceGateway);
-        bind();
+        init();
     }
 
     /**
@@ -112,10 +113,17 @@ public class NowPlayingViewModel extends ViewModel {
         return uiModelObservable;
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected void init() {
+        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway);
+        bind();
+    }
+
     /**
      * Bind to {@link PublishRelay}.
      */
-    private void bind() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected void bind() {
         uiModelObservable = publishRelayUiEvents
                 .observeOn(Schedulers.computation())
                 //Translate UiEvents into Actions

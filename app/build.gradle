@@ -77,7 +77,7 @@ dependencies {
 
     //Rx
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.5'
 
     //Rx Lint Checker - https://bitbucket.org/littlerobots/rxlint
     compile 'nl.littlerobots.rxlint:rxlint:1.3'
