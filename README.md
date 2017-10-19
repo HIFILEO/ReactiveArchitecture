@@ -23,8 +23,7 @@ The requirements for the app:
 
 The application architecture is as followed: 
 
-FIXME - need new diagram
-![Alt text](/doc/mvvm_detailed_architecture.png?raw=true "App MVVM Architecture")
+![Alt text](/doc/mvvm_reactive_redux_architecture.png?raw=true "App MVVM Architecture")
 
 Note - the application packages are TYPE defined for ease of learning.
 
