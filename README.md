@@ -17,9 +17,10 @@ The requirements for the app:
 1. As a user, show a list of "Now Playing" movies. Poster, Title, Release Date, & Rating. 
 2. As a user, any rating at eight or above should be stared.
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
-4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page. 
+4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
+5. As a user, restore the last page I was when the application or activity restarts.
 
-<img align="center" src="doc/demo.gif" alt="Demo of the app."/>
+![alt-text-1](doc/demo.gif "Sunny Day") ![alt-text-2](doc/demo.gif "Rainy Day With Restore")
 
 The application architecture is as followed: 
 

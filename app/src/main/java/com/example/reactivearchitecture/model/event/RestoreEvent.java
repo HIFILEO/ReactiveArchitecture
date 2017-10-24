@@ -20,23 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.reactivearchitecture.model.event;
 
 /**
- * Scroll Events.
+ * Restore Events.
  */
-public class ScrollEvent extends UiEvent {
+public class RestoreEvent extends UiEvent {
     private int pageNumber;
 
-    public ScrollEvent(int pageNumber) {
+    public RestoreEvent(int pageNumber) {
         this.pageNumber = pageNumber;
-    }
-
-    public ScrollEvent() {
     }
 
     public int getPageNumber() {
         return pageNumber;
-    }
-
-    public void setPageNumber(int pageNumber) {
-        this.pageNumber = pageNumber;
     }
 }

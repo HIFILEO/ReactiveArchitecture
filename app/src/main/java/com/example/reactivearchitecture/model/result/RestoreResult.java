@@ -19,16 +19,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.model.result;
 
-import android.support.annotation.Nullable;
-
 import com.example.reactivearchitecture.model.MovieInfo;
 
 import java.util.List;
 
 /**
- * Results from {@link com.example.reactivearchitecture.model.action.ScrollAction} requests.
+ * Results from {@link com.example.reactivearchitecture.model.action.RestoreAction} requests.
  */
-public class ScrollResult extends Result {
+public class RestoreResult extends Result {
     private @ResultType int resultType;
     private boolean isSuccessful;
     private boolean isLoading;
@@ -36,20 +34,20 @@ public class ScrollResult extends Result {
     private List<MovieInfo> result;
     private Throwable error;
 
-    public static ScrollResult inFlight(int pageNumber) {
-        return new ScrollResult(ResultType.IN_FLIGHT, false, true, pageNumber, null, null);
+    public static RestoreResult inFlight(int pageNumber, List<MovieInfo> result) {
+        return new RestoreResult(ResultType.IN_FLIGHT, true, true, pageNumber, result, null);
     }
 
-    public static ScrollResult sucess(int pageNumber, List<MovieInfo> result) {
-        return new ScrollResult(ResultType.SUCCESS, true, false, pageNumber, result, null);
+    public static RestoreResult sucess(int pageNumber, List<MovieInfo> result) {
+        return new RestoreResult(ResultType.SUCCESS, true, false, pageNumber, result, null);
     }
 
-    public static ScrollResult failure(int pageNumber, Throwable error) {
-        return new ScrollResult(ResultType.FAILURE, false, false, pageNumber, null, error);
+    public static RestoreResult failure(int pageNumber, boolean inProgress, Throwable error) {
+        return new RestoreResult(ResultType.FAILURE, false, inProgress, pageNumber, null, error);
     }
 
-    private ScrollResult(@ResultType int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
-                         List<MovieInfo> result, Throwable error) {
+    private RestoreResult(int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
+                          List<MovieInfo> result, Throwable error) {
         this.resultType = resultType;
         this.isSuccessful = isSuccessful;
         this.isLoading = isLoading;
@@ -59,7 +57,11 @@ public class ScrollResult extends Result {
     }
 
     @Override
-    public @ResultType int getType() {
+    public int getType() {
+        return resultType;
+    }
+
+    public int getResultType() {
         return resultType;
     }
 
@@ -75,7 +77,7 @@ public class ScrollResult extends Result {
         return pageNumber;
     }
 
-    public @Nullable List<MovieInfo> getResult() {
+    public List<MovieInfo> getResult() {
         return result;
     }
 

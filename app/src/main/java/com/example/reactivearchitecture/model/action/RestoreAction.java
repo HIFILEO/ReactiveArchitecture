@@ -17,26 +17,19 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.reactivearchitecture.model.event;
+package com.example.reactivearchitecture.model.action;
 
 /**
- * Scroll Events.
+ * Internal representation of {@link com.example.reactivearchitecture.model.event.RestoreEvent}.
  */
-public class ScrollEvent extends UiEvent {
-    private int pageNumber;
+public class RestoreAction extends Action {
+    private int pageNumberToRestore;
 
-    public ScrollEvent(int pageNumber) {
-        this.pageNumber = pageNumber;
+    public RestoreAction(int pageNumberToRestore) {
+        this.pageNumberToRestore = pageNumberToRestore;
     }
 
-    public ScrollEvent() {
-    }
-
-    public int getPageNumber() {
-        return pageNumber;
-    }
-
-    public void setPageNumber(int pageNumber) {
-        this.pageNumber = pageNumber;
+    public int getPageNumberToRestore() {
+        return pageNumberToRestore;
     }
 }

@@ -25,7 +25,9 @@ import com.example.reactivearchitecture.model.MovieInfoImpl;
 import com.example.reactivearchitecture.model.NowPlayingInfo;
 import com.example.reactivearchitecture.model.NowPlayingInfoImpl;
 import com.example.reactivearchitecture.model.action.Action;
+import com.example.reactivearchitecture.model.action.RestoreAction;
 import com.example.reactivearchitecture.model.action.ScrollAction;
+import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
 import com.example.reactivearchitecture.rx.RxJavaTest;
@@ -37,6 +39,7 @@ import org.mockito.Mock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -138,11 +141,16 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         TestObserver<Result> testObserver;
         NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
 
-        String msg = "Error Message";
-        Throwable throwable = new Throwable(msg);
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+        NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber, totalPageNumber);
 
-        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
-                Observable.<NowPlayingInfo>error(throwable));
+        String errorMessage = "Error Message";
+
+        TestFailure testFailure = new TestFailure(nowPlayingInfo, errorMessage);
+        when(mockServiceGateway.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
 
         //
         //Act
@@ -156,7 +164,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Assert
         //
         testObserver.assertNoErrors();
-        testObserver.assertValueCount(2);
+        testObserver.assertValueCount(3);
 
         //IN_FLIGHT Test
         Result result = (Result) testObserver.getEvents().get(0).get(0);
@@ -170,15 +178,232 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         assertThat(scrollResult.getType()).isEqualTo(Result.ResultType.IN_FLIGHT);
 
         //FAILURE
-        Result failureResult = (Result) testObserver.getEvents().get(0).get(1);
-        assertThat(failureResult).isNotNull();
-        assertThat(failureResult).isInstanceOf(ScrollResult.class);
+        result = (Result) testObserver.getEvents().get(0).get(1);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(ScrollResult.class);
 
-        ScrollResult scrollResultFailure = (ScrollResult) failureResult;
-        assertThat(scrollResultFailure.getPageNumber()).isEqualTo(pageNumber);
-        assertThat(scrollResultFailure.getError()).isNotNull();
-        assertThat(scrollResultFailure.getError().getMessage()).isEqualTo(msg);
-        assertThat(scrollResultFailure.getResult()).isNull();
-        assertThat(scrollResultFailure.getType()).isEqualTo(Result.ResultType.FAILURE);
+        scrollResult = (ScrollResult) result;
+        assertThat(scrollResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(scrollResult.getError()).isNotNull();
+        assertThat(scrollResult.getError().getMessage()).isEqualTo(errorMessage);
+        assertThat(scrollResult.getResult()).isNull();
+        assertThat(scrollResult.getType()).isEqualTo(Result.ResultType.FAILURE);
+
+        ///SUCCESS
+        result = (Result) testObserver.getEvents().get(0).get(2);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(ScrollResult.class);
+
+        scrollResult = (ScrollResult) result;
+        assertThat(scrollResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(scrollResult.getError()).isNull();
+        assertThat(scrollResult.getResult()).isNotEmpty();
+        assertThat(scrollResult.getResult()).hasSize(5);
+        assertThat(scrollResult.getType()).isEqualTo(Result.ResultType.SUCCESS);
+
+        for (int i =0; i < 5; i++) {
+            assertThat(scrollResult.getResult().get(i)).isEqualTo(movieInfo);
+        }
+    }
+
+    @Test
+    public void testResultAction_pass() {
+        //
+        //Arrange
+        //
+        TestObserver<Result> testObserver;
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+        NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
+                totalPageNumber);
+
+        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+                Observable.just(nowPlayingInfo));
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingInteractor.processAction(
+                Observable.just((Action) new RestoreAction(pageNumber))).test();
+        testScheduler.advanceTimeBy(4, TimeUnit.SECONDS);
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(2);
+
+        //IN_FLIGHT Test
+        Result result = (Result) testObserver.getEvents().get(0).get(0);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(RestoreResult.class);
+
+        RestoreResult restoreResult = (RestoreResult) result;
+        assertThat(restoreResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(restoreResult.getError()).isNull();
+        assertThat(restoreResult.getResult()).isNull();
+        assertThat(restoreResult.getType()).isEqualTo(Result.ResultType.IN_FLIGHT);
+
+        //SUCCESS
+        result = (Result) testObserver.getEvents().get(0).get(1);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(RestoreResult.class);
+
+        restoreResult = (RestoreResult) result;
+        assertThat(restoreResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(restoreResult.getError()).isNull();
+        assertThat(restoreResult.getResult()).isNotEmpty();
+        assertThat(restoreResult.getResult()).hasSize(5);
+        assertThat(restoreResult.getType()).isEqualTo(Result.ResultType.SUCCESS);
+    }
+
+    @Test
+    public void testResultAction_fail() {
+        //
+        //Arrange
+        //
+        TestObserver<Result> testObserver;
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+        NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber, totalPageNumber);
+
+        String errorMessage = "Error Message";
+
+        TestFailure testFailure = new TestFailure(nowPlayingInfo, errorMessage);
+        when(mockServiceGateway.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingInteractor.processAction(
+                Observable.just((Action) new RestoreAction(pageNumber))).test();
+        testScheduler.advanceTimeBy(4, TimeUnit.SECONDS);
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(3);
+
+        //IN_FLIGHT Test
+        Result result = (Result) testObserver.getEvents().get(0).get(0);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(RestoreResult.class);
+
+        RestoreResult restoreResult = (RestoreResult) result;
+        assertThat(restoreResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(restoreResult.getError()).isNull();
+        assertThat(restoreResult.getResult()).isNull();
+        assertThat(restoreResult.getType()).isEqualTo(Result.ResultType.IN_FLIGHT);
+
+        //FAILURE
+        result = (Result) testObserver.getEvents().get(0).get(1);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(RestoreResult.class);
+
+        restoreResult = (RestoreResult) result;
+        assertThat(restoreResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(restoreResult.getError()).isNotNull();
+        assertThat(restoreResult.getError().getMessage()).isEqualTo(errorMessage);
+        assertThat(restoreResult.getResult()).isNull();
+        assertThat(restoreResult.getType()).isEqualTo(Result.ResultType.FAILURE);
+
+        ///SUCCESS
+        result = (Result) testObserver.getEvents().get(0).get(2);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(RestoreResult.class);
+
+        restoreResult = (RestoreResult) result;
+        assertThat(restoreResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(restoreResult.getError()).isNull();
+        assertThat(restoreResult.getResult()).isNotEmpty();
+        assertThat(restoreResult.getResult()).hasSize(5);
+        assertThat(restoreResult.getType()).isEqualTo(Result.ResultType.SUCCESS);
+
+        for (int i =0; i < 5; i++) {
+            assertThat(restoreResult.getResult().get(i)).isEqualTo(movieInfo);
+        }
+    }
+
+    @Test
+    public void testResultAction_pass_multiple_results() {
+        //
+        //Arrange
+        //
+        TestObserver<Result> testObserver;
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+
+        int pageNumber = 2;
+
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+        NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
+                totalPageNumber);
+
+        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+                Observable.just(nowPlayingInfo));
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingInteractor.processAction(
+                Observable.just((Action) new RestoreAction(pageNumber))).test();
+        testScheduler.advanceTimeBy(8, TimeUnit.SECONDS);
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(4);
+    }
+
+    /**
+     * Test class used to test Rx {@link io.reactivex.internal.operators.observable.ObservableRetryPredicate}.
+     */
+    private class TestFailure {
+        private final NowPlayingInfo nowPlayingInfo;
+        private final String errorMessage;
+        private boolean didFailOnce = false;
+
+        /**
+         * Constructor.
+         * @param nowPlayingInfo
+         * @param errorMessage
+         */
+        protected TestFailure(NowPlayingInfo nowPlayingInfo, String errorMessage) {
+            this.nowPlayingInfo = nowPlayingInfo;
+            this.errorMessage = errorMessage;
+        }
+
+        /**
+         * Use Mockito to trigger this during test.
+         * @return - {@link Exception} first time it's called, {@link NowPlayingInfo} the second.
+         */
+        Observable<NowPlayingInfo> getNowPlayingInfoObservable() {
+            return Observable.fromCallable(new Callable<NowPlayingInfo>() {
+                @Override
+                public NowPlayingInfo call() throws Exception {
+                    if (didFailOnce) {
+                        return nowPlayingInfo;
+                    } else {
+                        didFailOnce = true;
+                        throw new Exception(errorMessage);
+                    }
+                }
+            });
+        }
     }
 }

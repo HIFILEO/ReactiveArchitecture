@@ -21,11 +21,10 @@ public class TestNowPlayingViewModel extends NowPlayingViewModel {
                                    @NonNull NowPlayingInteractor nowPlayingInteractor) {
         super(application, serviceGateway);
         super.nowPlayingInteractor = nowPlayingInteractor;
-        super.bind();
     }
 
     @Override
-    protected void init() {
+    protected void createNowPlayingInteractor() {
         //Do Nothing
     }
 }
