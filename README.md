@@ -94,8 +94,8 @@ The following command works for API emulator version 25.
 
 ## Resources
 
-1. https://medium.com/@zeyad.gasser/reactive-redux-simply-managing-state-with-rxjava-8d6b25849068
-2. https://github.com/Zeyad-37/UseCases
-3. http://blog.danlew.net/2015/03/02/dont-break-the-chain/
-4. https://proandroiddev.com/state-propagation-in-android-with-rxjava-subjects-81db49a0dd8e
-5. https://www.youtube.com/watch?v=0IKHxjkgop4&t=1828s&list=PL6LUvCSPzQMbfOQkSLAINzmXQPDdxWv3P&index=6
+1. [Medium - Reactive Redux Simply Managing State](https://medium.com/@zeyad.gasser/reactive-redux-simply-managing-state-with-rxjava-8d6b25849068)
+2. [Github - Use Cases](https://github.com/Zeyad-37/UseCases)
+3. [Medium - Don't Break the Chain](http://blog.danlew.net/2015/03/02/dont-break-the-chain/)
+4. [ProAndroid - State Propogation](https://proandroiddev.com/state-propagation-in-android-with-rxjava-subjects-81db49a0dd8e)
+5. [Youtube - Managing State](https://www.youtube.com/watch?v=0IKHxjkgop4&t=1828s&list=PL6LUvCSPzQMbfOQkSLAINzmXQPDdxWv3P&index=6)
