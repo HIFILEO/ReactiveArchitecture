@@ -19,6 +19,7 @@ The requirements for the app:
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
 5. As a user, restore the last page I was when the "Now Playing" screen restarts.
+6. As a user, I want to filter my results based on Rating. 
 
 ### Demo 
 <img align="center" src="doc/demo.gif" alt="Demo of the app."/>
