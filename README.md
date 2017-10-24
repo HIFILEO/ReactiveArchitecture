@@ -18,7 +18,7 @@ The requirements for the app:
 2. As a user, any rating at eight or above should be stared.
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
-5. As a user, restore the last page I was when the application or activity restarts.
+5. As a user, restore the last page I was when the "Now Playing" screen restarts.
 
 ### Demo 
 <img align="center" src="doc/demo.gif" alt="Demo of the app."/>
