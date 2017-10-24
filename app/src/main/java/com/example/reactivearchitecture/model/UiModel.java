@@ -19,6 +19,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +29,7 @@ import java.util.List;
  * The model the UI will bind to.
  * Note - fields in this class should be immutable for "Scan" safety.
  */
-public class UiModel {
+public class UiModel implements Parcelable {
     private boolean firstTimeLoad;
     private String failureMsg;
     private int pageNumber;
@@ -35,10 +38,44 @@ public class UiModel {
     private List<MovieViewInfo> resultList;
     private @AdapterCommandType int adapterCommandType;
 
+    protected UiModel(Parcel in) {
+        this.firstTimeLoad = false;
+        this.failureMsg = null;
+        this.pageNumber = in.readInt();
+        this.enableScrollListener = false;
+        this.currentList = null;
+        this.resultList = null;
+        this.adapterCommandType = AdapterCommandType.DO_NOTHING;
+    }
+
+    public static final Creator<UiModel> CREATOR = new Creator<UiModel>() {
+        @Override
+        public UiModel createFromParcel(Parcel in) {
+            return new UiModel(in);
+        }
+
+        @Override
+        public UiModel[] newArray(int size) {
+            return new UiModel[size];
+        }
+    };
+
     /**
-     * Create init state.
-     * Note - this can't be a static final becuase you write espresso tests and you'll end up duplicating data.
-     * @return - new UiModel in init state.
+     * * Restore state - when you are reloading pages that were lost due to activity finish().
+     * @param pageNumber -
+     * @param currentList -
+     * @param resultList -
+     * @return - new UiModel
+     */
+    public static UiModel restoreState(int pageNumber, List<MovieViewInfo> currentList, List<MovieViewInfo> resultList) {
+        return new UiModel(true, null, pageNumber, false, currentList, resultList,
+                resultList == null || resultList.isEmpty() ? AdapterCommandType.DO_NOTHING : AdapterCommandType.ADD_DATA_ONLY);
+    }
+
+    /**
+     * Create createNowPlayingInteractor state.
+     * Note - this can't be a static final because you write espresso tests and you'll end up duplicating data.
+     * @return - new UiModel in createNowPlayingInteractor state.
      */
     public static UiModel initState() {
         return new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null, AdapterCommandType.DO_NOTHING);
@@ -49,27 +86,30 @@ public class UiModel {
      * @param pageNumber - current page number.
      * @param fullList - latest full list that backs the adapter.
      * @param valuesToAdd - values to add to adapter.
+     * @param adapterCommandType -
      * @return new UiModel
      */
-    public static UiModel successState(int pageNumber, List<MovieViewInfo> fullList, List<MovieViewInfo> valuesToAdd) {
+    public static UiModel successState(int pageNumber, List<MovieViewInfo> fullList, List<MovieViewInfo> valuesToAdd,
+                                       @AdapterCommandType int adapterCommandType) {
         return new UiModel(false,
                 null,
                 pageNumber,
                 true,
                 fullList,
                 valuesToAdd,
-                AdapterCommandType.ADD_DATA);
+                adapterCommandType);
     }
 
     /**
      * Create failure state.
+     * @param firstTimeLoad - true when first time loading.
      * @param pageNumber - current page number.
      * @param fullList - latest full list that backs the adapter.
      * @param failureMsg - failure message to show
      * @return new UiModel
      */
-    public static UiModel failureState(int pageNumber, List<MovieViewInfo> fullList, String failureMsg) {
-        return new UiModel(false,
+    public static UiModel failureState(boolean firstTimeLoad, int pageNumber, List<MovieViewInfo> fullList, String failureMsg) {
+        return new UiModel(firstTimeLoad,
                 failureMsg,
                 pageNumber,
                 false,
@@ -106,6 +146,17 @@ public class UiModel {
         this.adapterCommandType = adapterCommandType;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int flags) {
+        //only care about pageNumber when saving state
+        parcel.writeInt(pageNumber);
+    }
+
     public boolean isFirstTimeLoad() {
         return firstTimeLoad;
     }
@@ -122,8 +173,12 @@ public class UiModel {
         return enableScrollListener;
     }
 
+    /**
+     * Return a shallow copy of the current list.
+     * @return Shallow copy of list.
+     */
     public List<MovieViewInfo> getCurrentList() {
-        return currentList;
+        return new ArrayList<>(currentList);
     }
 
     public List<MovieViewInfo> getResultList() {

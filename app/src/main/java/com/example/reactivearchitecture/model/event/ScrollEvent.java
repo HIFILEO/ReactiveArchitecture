@@ -25,6 +25,13 @@ package com.example.reactivearchitecture.model.event;
 public class ScrollEvent extends UiEvent {
     private int pageNumber;
 
+    public ScrollEvent(int pageNumber) {
+        this.pageNumber = pageNumber;
+    }
+
+    public ScrollEvent() {
+    }
+
     public int getPageNumber() {
         return pageNumber;
     }

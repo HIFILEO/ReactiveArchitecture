@@ -17,9 +17,14 @@ The requirements for the app:
 1. As a user, show a list of "Now Playing" movies. Poster, Title, Release Date, & Rating. 
 2. As a user, any rating at eight or above should be stared.
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
-4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page. 
+4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
+5. As a user, restore the last page I was when the "Now Playing" screen restarts.
 
+### Demo 
 <img align="center" src="doc/demo.gif" alt="Demo of the app."/>
+
+### Rainy Day Scenario (Failure + Restore)
+<img align="center" src="doc/error_restore.gif" alt="Rainy Day Scenario"/>
 
 The application architecture is as followed: 
 
@@ -87,3 +92,10 @@ To run all lint:
 The following command works for API emulator version 25.
 ./gradlew checkstyle lintDebug jacocoTestReport contractTest -Pcontract=true connectedDebugAndroidTest
 
+## Resources
+
+1. [Medium - Reactive Redux Simply Managing State](https://medium.com/@zeyad.gasser/reactive-redux-simply-managing-state-with-rxjava-8d6b25849068)
+2. [Github - Use Cases](https://github.com/Zeyad-37/UseCases)
+3. [Medium - Don't Break the Chain](http://blog.danlew.net/2015/03/02/dont-break-the-chain/)
+4. [Medium - State propagation in Android with RxJava Subjects](https://proandroiddev.com/state-propagation-in-android-with-rxjava-subjects-81db49a0dd8e)
+5. [Youtube - Managing State with RxJava by Jake Wharton](https://www.youtube.com/watch?v=0IKHxjkgop4&t=1828s&list=PL6LUvCSPzQMbfOQkSLAINzmXQPDdxWv3P&index=6)

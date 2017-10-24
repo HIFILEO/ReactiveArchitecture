@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.model.result;
 
+import android.support.annotation.Nullable;
+
 import com.example.reactivearchitecture.model.MovieInfo;
 
 import java.util.List;
@@ -73,7 +75,7 @@ public class ScrollResult extends Result {
         return pageNumber;
     }
 
-    public List<MovieInfo> getResult() {
+    public @Nullable List<MovieInfo> getResult() {
         return result;
     }
 

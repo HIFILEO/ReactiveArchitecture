@@ -67,6 +67,8 @@ public class ServiceGatewayImpl implements ServiceGateway {
 
     @Override
     public Observable<NowPlayingInfo> getNowPlaying(int pageNumber) {
+        Timber.i("Thread name: %s. Get NowPlaying for Page #%s.", Thread.currentThread().getName(), pageNumber);
+
         Map<String, Integer> mapToSend = new HashMap<>();
         mapToSend.put("page", pageNumber);
 

@@ -13,6 +13,7 @@ import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.action.Action;
 import com.example.reactivearchitecture.model.action.ScrollAction;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
+import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
 import com.example.reactivearchitecture.rx.RxJavaTest;
@@ -79,7 +80,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
                 });
             }
         });
-
     }
 
     @Test
@@ -90,6 +90,8 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
                 mockServiceGateway, mockNowPlayingInteractor);
+        nowPlayingViewModel.init(null);
+        when(mockTestTransformer.transform(any(Action.class))).thenReturn(Observable.<Result>empty());
 
         //
         //Act
@@ -122,11 +124,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
                 mockServiceGateway, mockNowPlayingInteractor);
+        nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
-        ScrollEvent scrollEvent = new ScrollEvent();
-        scrollEvent.setPageNumber(pageNumber);
-
         ScrollResult scrollResult = ScrollResult.inFlight(pageNumber);
 
         ArgumentCaptor<Action> argumentCaptor = ArgumentCaptor.forClass(Action.class);
@@ -137,7 +137,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Act
         //
         testObserver = nowPlayingViewModel.getUiModels().test();
-        nowPlayingViewModel.processUiEvent(scrollEvent);
         testScheduler.triggerActions();
 
         //
@@ -175,10 +174,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
                 mockServiceGateway, mockNowPlayingInteractor);
+        nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
-        ScrollEvent scrollEvent = new ScrollEvent();
-        scrollEvent.setPageNumber(pageNumber);
 
         ScrollResult scrollResultInFlight = ScrollResult.inFlight(pageNumber);
 
@@ -196,7 +194,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //Act
         //
         testObserver = nowPlayingViewModel.getUiModels().test();
-        nowPlayingViewModel.processUiEvent(scrollEvent);
         testScheduler.triggerActions();
 
         //
@@ -210,7 +207,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         UiModel uiModel = (UiModel) testObserver.getEvents().get(0).get(2);
         assertThat(uiModel).isNotNull();
         assertThat(uiModel.isFirstTimeLoad()).isFalse();
-        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.ADD_DATA);
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS);
         assertThat(uiModel.getCurrentList()).isNotEmpty();
         assertThat(uiModel.getCurrentList()).hasSize(1);
         assertThat(uiModel.getResultList()).isNotEmpty();
@@ -226,6 +223,147 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
         assertThat(movieViewInfo.isHighRating()).isTrue();
 
+    }
+
+    @Test
+    public void inRestoreState() {
+        //
+        //Arrange
+        //
+        TestObserver<UiModel> testObserver;
+        TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
+                mockServiceGateway, mockNowPlayingInteractor);
+
+        //restore activity
+        final int pageNumber = 2;
+        UiModel restoreState = UiModel.restoreState(pageNumber, null, null);
+        nowPlayingViewModel.init(restoreState);
+
+        //Fake Data from Restore
+        List<MovieInfo> movieInfoList1 = new ArrayList<>();
+        movieInfoList1.add(movieInfo);
+        List<MovieInfo> movieInfoList2 = new ArrayList<>();
+        movieInfoList2.add(movieInfo);
+
+        RestoreResult restoreResult_inFlight_1 = RestoreResult.inFlight(1, null);
+        RestoreResult restoreResult_inFlight_1_success = RestoreResult.inFlight(1, movieInfoList1);
+        RestoreResult restoreResult_inFlight_2 = RestoreResult.inFlight(2, null);
+        RestoreResult restoreResult_success_2 = RestoreResult.sucess(2, movieInfoList2);
+
+        ArgumentCaptor<Action> argumentCaptor = ArgumentCaptor.forClass(Action.class);
+        when(mockTestTransformer.transform(argumentCaptor.capture())).thenReturn(Observable.just(
+                (Result) restoreResult_inFlight_1,
+                (Result) restoreResult_inFlight_1_success,
+                (Result) restoreResult_inFlight_2,
+                (Result) restoreResult_success_2));
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingViewModel.getUiModels().test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        //Observer Test
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(5);
+
+        //Model Test 1st Item
+        UiModel uiModel = (UiModel) testObserver.getEvents().get(0).get(0);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isTrue();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.DO_NOTHING);
+        assertThat(uiModel.getCurrentList()).isEmpty();
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isFalse();
+        assertThat(uiModel.getPageNumber()).isEqualTo(0);
+
+        //Model Test 2nd Item
+        uiModel = (UiModel) testObserver.getEvents().get(0).get(1);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isTrue();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.DO_NOTHING);
+        assertThat(uiModel.getCurrentList()).isEmpty();
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isFalse();
+        assertThat(uiModel.getPageNumber()).isEqualTo(1);
+
+        //Model Test 3rd Item
+        uiModel = (UiModel) testObserver.getEvents().get(0).get(2);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isTrue();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.ADD_DATA_ONLY);
+        assertThat(uiModel.getCurrentList()).isNotEmpty();
+        assertThat(uiModel.getCurrentList()).hasSize(1);
+        assertThat(uiModel.getResultList()).isNotEmpty();
+        assertThat(uiModel.getResultList()).hasSize(1);
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isFalse();
+        assertThat(uiModel.getPageNumber()).isEqualTo(1);
+
+        MovieViewInfo movieViewInfo = uiModel.getResultList().get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+        assertThat(movieViewInfo.isHighRating()).isTrue();
+
+        //Model Test 4th Item
+        uiModel = (UiModel) testObserver.getEvents().get(0).get(3);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isTrue();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.DO_NOTHING);
+        assertThat(uiModel.getCurrentList()).isNotEmpty();
+        assertThat(uiModel.getCurrentList()).hasSize(1);
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isFalse();
+        assertThat(uiModel.getPageNumber()).isEqualTo(pageNumber);
+
+        //Model Test 5th Item
+        uiModel = (UiModel) testObserver.getEvents().get(0).get(4);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isFalse();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.ADD_DATA_ONLY);
+        assertThat(uiModel.getCurrentList()).isNotEmpty();
+        assertThat(uiModel.getCurrentList()).hasSize(2);
+        assertThat(uiModel.getResultList()).isNotEmpty();
+        assertThat(uiModel.getResultList()).hasSize(1);
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isTrue();
+        assertThat(uiModel.getPageNumber()).isEqualTo(pageNumber);
+
+        //test result
+        movieViewInfo = uiModel.getResultList().get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+        assertThat(movieViewInfo.isHighRating()).isTrue();
+
+        //test full list
+        movieViewInfo = uiModel.getCurrentList().get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+        assertThat(movieViewInfo.isHighRating()).isTrue();
+
+        movieViewInfo = uiModel.getCurrentList().get(1);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+        assertThat(movieViewInfo.isHighRating()).isTrue();
+
+
+//
+//        //Test List Data
+//        MovieViewInfo movieViewInfo = uiModel.getResultList().get(0);
+//        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+//        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+//        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+//        assertThat(movieViewInfo.isHighRating()).isTrue();
     }
 
     private class TestTransformer {

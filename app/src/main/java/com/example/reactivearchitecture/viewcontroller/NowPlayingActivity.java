@@ -63,13 +63,15 @@ import timber.log.Timber;
  */
 public class NowPlayingActivity extends BaseActivity {
     private static final String LAST_SCROLL_POSITION = "LAST_SCROLL_POSITION";
+    private static final String LAST_UIMODEL = "LAST_UIMODEL";
+
     private NowPlayingListAdapter nowPlayingListAdapter;
     private NowPlayingViewModel nowPlayingViewModel;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private ActivityNowPlayingBinding nowPlayingBinding;
     private Disposable scrollDisposable;
     private Parcelable savedRecyclerLayoutState;
-    private int pageNumber;
+    private UiModel latestUiModel;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -90,10 +92,15 @@ public class NowPlayingActivity extends BaseActivity {
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(nowPlayingBinding.toolbar);
 
-        //restore adapter
+        //restore
+        UiModel savedUiModel = null;
         if (savedInstanceState != null) {
             savedRecyclerLayoutState = savedInstanceState.getParcelable(LAST_SCROLL_POSITION);
+            savedUiModel = savedInstanceState.getParcelable(LAST_UIMODEL);
         }
+
+        //init viewModel
+        nowPlayingViewModel.init(savedUiModel);
     }
 
     @Override
@@ -106,6 +113,7 @@ public class NowPlayingActivity extends BaseActivity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(LAST_SCROLL_POSITION, nowPlayingBinding.recyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putParcelable(LAST_UIMODEL, latestUiModel);
     }
 
     @Override
@@ -180,7 +188,7 @@ public class NowPlayingActivity extends BaseActivity {
                         //Only handle 'is at end' of list scroll events
                         if (scrollEventCalculator.isAtScrollEnd()) {
                             ScrollEvent scrollEvent = new ScrollEvent();
-                            scrollEvent.setPageNumber(pageNumber + 1);
+                            scrollEvent.setPageNumber(latestUiModel.getPageNumber() + 1);
                             return Observable.just(scrollEvent);
                         } else {
                             return Observable.empty();
@@ -230,17 +238,13 @@ public class NowPlayingActivity extends BaseActivity {
         Note - Keep the logic here as SIMPLE as possible.
          */
         Timber.i("Thread name: %s. Update UI based on UiModel.", Thread.currentThread().getName());
+        this.latestUiModel = uiModel;
 
         //
         //Update progressBar
         //
         nowPlayingBinding.progressBar.setVisibility(
                 uiModel.isFirstTimeLoad() ? View.VISIBLE : View.GONE);
-
-        //
-        //Update page number
-        //
-        pageNumber = uiModel.getPageNumber();
 
         //
         //Scroll Listener
@@ -255,11 +259,12 @@ public class NowPlayingActivity extends BaseActivity {
         //Update adapter
         //
         if (nowPlayingListAdapter == null) {
-            //shallow-copy
-            ArrayList<MovieViewInfo> adapterData = new ArrayList<>(uiModel.getCurrentList());
+            //Note, get returns a shallow-copy
+            ArrayList<MovieViewInfo> adapterData = (ArrayList<MovieViewInfo>) uiModel.getCurrentList();
 
             //Process last adapter command
-            if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA) {
+            if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA_ONLY
+                    || uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS) {
                 adapterData.addAll(uiModel.getResultList());
             } else if (uiModel.getAdapterCommandType() == AdapterCommandType.SHOW_IN_PROGRESS) {
                 adapterData.add(null);
@@ -271,27 +276,31 @@ public class NowPlayingActivity extends BaseActivity {
             //Restore adapter state
             if (savedRecyclerLayoutState != null) {
                 nowPlayingBinding.recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
-            } else {
-                //Trigger first load.
-                ScrollEvent scrollEvent = new ScrollEvent();
-                scrollEvent.setPageNumber(pageNumber + 1);
-                nowPlayingViewModel.processUiEvent(scrollEvent);
             }
-        } else {
-            if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA) {
-                Timber.i("Thread name: %s. Add adapter data on UiModel.", Thread.currentThread().getName());
-                //Remove Null Spinner
-                if (nowPlayingListAdapter.getItemCount() > 0) {
-                    nowPlayingListAdapter.remove(
-                            nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
-                }
 
-                //Add Data
-                nowPlayingListAdapter.addList(uiModel.getResultList());
-            } else if (uiModel.getAdapterCommandType() == AdapterCommandType.SHOW_IN_PROGRESS) {
-                //Add null to adapter. Null shows spinner in Adapter logic.
-                nowPlayingListAdapter.add(null);
-                nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
+        } else {
+            switch (uiModel.getAdapterCommandType()) {
+                case AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS:
+                    //Remove Null Spinner
+                    if (nowPlayingListAdapter.getItemCount() > 0) {
+                        nowPlayingListAdapter.remove(
+                                nowPlayingListAdapter.getItem(nowPlayingListAdapter.getItemCount() - 1));
+                    }
+
+                    //Add Data
+                    nowPlayingListAdapter.addList(uiModel.getResultList());
+                    break;
+                case AdapterCommandType.ADD_DATA_ONLY:
+                    //Add Data
+                    nowPlayingListAdapter.addList(uiModel.getResultList());
+                    break;
+                case AdapterCommandType.SHOW_IN_PROGRESS:
+                    //Add null to adapter. Null shows spinner in Adapter logic.
+                    nowPlayingListAdapter.add(null);
+                    nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
+                    break;
+                default:
+                    //No-Op
             }
         }
 
