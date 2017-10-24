@@ -20,7 +20,11 @@ The requirements for the app:
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
 5. As a user, restore the last page I was when the application or activity restarts.
 
-![alt-text-1](doc/demo.gif "Sunny Day") ![alt-text-2](doc/demo.gif "Rainy Day With Restore")
+### Demo 
+<img align="center" src="doc/demo.gif" alt="Demo of the app."/>
+
+### Rainy Day Scenario (Failure + Restore)
+<img align="center" src="doc/error_restore.gif" alt="Rainy Day Scenario"/>
 
 The application architecture is as followed: 
 
@@ -88,3 +92,10 @@ To run all lint:
 The following command works for API emulator version 25.
 ./gradlew checkstyle lintDebug jacocoTestReport contractTest -Pcontract=true connectedDebugAndroidTest
 
+## Resources
+
+1. https://medium.com/@zeyad.gasser/reactive-redux-simply-managing-state-with-rxjava-8d6b25849068
+2. https://github.com/Zeyad-37/UseCases
+3. http://blog.danlew.net/2015/03/02/dont-break-the-chain/
+4. https://proandroiddev.com/state-propagation-in-android-with-rxjava-subjects-81db49a0dd8e
+5. https://www.youtube.com/watch?v=0IKHxjkgop4&t=1828s&list=PL6LUvCSPzQMbfOQkSLAINzmXQPDdxWv3P&index=6
