@@ -17,9 +17,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.reactivearchitecture.adapter;
+package com.example.reactivearchitecture.adapter.nowplaying;
 
 import android.view.View;
+
+import com.example.reactivearchitecture.adapter.BaseViewHolder;
 
 /**
  * View holder for Progress Item.

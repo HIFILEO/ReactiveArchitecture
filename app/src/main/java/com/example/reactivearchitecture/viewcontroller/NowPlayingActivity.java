@@ -26,15 +26,21 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.adapter.NowPlayingListAdapter;
+import com.example.reactivearchitecture.adapter.filter.FilterAdapter;
+import com.example.reactivearchitecture.adapter.nowplaying.NowPlayingListAdapter;
 import com.example.reactivearchitecture.adapter.ScrollEventCalculator;
 import com.example.reactivearchitecture.databinding.ActivityNowPlayingBinding;
 import com.example.reactivearchitecture.model.AdapterCommandType;
 
+import com.example.reactivearchitecture.model.FilterView;
 import com.example.reactivearchitecture.model.MovieViewInfo;
 import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
@@ -72,6 +78,7 @@ public class NowPlayingActivity extends BaseActivity {
     private Disposable scrollDisposable;
     private Parcelable savedRecyclerLayoutState;
     private UiModel latestUiModel;
+    private Spinner filterSpinner;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -114,6 +121,9 @@ public class NowPlayingActivity extends BaseActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(LAST_SCROLL_POSITION, nowPlayingBinding.recyclerView.getLayoutManager().onSaveInstanceState());
         outState.putParcelable(LAST_UIMODEL, latestUiModel);
+
+
+
     }
 
     @Override
@@ -130,6 +140,58 @@ public class NowPlayingActivity extends BaseActivity {
 
         //un-bind (Android Databinding)
         nowPlayingBinding.unbind();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_action_bar_spinner, menu);
+        filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
+
+
+        FilterView filterViewOn = new FilterView(
+                getString(R.string.filter_on),
+                R.drawable.star_filled,
+                true);
+
+        FilterView filterViewOff = new FilterView(
+                getString(R.string.filter_off),
+                R.drawable.star_empty,
+                false);
+
+        List<FilterView> filterViewList = new ArrayList<>();
+        filterViewList.add(filterViewOn);
+        filterViewList.add(filterViewOff);
+
+        FilterAdapter filterAdapter = new FilterAdapter(filterViewList);
+
+
+
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.filters, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        filterSpinner.setAdapter(adapter);
+        filterSpinner.setAdapter(filterAdapter);
+
+
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                adapterView.getItemAtPosition(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     /**

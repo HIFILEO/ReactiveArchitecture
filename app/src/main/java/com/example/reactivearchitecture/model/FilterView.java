@@ -17,39 +17,37 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.reactivearchitecture.adapter;
-
-import android.databinding.ViewDataBinding;
-
-import com.example.reactivearchitecture.databinding.MovieItemBinding;
-import com.example.reactivearchitecture.model.MovieViewInfo;
-import com.squareup.picasso.Picasso;
+package com.example.reactivearchitecture.model;
 
 /**
- * {@link MovieViewInfo} holder.
+ * Item to represent a filter view.
  */
-public class MovieViewHolder extends BaseViewHolder {
-    private final MovieItemBinding movieItemBinding;
+public class FilterView {
+    private String filterText;
+    private int drawableResource;
+    private boolean filterOn;
 
     /**
      * Constructor.
-     * @param viewDataBinding - View to bind data to in {@link MovieViewHolder#bind(MovieViewInfo)}.
+     * @param filterText - Text to show.
+     * @param drawableResource - drawable resource to show
+     * @param filterOn - true when filter is on, false otherwise
      */
-    public  MovieViewHolder(ViewDataBinding viewDataBinding) {
-        super(viewDataBinding.getRoot());
-        this.movieItemBinding = (MovieItemBinding) viewDataBinding;
+    public FilterView(String filterText, int drawableResource, boolean filterOn) {
+        this.filterText = filterText;
+        this.drawableResource = drawableResource;
+        this.filterOn = filterOn;
     }
 
-    /**
-     * Bind the {@link MovieViewInfo} to the view holder.
-     * @param movieViewInfo - data to bind with.
-     */
-    public void bind(MovieViewInfo movieViewInfo) {
-        movieItemBinding.setMovieViewInfo(movieViewInfo);
+    public String getFilterText() {
+        return filterText;
+    }
 
-        //Picasso
-        Picasso.with(movieItemBinding.moviePosterImageView.getContext())
-                .load(movieViewInfo.getPictureUrl())
-                .into(movieItemBinding.moviePosterImageView);
+    public int getDrawableResource() {
+        return drawableResource;
+    }
+
+    public boolean isFilterOn() {
+        return filterOn;
     }
 }

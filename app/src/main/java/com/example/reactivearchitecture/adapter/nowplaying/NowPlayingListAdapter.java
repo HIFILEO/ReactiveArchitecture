@@ -17,7 +17,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.reactivearchitecture.adapter;
+package com.example.reactivearchitecture.adapter.nowplaying;
 
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
@@ -26,6 +26,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.reactivearchitecture.R;
+import com.example.reactivearchitecture.adapter.BaseViewHolder;
+import com.example.reactivearchitecture.adapter.RecyclerArrayAdapter;
 import com.example.reactivearchitecture.model.MovieViewInfo;
 
 import java.util.List;
@@ -40,7 +42,7 @@ public class NowPlayingListAdapter extends RecyclerArrayAdapter<MovieViewInfo, B
     /**
      * Constructor.
      *
-     * @param objects            - list of {@link MovieViewInfo}
+     * @param objects - list of {@link MovieViewInfo}
      */
     public NowPlayingListAdapter(List<MovieViewInfo> objects) {
         super(objects);

@@ -37,6 +37,7 @@ public class UiModel implements Parcelable {
     private List<MovieViewInfo> currentList;
     private List<MovieViewInfo> resultList;
     private @AdapterCommandType int adapterCommandType;
+    private int filterPosition;
 
     protected UiModel(Parcel in) {
         this.firstTimeLoad = false;
@@ -46,6 +47,7 @@ public class UiModel implements Parcelable {
         this.currentList = null;
         this.resultList = null;
         this.adapterCommandType = AdapterCommandType.DO_NOTHING;
+        this.filterPosition = in.readInt();
     }
 
     public static final Creator<UiModel> CREATOR = new Creator<UiModel>() {
