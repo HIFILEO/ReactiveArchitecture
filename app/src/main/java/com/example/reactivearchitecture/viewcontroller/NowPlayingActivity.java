@@ -47,7 +47,10 @@ import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.view.DividerItemDecoration;
 import com.example.reactivearchitecture.viewmodel.NowPlayingViewModel;
 import com.jakewharton.rxbinding2.support.v7.widget.RecyclerViewScrollEvent;
+import com.jakewharton.rxbinding2.support.v7.widget.RxPopupMenu;
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView;
+import com.jakewharton.rxbinding2.widget.RxAdapter;
+import com.jakewharton.rxbinding2.widget.RxAdapterView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +60,7 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -121,9 +125,6 @@ public class NowPlayingActivity extends BaseActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(LAST_SCROLL_POSITION, nowPlayingBinding.recyclerView.getLayoutManager().onSaveInstanceState());
         outState.putParcelable(LAST_UIMODEL, latestUiModel);
-
-
-
     }
 
     @Override
@@ -146,45 +147,32 @@ public class NowPlayingActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_action_bar_spinner, menu);
         filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
+        filterSpinner.setAdapter(createFilterAdapter());
 
-
-        FilterView filterViewOn = new FilterView(
-                getString(R.string.filter_on),
-                R.drawable.star_filled,
-                true);
-
-        FilterView filterViewOff = new FilterView(
-                getString(R.string.filter_off),
-                R.drawable.star_empty,
-                false);
-
-        List<FilterView> filterViewList = new ArrayList<>();
-        filterViewList.add(filterViewOn);
-        filterViewList.add(filterViewOff);
-
-        FilterAdapter filterAdapter = new FilterAdapter(filterViewList);
+        //set latest position
+        if (latestUiModel.isFilterOn()) {
+            filterSpinner.setSelection(1);
+        } else {
+            filterSpinner.setSelection(0);
+        }
 
 
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.filters, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        filterSpinner.setAdapter(adapter);
-        filterSpinner.setAdapter(filterAdapter);
+//        if (latestUiModel.is)
+//
+//
+//
+
+//        compositeDisposable.add(RxAdapterView.itemSelections(filterSpinner)
+//                .subscribeOn(AndroidSchedulers.mainThread());
 
 
-        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                adapterView.getItemAtPosition(i);
-            }
+      //  crollDisposable = RxRecyclerView.scrollEvents
 
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
 
-            }
-        });
+     //   filterSpinner.setSelection();
+
         return true;
     }
 
@@ -372,5 +360,27 @@ public class NowPlayingActivity extends BaseActivity {
         if (uiModel.getFailureMsg() != null && !uiModel.getFailureMsg().isEmpty()) {
             Toast.makeText(NowPlayingActivity.this, R.string.error_msg, Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Create the filter list adapter.
+     * @return - adapter to show for filtering.
+     */
+    private FilterAdapter createFilterAdapter() {
+        FilterView filterViewOn = new FilterView(
+                getString(R.string.filter_on),
+                R.drawable.star_filled,
+                true);
+
+        FilterView filterViewOff = new FilterView(
+                getString(R.string.filter_off),
+                R.drawable.star_empty,
+                false);
+
+        List<FilterView> filterViewList = new ArrayList<>();
+        filterViewList.add(filterViewOff);
+        filterViewList.add(filterViewOn);
+
+        return new FilterAdapter(this, filterViewList);
     }
 }

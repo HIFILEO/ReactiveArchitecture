@@ -12,7 +12,6 @@ import com.example.reactivearchitecture.model.MovieViewInfo;
 import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.action.Action;
 import com.example.reactivearchitecture.model.action.ScrollAction;
-import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
@@ -236,7 +235,11 @@ public class NowPlayingViewModelTest extends RxJavaTest {
 
         //restore activity
         final int pageNumber = 2;
-        UiModel restoreState = UiModel.restoreState(pageNumber, null, null);
+
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(UiModel.initState());
+        uiModelBuilder.setPageNumber(pageNumber);
+
+        UiModel restoreState = uiModelBuilder.createUiModel();
         nowPlayingViewModel.init(restoreState);
 
         //Fake Data from Restore
@@ -356,14 +359,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
         assertThat(movieViewInfo.isHighRating()).isTrue();
 
-
-//
-//        //Test List Data
-//        MovieViewInfo movieViewInfo = uiModel.getResultList().get(0);
-//        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
-//        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
-//        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
-//        assertThat(movieViewInfo.isHighRating()).isTrue();
     }
 
     private class TestTransformer {

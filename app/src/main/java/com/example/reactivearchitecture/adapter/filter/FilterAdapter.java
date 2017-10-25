@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.reactivearchitecture.adapter.filter;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,8 +27,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.adapter.BaseViewHolder;
-import com.example.reactivearchitecture.adapter.RecyclerArrayAdapter;
 import com.example.reactivearchitecture.model.FilterView;
 
 import java.util.List;
@@ -39,24 +36,43 @@ import java.util.List;
  */
 public class FilterAdapter extends ArrayAdapter<FilterView> {
 
-    http://abhiandroid.com/ui/custom-spinner-examples.html
-
-    public FilterAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<FilterView> objects) {
-        super(context, resource, objects);
+    public FilterAdapter(@NonNull Context context, @NonNull List<FilterView> filterViewList) {
+        super(context, 0, filterViewList);
     }
 
     @Override
-    public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.filter_item, parent, false);
-        return new FilterViewHolder(view);
-    }
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View viewToFill = convertView;
+        FilterViewHolder filterViewHolder;
 
-    @Override
-    public void onBindViewHolder(BaseViewHolder holder, int position) {
-        FilterView item = getItem(position);
-        if (item != null) {
-            ((FilterViewHolder) holder).bind(item);
+        if (viewToFill == null) {
+            viewToFill =( LayoutInflater.from(getContext())).inflate(R.layout.filter_item, null);
+            filterViewHolder = new FilterViewHolder(viewToFill);
+        } else {
+            filterViewHolder = (FilterViewHolder) viewToFill.getTag();
         }
+
+        filterViewHolder.bind(getItem(position));
+        viewToFill.setTag(filterViewHolder);
+
+        return viewToFill;
     }
 
+    @Override
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        View viewToFill = convertView;
+        FilterViewHolder filterViewHolder;
+
+        if (viewToFill == null) {
+            viewToFill =( LayoutInflater.from(getContext())).inflate(R.layout.filter_dropdown_item, null);
+            filterViewHolder = new FilterViewHolder(viewToFill);
+        } else {
+            filterViewHolder = (FilterViewHolder) viewToFill.getTag();
+        }
+
+        filterViewHolder.bind(getItem(position));
+        viewToFill.setTag(filterViewHolder);
+
+        return viewToFill;
+    }
 }
