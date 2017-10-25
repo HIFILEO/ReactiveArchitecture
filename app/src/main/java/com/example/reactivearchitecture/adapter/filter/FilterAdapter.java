@@ -41,7 +41,7 @@ public class FilterAdapter extends ArrayAdapter<FilterView> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public @NonNull View getView(int position, View convertView, ViewGroup parent) {
         View viewToFill = convertView;
         FilterViewHolder filterViewHolder;
 

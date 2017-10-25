@@ -145,34 +145,21 @@ public class NowPlayingActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        //
+        //Inflate
+        //
         getMenuInflater().inflate(R.menu.menu_action_bar_spinner, menu);
         filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
         filterSpinner.setAdapter(createFilterAdapter());
 
-        //set latest position
+        //
+        //Restore
+        //
         if (latestUiModel.isFilterOn()) {
             filterSpinner.setSelection(1);
         } else {
             filterSpinner.setSelection(0);
         }
-
-
-
-
-//        if (latestUiModel.is)
-//
-//
-//
-
-//        compositeDisposable.add(RxAdapterView.itemSelections(filterSpinner)
-//                .subscribeOn(AndroidSchedulers.mainThread());
-
-
-      //  crollDisposable = RxRecyclerView.scrollEvents
-
-
-     //   filterSpinner.setSelection();
-
         return true;
     }
 
@@ -219,6 +206,18 @@ public class NowPlayingActivity extends BaseActivity {
                     }
                 })
         );
+
+        //
+        //Bind to Events
+        //
+        compositeDisposable.add(RxAdapterView.itemSelections(filterSpinner)
+                .flatMap(new Function<Integer, ObservableSource<?>>() {
+                    @Override
+                    public ObservableSource<Filter> apply(@NonNull Integer position) throws Exception {
+                        boolean filterOn = integer
+                    }
+                })
+//                .subscribeOn(AndroidSchedulers.mainThread());
     }
 
     /**
