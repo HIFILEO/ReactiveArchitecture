@@ -13,6 +13,11 @@ public class FilterResult extends Result {
     private boolean filterInProgress;
     private List<MovieInfo> filteredList;
 
+    /**
+     * In progress creator.
+     * @param filterOn -
+     * @return new {@link FilterResult}
+     */
     public static FilterResult inProgress(boolean filterOn) {
         return new FilterResult(
                 ResultType.IN_FLIGHT,
@@ -21,6 +26,12 @@ public class FilterResult extends Result {
                 null);
     }
 
+    /**
+     * Success Creator.
+     * @param filterOn -
+     * @param listToShow -
+     * @return new {@link FilterResult}
+     */
     public static FilterResult success(boolean filterOn, List<MovieInfo> listToShow) {
         return new FilterResult(
                 ResultType.SUCCESS,
@@ -41,9 +52,6 @@ public class FilterResult extends Result {
         return resultType;
     }
 
-    public int getResultType() {
-        return resultType;
-    }
 
     public boolean isFilterOn() {
         return filterOn;

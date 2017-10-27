@@ -23,9 +23,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.NowPlayingInfo;
 import com.example.reactivearchitecture.model.action.Action;
+import com.example.reactivearchitecture.model.action.FilterAction;
 import com.example.reactivearchitecture.model.action.RestoreAction;
 import com.example.reactivearchitecture.model.action.ScrollAction;
 import com.example.reactivearchitecture.model.result.RestoreResult;
@@ -52,6 +54,9 @@ public class NowPlayingInteractor {
     private final ServiceGateway serviceGateway;
 
     @NonNull
+    private final FilterTransformer filterTransformer;
+
+    @NonNull
     private final ObservableTransformer<ScrollAction, ScrollResult> transformScrollActionToScrollResult;
 
     @NonNull
@@ -62,11 +67,13 @@ public class NowPlayingInteractor {
 
     /**
      * Constructor.
-     * @param serviceGatewayLocal - Gateway to fetch data from.
+     * @param serviceGatewayIn - Gateway to fetch data from.
+     * @param filterTransformerIn - {@link FilterTransformer}
      */
     @SuppressWarnings("checkstyle:magicnumber")
-    public NowPlayingInteractor(ServiceGateway serviceGatewayLocal) {
-        this.serviceGateway = serviceGatewayLocal;
+    public NowPlayingInteractor(@NonNull ServiceGateway serviceGatewayIn, @NonNull FilterTransformer filterTransformerIn) {
+        this.serviceGateway = serviceGatewayIn;
+        this.filterTransformer = filterTransformerIn;
 
         transformScrollActionToScrollResult = new ObservableTransformer<ScrollAction, ScrollResult>() {
             @Override
@@ -81,7 +88,7 @@ public class NowPlayingInteractor {
 
                         return serviceGateway.getNowPlaying(scrollAction.getPageNumber())
                                 //Delay for 3 seconds to show spinner on screen.
-                                .delay(1, TimeUnit.SECONDS)
+                                .delay(3, TimeUnit.SECONDS)
                                 //translate external to internal business logic (Example if we wanted to save to prefs)
                                 .flatMap(new NowPlayingInteractor.MovieListFetcher())
                                 .flatMap(new Function<List<MovieInfo>, ObservableSource<ScrollResult>>() {
@@ -173,10 +180,17 @@ public class NowPlayingInteractor {
                     @Override
                     public ObservableSource<Result> apply(Observable<Action> actionObservable) throws Exception {
                         Timber.i("Thread name: %s. Translate Actions into Specific Actions.", Thread.currentThread().getName());
+
                         return Observable.merge(
+                                actionObservable.ofType(FilterAction.class),
                                 actionObservable.ofType(ScrollAction.class).compose(transformScrollActionToScrollResult),
-                                actionObservable.ofType(RestoreAction.class).compose(transformRestoreActionToRestoreResult)
-                        );
+                                actionObservable.ofType(RestoreAction.class).compose(transformRestoreActionToRestoreResult))
+                                .concatMap(new Function<Object, ObservableSource<Result>>() {
+                                    @Override
+                                    public ObservableSource<Result> apply(Object object) throws Exception {
+                                        return processFiltering(object);
+                                    }
+                                });
                     }
                 });
             }
@@ -190,6 +204,28 @@ public class NowPlayingInteractor {
      */
     public Observable<Result> processAction(Observable<Action> actions) {
         return actions.compose(transformActionIntoResults);
+    }
+
+    /**
+     * Process Filtering for {@link ScrollResult}, {@link RestoreResult}, {@link FilterAction}.
+     * @param object - object to apply filtering on.
+     * @return {@link Observable} of {@link Result}
+     */
+    private Observable<Result> processFiltering(Object object) {
+        return Observable.just(object)
+                .publish(new Function<Observable<Object>, ObservableSource<Result>>() {
+                    @Override
+                    public ObservableSource<Result> apply(Observable<Object> objectObservable) throws Exception {
+                        return Observable.merge(
+                                objectObservable.ofType(FilterAction.class)
+                                        .compose(filterTransformer.getTransformFilterActionToFilterResult()),
+                                objectObservable.ofType(ScrollResult.class)
+                                        .compose(filterTransformer.getTransformFilterScrollResult()),
+                                objectObservable.ofType(RestoreResult.class)
+                                        .compose(filterTransformer.getTransformFilterRestoreResult())
+                        );
+                    }
+                });
     }
 
     /**

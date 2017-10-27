@@ -32,16 +32,21 @@ import com.example.reactivearchitecture.R;
 import com.example.reactivearchitecture.gateway.ServiceGateway;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
+import com.example.reactivearchitecture.model.FilterManager;
+import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.MovieViewInfo;
 import com.example.reactivearchitecture.model.MovieViewInfoImpl;
 import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.action.Action;
+import com.example.reactivearchitecture.model.action.FilterAction;
 import com.example.reactivearchitecture.model.action.RestoreAction;
 import com.example.reactivearchitecture.model.action.ScrollAction;
+import com.example.reactivearchitecture.model.event.FilterEvent;
 import com.example.reactivearchitecture.model.event.RestoreEvent;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.model.event.UiEvent;
+import com.example.reactivearchitecture.model.result.FilterResult;
 import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
@@ -68,7 +73,6 @@ public class NowPlayingViewModel extends ViewModel {
     private Observable<UiModel> uiModelObservable;
     private UiModel initialUiModel;
     private Observable<UiEvent> startEventsObservable;
-
     private ObservableTransformer<UiEvent, Action> transformEventsIntoActions;
 
     @NonNull
@@ -87,6 +91,12 @@ public class NowPlayingViewModel extends ViewModel {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected NowPlayingInteractor nowPlayingInteractor;
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected FilterManager filterManager;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected FilterTransformer filterTransformer;
+
     /**
      * Constructor. Members are injected.
      * @param application -
@@ -97,7 +107,7 @@ public class NowPlayingViewModel extends ViewModel {
         this.serviceGateway = serviceGateway;
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
-        createNowPlayingInteractor();
+        createNonInjectedData();
         setupTransformers();
     }
 
@@ -119,6 +129,7 @@ public class NowPlayingViewModel extends ViewModel {
                 initialUiModel = uiModelBuilder.createUiModel();
                 startEventsObservable = Observable.just((UiEvent) new RestoreEvent(initialUiModel.getPageNumber()));
             }
+            filterManager.setFilterOn(initialUiModel.isFilterOn());
             bind();
         }
     }
@@ -157,8 +168,10 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected void createNowPlayingInteractor() {
-        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway);
+    protected void createNonInjectedData() {
+        filterManager = new FilterManager(false);
+        filterTransformer = new FilterTransformer(filterManager);
+        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway, filterTransformer);
     }
 
     /**
@@ -181,7 +194,7 @@ public class NowPlayingViewModel extends ViewModel {
                     }
                 })
                 //Scan Results to Update UiModel
-                .scan(UiModel.initState(), new BiFunction<UiModel, Result, UiModel>() {
+                .scan(initialUiModel, new BiFunction<UiModel, Result, UiModel>() {
                     @Override
                     public UiModel apply(UiModel uiModel, Result result) throws Exception {
                         Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
@@ -190,6 +203,8 @@ public class NowPlayingViewModel extends ViewModel {
                             return processScrollResult(uiModel, (ScrollResult) result);
                         } else if (result instanceof RestoreResult) {
                             return processRestoreResult(uiModel, (RestoreResult) result);
+                        } else if (result instanceof FilterResult) {
+                            return processFilterResult(uiModel, (FilterResult) result);
                         }
 
                         //Unknown result - throw error
@@ -219,7 +234,7 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     /**
-     * Setup the transformers used by this {@link NowPlayingViewModel}
+     * Setup the transformers used by this {@link NowPlayingViewModel}.
      */
     @MainThread
     private void setupTransformers() {
@@ -249,6 +264,19 @@ public class NowPlayingViewModel extends ViewModel {
             }
         };
 
+        final ObservableTransformer<FilterEvent, FilterAction> filterTransformer =
+                new ObservableTransformer<FilterEvent, FilterAction>() {
+                    @Override
+                    public ObservableSource<FilterAction> apply(Observable<FilterEvent> upstream) {
+                        return upstream.flatMap(new Function<FilterEvent, ObservableSource<FilterAction>>() {
+                            @Override
+                            public ObservableSource<FilterAction> apply(FilterEvent filterEvent) throws Exception {
+                                return Observable.just(new FilterAction(filterEvent.isFilterOn()));
+                            }
+                        });
+                    }
+                };
+
         transformEventsIntoActions = new ObservableTransformer<UiEvent, Action>() {
             @Override
             public ObservableSource<Action> apply(@io.reactivex.annotations.NonNull Observable<UiEvent> upstream) {
@@ -257,7 +285,9 @@ public class NowPlayingViewModel extends ViewModel {
                     public ObservableSource<Action> apply(Observable<UiEvent> uiEventObservable) throws Exception {
                         return Observable.merge(
                                 uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
-                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer));
+                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer),
+                                uiEventObservable.ofType(FilterEvent.class).compose(filterTransformer)
+                        );
                     }
                 });
             }
@@ -376,6 +406,38 @@ public class NowPlayingViewModel extends ViewModel {
             default:
                 //Unknown result - throw error
                 throw new IllegalArgumentException("Unknown ResultType: " + restoreResult.getType());
+        }
+
+        return uiModelBuilder.createUiModel();
+    }
+
+    /**
+     * Update the {@link UiModel} based on input form a {@link FilterResult}.
+     * @param uiModel - model to udate
+     * @param filterResult - results from {@link FilterResult}
+     * @return new updated {@link UiModel}
+     */
+    private UiModel processFilterResult(@NonNull UiModel uiModel, FilterResult filterResult) {
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(uiModel);
+
+        switch (filterResult.getType()) {
+            case Result.ResultType.IN_FLIGHT:
+                Timber.i("Filter - IN_FLIGHT");
+                break;
+            case Result.ResultType.SUCCESS:
+                //Success
+                uiModelBuilder
+                        .setCurrentList(translateResultsForUi(filterResult.getFilteredList()))
+                        .setFilterOn(filterResult.isFilterOn())
+                        .setResultList(null)
+                        .setAdapterCommandType(AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER);
+                break;
+            case Result.ResultType.FAILURE:
+                Timber.e("Failure during filter. Throw error, this should never happen.");
+                throw new IllegalArgumentException("Failure during filter. This should never happen.");
+            default:
+                //Unknown result - throw error
+                throw new IllegalArgumentException("Unknown ResultType: " + filterResult.getType());
         }
 
         return uiModelBuilder.createUiModel();

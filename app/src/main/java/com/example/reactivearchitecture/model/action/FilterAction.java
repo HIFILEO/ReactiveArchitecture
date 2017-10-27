@@ -22,7 +22,7 @@ package com.example.reactivearchitecture.model.action;
 /**
  * Internal representation of {@link com.example.reactivearchitecture.model.event.FilterEvent}.
  */
-public class FilterAction extends Action{
+public class FilterAction extends Action {
     private boolean filterOn;
 
     public FilterAction(boolean filterOn) {

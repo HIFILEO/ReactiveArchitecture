@@ -48,7 +48,16 @@ public class ScrollResult extends Result {
         return new ScrollResult(ResultType.FAILURE, false, false, pageNumber, null, error);
     }
 
-    private ScrollResult(@ResultType int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
+    /**
+     * Constructor.
+     * @param resultType -
+     * @param isSuccessful -
+     * @param isLoading -
+     * @param pageNumber -
+     * @param result -
+     * @param error -
+     */
+    public ScrollResult(@ResultType int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
                          List<MovieInfo> result, Throwable error) {
         this.resultType = resultType;
         this.isSuccessful = isSuccessful;

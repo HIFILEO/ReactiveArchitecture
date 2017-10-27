@@ -46,7 +46,7 @@ public class FilterAdapter extends ArrayAdapter<FilterView> {
         FilterViewHolder filterViewHolder;
 
         if (viewToFill == null) {
-            viewToFill =( LayoutInflater.from(getContext())).inflate(R.layout.filter_item, null);
+            viewToFill = (LayoutInflater.from(getContext())).inflate(R.layout.filter_item, null);
             filterViewHolder = new FilterViewHolder(viewToFill);
         } else {
             filterViewHolder = (FilterViewHolder) viewToFill.getTag();
@@ -64,7 +64,7 @@ public class FilterAdapter extends ArrayAdapter<FilterView> {
         FilterViewHolder filterViewHolder;
 
         if (viewToFill == null) {
-            viewToFill =( LayoutInflater.from(getContext())).inflate(R.layout.filter_dropdown_item, null);
+            viewToFill = (LayoutInflater.from(getContext())).inflate(R.layout.filter_dropdown_item, null);
             filterViewHolder = new FilterViewHolder(viewToFill);
         } else {
             filterViewHolder = (FilterViewHolder) viewToFill.getTag();

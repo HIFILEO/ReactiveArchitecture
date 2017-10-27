@@ -64,9 +64,9 @@ public class UiModel implements Parcelable {
     };
 
     /**
-     * Create createNowPlayingInteractor state.
+     * Create createNonInjectedData state.
      * Note - this can't be a static final because you write espresso tests and you'll end up duplicating data.
-     * @return - new UiModel in createNowPlayingInteractor state.
+     * @return - new UiModel in createNonInjectedData state.
      */
     public static UiModel initState() {
         return new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null, AdapterCommandType.DO_NOTHING, false);
@@ -93,7 +93,7 @@ public class UiModel implements Parcelable {
     public void writeToParcel(Parcel parcel, int flags) {
         //only care about pageNumber when saving state
         parcel.writeInt(pageNumber);
-        parcel.writeByte((byte) (filterOn ? 1: 0));
+        parcel.writeByte((byte) (filterOn ? 1 : 0));
     }
 
     public boolean isFirstTimeLoad() {
@@ -133,7 +133,7 @@ public class UiModel implements Parcelable {
     }
 
     /**
-     * Too many state? Too many params in constructors? Call on the builder pattern to Save The Day!
+     * Too many state? Too many params in constructors? Call on the builder pattern to Save The Day!.
      */
     public static class UiModelBuilder {
         private final UiModel uiModel;
@@ -153,6 +153,15 @@ public class UiModel implements Parcelable {
          */
         public UiModelBuilder(@NonNull UiModel uiModel) {
             this.uiModel = uiModel;
+
+            this.firstTimeLoad = uiModel.firstTimeLoad;
+            this.failureMsg = uiModel.failureMsg;
+            this.pageNumber = uiModel.pageNumber;
+            this.enableScrollListener = uiModel.enableScrollListener;
+            this.currentList = uiModel.currentList;
+            this.resultList = uiModel.resultList;
+            this.adapterCommandType = uiModel.adapterCommandType;
+            this.filterOn = uiModel.filterOn;
         }
 
         public UiModelBuilder() {
