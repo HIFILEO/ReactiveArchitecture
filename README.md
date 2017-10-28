@@ -22,7 +22,7 @@ The requirements for the app:
 6. As a user, I want to filter my results based on Rating. 
 
 ### Demo 
-<img align="center" src="doc/demo.gif" alt="Demo of the app."/>
+<img align="center" src="doc/demo_with_filter.gif" alt="Demo of the app."/>
 
 ### Rainy Day Scenario (Failure + Restore - Filter)
 <img align="center" src="doc/error_restore.gif" alt="Rainy Day Scenario"/>
