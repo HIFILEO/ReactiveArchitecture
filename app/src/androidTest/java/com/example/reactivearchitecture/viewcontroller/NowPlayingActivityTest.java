@@ -26,13 +26,19 @@ import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingResource;
+import android.support.test.espresso.NoMatchingViewException;
+import android.support.test.espresso.ViewAssertion;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import com.example.reactivearchitecture.R;
 
+import com.example.reactivearchitecture.adapter.nowplaying.NowPlayingListAdapter;
 import com.example.reactivearchitecture.application.TestReactiveArchitectureApplication;
+import com.example.reactivearchitecture.model.FilterView;
 import com.example.reactivearchitecture.service.ServiceApi;
 import com.example.reactivearchitecture.service.ServiceResponse;
 import com.example.reactivearchitecture.util.EspressoTestRule;
@@ -42,6 +48,10 @@ import com.example.reactivearchitecture.util.RxEspressoHandler;
 import com.example.reactivearchitecture.util.TestEspressoAssetFileHelper;
 import com.google.gson.Gson;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,14 +70,21 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.plugins.RxJavaPlugins;
 
+import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -235,7 +252,7 @@ public class NowPlayingActivityTest {
                 RecyclerViewActions.scrollToPosition(20) //scroll to show progress spinner
         );
 
-        //Not idea - need to wait until next frame to trigger load
+        //Not ideal - need to wait until next frame to trigger load
         //TODO - create an espresso test and wait w/ backoff.
         Thread.sleep(250);
 
@@ -244,6 +261,71 @@ public class NowPlayingActivityTest {
 
         onView(withRecyclerView(R.id.recyclerView).atPosition(20))
                 .check(matches(hasDescendant(withId(R.id.progressBar))));
+    }
+
+    @Test
+    public void filterOnLoadsMoreData() throws InterruptedException {
+        //
+        //Arrange
+        //
+
+        //Register Rx Idling (Only needed for specific tests that need to wait for data)
+        RxEspressoHandler rxEspressoHandler = new RxEspressoHandler();
+        RxJavaPlugins.setScheduleHandler(rxEspressoHandler.getRxEspressoScheduleHandler());
+        RxJavaPlugins.setOnObservableAssembly(rxEspressoHandler.getRxEspressoObserverHandler());
+
+        //
+        //Act
+        //
+        activityTestRule.launchActivity(new Intent());
+        onView(withId(R.id.filterSpinner)).perform(click());
+
+        onData(allOf(is(instanceOf(FilterView.class)), new BaseMatcher<FilterView>() {
+                    @Override
+                    public void describeTo(Description description) {
+                        //No-Op
+                    }
+
+                    @Override
+                    public boolean matches(Object item) {
+                        if (item instanceof FilterView) {
+                            FilterView filterView = (FilterView) item;
+                            if (filterView.getFilterText().equalsIgnoreCase("On")) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+
+                        return false;
+                    }
+                })).perform(click());
+
+        //enable idling resource AFTER we trigger the filter.
+        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
+
+        //
+        //Assert
+        //
+
+        //A load more will trigger when not enough data to fill screen. Check the second page loads a total of 7 items.
+        onView(withId(R.id.recyclerView)).check(new ViewAssertion(){
+
+            @Override
+            public void check(View view, NoMatchingViewException noViewFoundException) {
+                if (noViewFoundException != null) {
+                    throw noViewFoundException;
+                }
+
+                RecyclerView recyclerView = (RecyclerView) view;
+                RecyclerView.Adapter adapter = recyclerView.getAdapter();
+                assertThat(adapter.getItemCount(), Matchers.is(7));
+
+                assertThat(adapter).isInstanceOf(NowPlayingListAdapter.class);
+                NowPlayingListAdapter nowPlayingListAdapter = (NowPlayingListAdapter) adapter;
+                assertThat(nowPlayingListAdapter.getItem(6)).isNotNull();
+            }
+        });
     }
 
     @After
@@ -274,5 +356,21 @@ public class NowPlayingActivityTest {
         String apiKey = getResourceString(R.string.api_key);
         when(serviceApi.nowPlaying(apiKey, mapToSend1)).thenReturn(Observable.just(serviceResponse1));
         when(serviceApi.nowPlaying(apiKey, mapToSend2)).thenReturn(Observable.just(serviceResponse2));
+    }
+
+    public static <T> Matcher<T> withMyValue(final String name) {
+
+        return new BaseMatcher<T>() {
+
+            @Override
+            public boolean matches(Object item) {
+                return item.toString().equals(name);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+
+            }
+        };
     }
 }

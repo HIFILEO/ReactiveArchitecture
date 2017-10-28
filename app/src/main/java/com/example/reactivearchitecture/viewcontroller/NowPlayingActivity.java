@@ -80,7 +80,6 @@ public class NowPlayingActivity extends BaseActivity {
     private Disposable scrollDisposable;
     private Parcelable savedRecyclerLayoutState;
     private UiModel latestUiModel;
-    private Spinner filterSpinner;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -147,7 +146,7 @@ public class NowPlayingActivity extends BaseActivity {
         //Inflate
         //
         getMenuInflater().inflate(R.menu.menu_action_bar_spinner, menu);
-        filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
+        Spinner filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
         filterSpinner.setAdapter(createFilterAdapter());
 
         //
