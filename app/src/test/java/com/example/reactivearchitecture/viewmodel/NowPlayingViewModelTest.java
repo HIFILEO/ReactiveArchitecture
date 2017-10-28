@@ -6,13 +6,15 @@ import com.example.reactivearchitecture.categories.UnitTest;
 import com.example.reactivearchitecture.gateway.ServiceGateway;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
+import com.example.reactivearchitecture.model.FilterManager;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.MovieInfoImpl;
 import com.example.reactivearchitecture.model.MovieViewInfo;
+import com.example.reactivearchitecture.model.MovieViewInfoImpl;
 import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.action.Action;
 import com.example.reactivearchitecture.model.action.ScrollAction;
-import com.example.reactivearchitecture.model.event.ScrollEvent;
+import com.example.reactivearchitecture.model.result.FilterResult;
 import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
@@ -38,6 +40,8 @@ import io.reactivex.observers.TestObserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -53,6 +57,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
     NowPlayingInteractor mockNowPlayingInteractor;
 
     @Mock
+    FilterManager mockFilterManager;
+
+    @Mock
     TestTransformer mockTestTransformer;
 
     MovieInfo movieInfo = new MovieInfoImpl(
@@ -60,6 +67,12 @@ public class NowPlayingViewModelTest extends RxJavaTest {
             "Dan The Man",
             new Date(),
             9d);
+
+    MovieInfo movieInfoLowRating = new MovieInfoImpl(
+            "www.url_low.com",
+            "Dan IS STILL The Man",
+            new Date(),
+            5d);
 
     @Before
     public void setUp() {
@@ -89,7 +102,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor);
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
         when(mockTestTransformer.transform(any(Action.class))).thenReturn(Observable.<Result>empty());
 
@@ -123,7 +136,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor);
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
@@ -131,7 +144,6 @@ public class NowPlayingViewModelTest extends RxJavaTest {
 
         ArgumentCaptor<Action> argumentCaptor = ArgumentCaptor.forClass(Action.class);
         when(mockTestTransformer.transform(argumentCaptor.capture())).thenReturn(Observable.just((Result) scrollResult));
-
 
         //
         //Act
@@ -142,6 +154,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
+        //FilterManager Test (Must call Filter Manager)
+        verify(mockFilterManager).setFilterOn(anyBoolean());
+
         //Observer Test
         testObserver.assertNoErrors();
         testObserver.assertValueCount(2);
@@ -173,7 +188,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor);
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
@@ -199,6 +214,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
+        //FilterManager Test (Must call Filter Manager)
+        verify(mockFilterManager).setFilterOn(anyBoolean());
+
         //Observer Test
         testObserver.assertNoErrors();
         testObserver.assertValueCount(3);
@@ -232,11 +250,15 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor);
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
 
         //restore activity
         final int pageNumber = 2;
-        UiModel restoreState = UiModel.restoreState(pageNumber, null, null);
+
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(UiModel.initState());
+        uiModelBuilder.setPageNumber(pageNumber);
+
+        UiModel restoreState = uiModelBuilder.createUiModel();
         nowPlayingViewModel.init(restoreState);
 
         //Fake Data from Restore
@@ -266,6 +288,9 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         //Assert
         //
+        //FilterManager Test (Must call Filter Manager)
+        verify(mockFilterManager).setFilterOn(anyBoolean());
+
         //Observer Test
         testObserver.assertNoErrors();
         testObserver.assertValueCount(5);
@@ -279,7 +304,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         assertThat(uiModel.getResultList()).isNullOrEmpty();
         assertThat(uiModel.getFailureMsg()).isNull();
         assertThat(uiModel.isEnableScrollListener()).isFalse();
-        assertThat(uiModel.getPageNumber()).isEqualTo(0);
+        assertThat(uiModel.getPageNumber()).isEqualTo(2);
 
         //Model Test 2nd Item
         uiModel = (UiModel) testObserver.getEvents().get(0).get(1);
@@ -355,15 +380,170 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
         assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
         assertThat(movieViewInfo.isHighRating()).isTrue();
+    }
+
+    @Test
+    public void inFilterState() {
+        //
+        //Arrange
+        //
+        TestObserver<UiModel> testObserver;
+        TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+
+        //restore activity
+        List<MovieViewInfo> movieViewInfoList_HighRating = new ArrayList<>();
+        List<MovieInfo> movieInfoList_HighRating = new ArrayList<>();
+        for (int i =0; i < 5; i++) {
+            movieViewInfoList_HighRating.add(new MovieViewInfoImpl(movieInfo));
+            movieInfoList_HighRating.add(movieInfo);
+        }
+        List<MovieViewInfo> movieViewInfoList_LowRating = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            movieViewInfoList_LowRating.add(new MovieViewInfoImpl(movieInfoLowRating));
+        }
+        List<MovieViewInfo> movieViewInfoList = new ArrayList<>();
+        movieViewInfoList.addAll(movieViewInfoList_LowRating);
+        movieViewInfoList.addAll(movieViewInfoList_HighRating);
+
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(UiModel.initState());
+        uiModelBuilder.setPageNumber(2);
+        uiModelBuilder.setCurrentList(movieViewInfoList);
+        uiModelBuilder.setFilterOn(false);
+        uiModelBuilder.setEnableScrollListener(true);
+        uiModelBuilder.setFirstTimeLoad(false);
+        uiModelBuilder.setResultList(null);
+        uiModelBuilder.setAdapterCommandType(AdapterCommandType.DO_NOTHING);
+
+        nowPlayingViewModel.init(uiModelBuilder.createUiModel());
+
+        //Fake Data from FilterResult
+        FilterResult filterResult = FilterResult.success(true, movieInfoList_HighRating);
+
+        ArgumentCaptor<Action> argumentCaptor = ArgumentCaptor.forClass(Action.class);
+        when(mockTestTransformer.transform(argumentCaptor.capture())).thenReturn(Observable.just(
+                (Result) filterResult));
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingViewModel.getUiModels().test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(2);
+
+        //Model Test 1st Item
+        UiModel uiModel = (UiModel) testObserver.getEvents().get(0).get(0);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isFalse();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.DO_NOTHING);
+        assertThat(uiModel.getCurrentList()).isNotEmpty();
+        assertThat(uiModel.getCurrentList()).hasSize(movieViewInfoList.size());
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isTrue();
+        assertThat(uiModel.getPageNumber()).isEqualTo(2);
+
+        //Model Test 2nd Item
+        uiModel = (UiModel) testObserver.getEvents().get(0).get(1);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isFalse();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER);
+        assertThat(uiModel.getCurrentList()).hasSize(movieInfoList_HighRating.size());
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isTrue();
+        assertThat(uiModel.getPageNumber()).isEqualTo(2);
+
+        //check values
+        MovieViewInfo movieViewInfo = uiModel.getCurrentList().get(0);
+        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
+        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
+        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
+        assertThat(movieViewInfo.isHighRating()).isTrue();
+    }
+
+    @Test
+    public void filterStateOnToOff() {
+        //
+        //Arrange
+        //
+        TestObserver<UiModel> testObserver;
+        TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
+                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+
+        //restore activity
+        List<MovieViewInfo> movieViewInfoList_HighRating = new ArrayList<>();
+        List<MovieInfo> movieInfoList_HighRating = new ArrayList<>();
+        for (int i =0; i < 5; i++) {
+            movieViewInfoList_HighRating.add(new MovieViewInfoImpl(movieInfo));
+            movieInfoList_HighRating.add(movieInfo);
+        }
+
+        List<MovieViewInfo> movieViewInfoList_LowRating = new ArrayList<>();
+        List<MovieInfo> movieInfoList_LowRating = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            movieViewInfoList_LowRating.add(new MovieViewInfoImpl(movieInfoLowRating));
+            movieInfoList_LowRating.add(movieInfoLowRating);
+        }
+
+        List<MovieViewInfo> movieViewInfoList = new ArrayList<>();
+        movieViewInfoList.addAll(movieViewInfoList_LowRating);
+        movieViewInfoList.addAll(movieViewInfoList_HighRating);
 
 
-//
-//        //Test List Data
-//        MovieViewInfo movieViewInfo = uiModel.getResultList().get(0);
-//        assertThat(movieViewInfo.getPictureUrl()).isEqualToIgnoringCase(movieInfo.getPictureUrl());
-//        assertThat(movieViewInfo.getTitle()).isEqualToIgnoringCase(movieInfo.getTitle());
-//        assertThat(movieViewInfo.getRating()).isEqualToIgnoringCase(String.valueOf(Math.round(movieInfo.getRating()) + "/10"));
-//        assertThat(movieViewInfo.isHighRating()).isTrue();
+        List<MovieInfo> movieInfoList = new ArrayList<>();
+        movieInfoList.addAll(movieInfoList_HighRating);
+        movieInfoList.addAll(movieInfoList_LowRating);
+
+
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(UiModel.initState());
+        uiModelBuilder.setPageNumber(2);
+        uiModelBuilder.setCurrentList(movieViewInfoList);
+        uiModelBuilder.setFilterOn(false);
+        uiModelBuilder.setEnableScrollListener(true);
+        uiModelBuilder.setFirstTimeLoad(false);
+        uiModelBuilder.setResultList(null);
+        uiModelBuilder.setAdapterCommandType(AdapterCommandType.DO_NOTHING);
+
+        nowPlayingViewModel.init(uiModelBuilder.createUiModel());
+
+        //Fake Data from FilterResult
+        FilterResult filterResultOn = FilterResult.success(true, movieInfoList_HighRating);
+        FilterResult filterResultOff = FilterResult.success(false, movieInfoList);
+
+        ArgumentCaptor<Action> argumentCaptor = ArgumentCaptor.forClass(Action.class);
+        when(mockTestTransformer.transform(argumentCaptor.capture())).thenReturn(Observable.just(
+                (Result) filterResultOn,
+                (Result) filterResultOff));
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingViewModel.getUiModels().test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(3);
+
+        //Model Test 3rd Item
+        UiModel uiModel = (UiModel) testObserver.getEvents().get(0).get(2);
+        assertThat(uiModel).isNotNull();
+        assertThat(uiModel.isFirstTimeLoad()).isFalse();
+        assertThat(uiModel.getAdapterCommandType()).isEqualTo(AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER);
+        assertThat(uiModel.getCurrentList()).isNotEmpty();
+        assertThat(uiModel.getCurrentList()).hasSize(movieViewInfoList.size());
+        assertThat(uiModel.getResultList()).isNullOrEmpty();
+        assertThat(uiModel.getFailureMsg()).isNull();
+        assertThat(uiModel.isEnableScrollListener()).isTrue();
+        assertThat(uiModel.getPageNumber()).isEqualTo(2);
     }
 
     private class TestTransformer {

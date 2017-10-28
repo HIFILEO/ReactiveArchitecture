@@ -26,22 +26,30 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.View;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.adapter.NowPlayingListAdapter;
+
+
 import com.example.reactivearchitecture.adapter.ScrollEventCalculator;
+import com.example.reactivearchitecture.adapter.filter.FilterAdapter;
+import com.example.reactivearchitecture.adapter.nowplaying.NowPlayingListAdapter;
 import com.example.reactivearchitecture.databinding.ActivityNowPlayingBinding;
 import com.example.reactivearchitecture.model.AdapterCommandType;
 
+import com.example.reactivearchitecture.model.FilterView;
 import com.example.reactivearchitecture.model.MovieViewInfo;
 import com.example.reactivearchitecture.model.UiModel;
+import com.example.reactivearchitecture.model.event.FilterEvent;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.view.DividerItemDecoration;
 import com.example.reactivearchitecture.viewmodel.NowPlayingViewModel;
 import com.jakewharton.rxbinding2.support.v7.widget.RecyclerViewScrollEvent;
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView;
+import com.jakewharton.rxbinding2.widget.RxAdapterView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,6 +140,61 @@ public class NowPlayingActivity extends BaseActivity {
         nowPlayingBinding.unbind();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //
+        //Inflate
+        //
+        getMenuInflater().inflate(R.menu.menu_action_bar_spinner, menu);
+        Spinner filterSpinner = (Spinner) menu.findItem(R.id.filterSpinner).getActionView();
+        filterSpinner.setAdapter(createFilterAdapter());
+
+        //
+        //Restore
+        //
+        //Note - menu items get created AFTER onStart(). So must restore here.
+        if (latestUiModel.isFilterOn()) {
+            filterSpinner.setSelection(1);
+        } else {
+            filterSpinner.setSelection(0);
+        }
+
+        //
+        //Bind to Spinner
+        //
+        compositeDisposable.add(RxAdapterView.itemSelections(filterSpinner)
+                //When binding for the first time, the previous restore triggers a filter command twice. Not needed.
+                .skip(2)
+                .map(new Function<Integer, FilterEvent>() {
+                    @Override
+                    public FilterEvent apply(@NonNull Integer integer) throws Exception {
+                        return new FilterEvent(integer == 1);
+                    }
+                })
+                //Send FilterEvent to ViewModel
+                .subscribe(new Consumer<FilterEvent>() {
+                    @Override
+                    public void accept(@NonNull FilterEvent filterEvent) throws Exception {
+                        nowPlayingViewModel.processUiEvent(filterEvent);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        throw new UnsupportedOperationException("Errors in filter event unsupported. Crash app."
+                                + throwable.getLocalizedMessage());
+                    }
+                })
+        );
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     /**
      * Create the adapter for {@link RecyclerView}.
      * @param adapterList - List that backs the adapter.
@@ -176,6 +239,16 @@ public class NowPlayingActivity extends BaseActivity {
      */
     @SuppressWarnings("checkstyle:magicnumber")
     private void bindToScrollEvent() {
+        //
+        //Guard
+        //
+        if (scrollDisposable != null) {
+            return;
+        }
+
+        //
+        //Bind
+        //
         scrollDisposable = RxRecyclerView.scrollEvents(nowPlayingBinding.recyclerView)
                 //Bind to RxBindings.
                 .flatMap(new Function<RecyclerViewScrollEvent, ObservableSource<ScrollEvent>>() {
@@ -226,6 +299,7 @@ public class NowPlayingActivity extends BaseActivity {
         if (scrollDisposable != null) {
             scrollDisposable.dispose();
             compositeDisposable.delete(scrollDisposable);
+            scrollDisposable = null;
         }
     }
 
@@ -264,7 +338,8 @@ public class NowPlayingActivity extends BaseActivity {
 
             //Process last adapter command
             if (uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA_ONLY
-                    || uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS) {
+                    || uiModel.getAdapterCommandType() == AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS
+                    || uiModel.getAdapterCommandType() == AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER) {
                 adapterData.addAll(uiModel.getResultList());
             } else if (uiModel.getAdapterCommandType() == AdapterCommandType.SHOW_IN_PROGRESS) {
                 adapterData.add(null);
@@ -299,6 +374,17 @@ public class NowPlayingActivity extends BaseActivity {
                     nowPlayingListAdapter.add(null);
                     nowPlayingBinding.recyclerView.scrollToPosition(nowPlayingListAdapter.getItemCount() - 1);
                     break;
+                case AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER:
+                    List<MovieViewInfo> currentList = uiModel.getCurrentList();
+
+                    //Check if loading was in progress
+                    int itemCount = nowPlayingListAdapter.getItemCount();
+                    if (itemCount > 0 && nowPlayingListAdapter.getItem(itemCount - 1) == null) {
+                        currentList.add(null);
+                    }
+
+                    nowPlayingListAdapter.replace(uiModel.getCurrentList());
+                    break;
                 default:
                     //No-Op
             }
@@ -310,5 +396,27 @@ public class NowPlayingActivity extends BaseActivity {
         if (uiModel.getFailureMsg() != null && !uiModel.getFailureMsg().isEmpty()) {
             Toast.makeText(NowPlayingActivity.this, R.string.error_msg, Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Create the filter list adapter.
+     * @return - adapter to show for filtering.
+     */
+    private FilterAdapter createFilterAdapter() {
+        FilterView filterViewOn = new FilterView(
+                getString(R.string.filter_on),
+                R.drawable.star_filled,
+                true);
+
+        FilterView filterViewOff = new FilterView(
+                getString(R.string.filter_off),
+                R.drawable.star_empty,
+                false);
+
+        List<FilterView> filterViewList = new ArrayList<>();
+        filterViewList.add(filterViewOff);
+        filterViewList.add(filterViewOn);
+
+        return new FilterAdapter(this, filterViewList);
     }
 }

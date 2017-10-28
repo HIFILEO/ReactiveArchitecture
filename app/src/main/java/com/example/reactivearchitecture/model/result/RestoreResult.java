@@ -46,7 +46,16 @@ public class RestoreResult extends Result {
         return new RestoreResult(ResultType.FAILURE, false, inProgress, pageNumber, null, error);
     }
 
-    private RestoreResult(int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
+    /**
+     * Constructor.
+     * @param resultType -
+     * @param isSuccessful -
+     * @param isLoading -
+     * @param pageNumber -
+     * @param result -
+     * @param error -
+     */
+    public RestoreResult(int resultType, boolean isSuccessful, boolean isLoading, int pageNumber,
                           List<MovieInfo> result, Throwable error) {
         this.resultType = resultType;
         this.isSuccessful = isSuccessful;
@@ -58,10 +67,6 @@ public class RestoreResult extends Result {
 
     @Override
     public int getType() {
-        return resultType;
-    }
-
-    public int getResultType() {
         return resultType;
     }
 

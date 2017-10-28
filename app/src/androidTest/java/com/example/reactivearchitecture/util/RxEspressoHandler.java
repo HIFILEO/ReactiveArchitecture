@@ -29,7 +29,7 @@ import android.support.test.espresso.idling.CountingIdlingResource;
  */
 public class RxEspressoHandler {
     private final CountingIdlingResource countingIdlingResource =
-            new CountingIdlingResource(RxEspressoHandler.class.getSimpleName());
+            new CountingIdlingResource(RxEspressoHandler.class.getSimpleName(), true);
 
     private RxEspressoScheduleHandler rxEspressoScheduleHandler;
     private RxEspressoObserverHandler rxEspressoObserverHandler;

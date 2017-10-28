@@ -6,7 +6,7 @@ the original [MVVMReactive](https://github.com/HIFILEO/MVVMReactive)
 
 Reactive architecture breaks an application's interactions into single stream events. Instead of creating impure
 side effects on a stream, reactive architecture focuses on slamming asynchronous events into synchronous state events that update
-the UI.
+the UI. Reactive state event updates is very similar to REDUX. 
 
 Reactive architecture is built on MVVM. MVVM breaks down an application into more testable components keeping your internal
 business objects and data separate from the external UI or external data.
@@ -19,11 +19,12 @@ The requirements for the app:
 3. As a user, I only want to see ratings rounded to the nearest whole digit. 
 4. As a user, while scrolling, keep loading "Now Playing" movies until you hit the last page.
 5. As a user, restore the last page I was when the "Now Playing" screen restarts.
+6. As a user, I want to filter my results based on Rating. 
 
 ### Demo 
 <img align="center" src="doc/demo.gif" alt="Demo of the app."/>
 
-### Rainy Day Scenario (Failure + Restore)
+### Rainy Day Scenario (Failure + Restore - Filter)
 <img align="center" src="doc/error_restore.gif" alt="Rainy Day Scenario"/>
 
 The application architecture is as followed: 

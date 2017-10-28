@@ -21,6 +21,7 @@ package com.example.reactivearchitecture.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class UiModel implements Parcelable {
     private List<MovieViewInfo> currentList;
     private List<MovieViewInfo> resultList;
     private @AdapterCommandType int adapterCommandType;
+    private boolean filterOn;
 
     protected UiModel(Parcel in) {
         this.firstTimeLoad = false;
@@ -46,6 +48,7 @@ public class UiModel implements Parcelable {
         this.currentList = null;
         this.resultList = null;
         this.adapterCommandType = AdapterCommandType.DO_NOTHING;
+        this.filterOn = in.readByte() != 0;
     }
 
     public static final Creator<UiModel> CREATOR = new Creator<UiModel>() {
@@ -61,82 +64,16 @@ public class UiModel implements Parcelable {
     };
 
     /**
-     * * Restore state - when you are reloading pages that were lost due to activity finish().
-     * @param pageNumber -
-     * @param currentList -
-     * @param resultList -
-     * @return - new UiModel
-     */
-    public static UiModel restoreState(int pageNumber, List<MovieViewInfo> currentList, List<MovieViewInfo> resultList) {
-        return new UiModel(true, null, pageNumber, false, currentList, resultList,
-                resultList == null || resultList.isEmpty() ? AdapterCommandType.DO_NOTHING : AdapterCommandType.ADD_DATA_ONLY);
-    }
-
-    /**
-     * Create createNowPlayingInteractor state.
+     * Create createNonInjectedData state.
      * Note - this can't be a static final because you write espresso tests and you'll end up duplicating data.
-     * @return - new UiModel in createNowPlayingInteractor state.
+     * @return - new UiModel in createNonInjectedData state.
      */
     public static UiModel initState() {
-        return new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null, AdapterCommandType.DO_NOTHING);
-    }
-
-    /**
-     * Create success state.
-     * @param pageNumber - current page number.
-     * @param fullList - latest full list that backs the adapter.
-     * @param valuesToAdd - values to add to adapter.
-     * @param adapterCommandType -
-     * @return new UiModel
-     */
-    public static UiModel successState(int pageNumber, List<MovieViewInfo> fullList, List<MovieViewInfo> valuesToAdd,
-                                       @AdapterCommandType int adapterCommandType) {
-        return new UiModel(false,
-                null,
-                pageNumber,
-                true,
-                fullList,
-                valuesToAdd,
-                adapterCommandType);
-    }
-
-    /**
-     * Create failure state.
-     * @param firstTimeLoad - true when first time loading.
-     * @param pageNumber - current page number.
-     * @param fullList - latest full list that backs the adapter.
-     * @param failureMsg - failure message to show
-     * @return new UiModel
-     */
-    public static UiModel failureState(boolean firstTimeLoad, int pageNumber, List<MovieViewInfo> fullList, String failureMsg) {
-        return new UiModel(firstTimeLoad,
-                failureMsg,
-                pageNumber,
-                false,
-                fullList,
-                null,
-                AdapterCommandType.DO_NOTHING);
-    }
-
-    /**
-     * Create in progress state.
-     * @param firstTimeLoad - is this first time loading in progress.
-     * @param pageNumber - current page number.
-     * @param fullList - latest full list that backs the adapter.
-     * @return new UiModel
-     */
-    public static UiModel inProgressState(boolean firstTimeLoad, int pageNumber, List<MovieViewInfo> fullList) {
-        return new UiModel(firstTimeLoad,
-                null,
-                pageNumber,
-                false,
-                fullList,
-                null,
-                firstTimeLoad ? AdapterCommandType.DO_NOTHING : AdapterCommandType.SHOW_IN_PROGRESS);
+        return new UiModel(true, null, 0, false, new ArrayList<MovieViewInfo>(), null, AdapterCommandType.DO_NOTHING, false);
     }
 
     private UiModel(boolean firstTimeLoad, String failureMsg, int pageNumber, boolean enableScrollListener,
-                    List<MovieViewInfo> currentList, List<MovieViewInfo> resultList, int adapterCommandType) {
+                    List<MovieViewInfo> currentList, List<MovieViewInfo> resultList, int adapterCommandType, boolean filterOn) {
         this.firstTimeLoad = firstTimeLoad;
         this.failureMsg = failureMsg;
         this.pageNumber = pageNumber;
@@ -144,6 +81,7 @@ public class UiModel implements Parcelable {
         this.currentList = currentList;
         this.resultList = resultList;
         this.adapterCommandType = adapterCommandType;
+        this.filterOn = filterOn;
     }
 
     @Override
@@ -155,6 +93,7 @@ public class UiModel implements Parcelable {
     public void writeToParcel(Parcel parcel, int flags) {
         //only care about pageNumber when saving state
         parcel.writeInt(pageNumber);
+        parcel.writeByte((byte) (filterOn ? 1 : 0));
     }
 
     public boolean isFirstTimeLoad() {
@@ -187,5 +126,111 @@ public class UiModel implements Parcelable {
 
     public int getAdapterCommandType() {
         return adapterCommandType;
+    }
+
+    public boolean isFilterOn() {
+        return filterOn;
+    }
+
+    /**
+     * Too many state? Too many params in constructors? Call on the builder pattern to Save The Day!.
+     */
+    public static class UiModelBuilder {
+        private final UiModel uiModel;
+
+        private boolean firstTimeLoad;
+        private String failureMsg;
+        private int pageNumber;
+        private boolean enableScrollListener;
+        private List<MovieViewInfo> currentList;
+        private List<MovieViewInfo> resultList;
+        private @AdapterCommandType int adapterCommandType;
+        private boolean filterOn;
+
+        /**
+         * Construct Builder using defaults from previous {@link UiModel}.
+         * @param uiModel - model for builder to use.
+         */
+        public UiModelBuilder(@NonNull UiModel uiModel) {
+            this.uiModel = uiModel;
+
+            this.firstTimeLoad = uiModel.firstTimeLoad;
+            this.failureMsg = uiModel.failureMsg;
+            this.pageNumber = uiModel.pageNumber;
+            this.enableScrollListener = uiModel.enableScrollListener;
+            this.currentList = uiModel.currentList;
+            this.resultList = uiModel.resultList;
+            this.adapterCommandType = uiModel.adapterCommandType;
+            this.filterOn = uiModel.filterOn;
+        }
+
+        public UiModelBuilder() {
+            this.uiModel = null;
+        }
+
+        /**
+         * Create the {@link UiModel} using the types in {@link UiModelBuilder}.
+         * @return new {@link UiModel}.
+         */
+        public UiModel createUiModel() {
+            if (currentList == null) {
+                if (uiModel == null) {
+                    currentList = new ArrayList<>();
+                } else {
+                    //shallow copy
+                    currentList = uiModel.getCurrentList();
+                }
+            }
+
+            return new UiModel(
+                    firstTimeLoad,
+                    failureMsg,
+                    pageNumber,
+                    enableScrollListener,
+                    currentList,
+                    resultList,
+                    adapterCommandType,
+                    filterOn);
+        }
+
+        public UiModelBuilder setFirstTimeLoad(boolean firstTimeLoad) {
+            this.firstTimeLoad = firstTimeLoad;
+            return this;
+        }
+
+        public UiModelBuilder setFailureMsg(String failureMsg) {
+            this.failureMsg = failureMsg;
+            return this;
+        }
+
+        public UiModelBuilder setPageNumber(int pageNumber) {
+            this.pageNumber = pageNumber;
+            return this;
+        }
+
+        public UiModelBuilder setEnableScrollListener(boolean enableScrollListener) {
+            this.enableScrollListener = enableScrollListener;
+            return this;
+        }
+
+        public UiModelBuilder setCurrentList(List<MovieViewInfo> currentList) {
+            this.currentList = currentList;
+            return this;
+        }
+
+        public UiModelBuilder setResultList(List<MovieViewInfo> resultList) {
+            this.resultList = resultList;
+            return this;
+        }
+
+        public UiModelBuilder setAdapterCommandType(int adapterCommandType) {
+            this.adapterCommandType = adapterCommandType;
+            return this;
+        }
+
+        public UiModelBuilder setFilterOn(boolean filterOn) {
+            this.filterOn = filterOn;
+            return this;
+        }
     }
 }

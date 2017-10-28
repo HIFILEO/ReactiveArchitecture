@@ -4,4 +4,8 @@
     <string name="api_key">6efc30f1fdcbe7425ab08503f07e2762</string>
     <string name="image_url_path">https://image.tmdb.org/t/p/w92/</string>
     <string name="error_msg">Unable to load data from internet. We\'ll try again for you &#8230;</string>
+    <string name="filter_title">Filter</string>
+    <string name="filter_on">On</string>
+    <string name="filter_off">Off</string>
+
 </resources>

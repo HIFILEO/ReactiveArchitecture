@@ -22,6 +22,7 @@ package com.example.reactivearchitecture.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.ViewModel;
 import android.databinding.ObservableField;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -31,16 +32,21 @@ import com.example.reactivearchitecture.R;
 import com.example.reactivearchitecture.gateway.ServiceGateway;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
+import com.example.reactivearchitecture.model.FilterManager;
+import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.MovieViewInfo;
 import com.example.reactivearchitecture.model.MovieViewInfoImpl;
 import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.action.Action;
+import com.example.reactivearchitecture.model.action.FilterAction;
 import com.example.reactivearchitecture.model.action.RestoreAction;
 import com.example.reactivearchitecture.model.action.ScrollAction;
+import com.example.reactivearchitecture.model.event.FilterEvent;
 import com.example.reactivearchitecture.model.event.RestoreEvent;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.model.event.UiEvent;
+import com.example.reactivearchitecture.model.result.FilterResult;
 import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
@@ -67,6 +73,7 @@ public class NowPlayingViewModel extends ViewModel {
     private Observable<UiModel> uiModelObservable;
     private UiModel initialUiModel;
     private Observable<UiEvent> startEventsObservable;
+    private ObservableTransformer<UiEvent, Action> transformEventsIntoActions;
 
     @NonNull
     private Application application;
@@ -81,11 +88,14 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private PublishRelay<UiEvent> publishRelayUiEvents = PublishRelay.create();
 
-    @NonNull
-    private ObservableTransformer<UiEvent, Action> transformEventsIntoActions;
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected NowPlayingInteractor nowPlayingInteractor;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected FilterManager filterManager;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected FilterTransformer filterTransformer;
 
     /**
      * Constructor. Members are injected.
@@ -97,7 +107,7 @@ public class NowPlayingViewModel extends ViewModel {
         this.serviceGateway = serviceGateway;
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
-        createNowPlayingInteractor();
+        createNonInjectedData();
         setupTransformers();
     }
 
@@ -115,9 +125,11 @@ public class NowPlayingViewModel extends ViewModel {
                 startEventsObservable = Observable.just((UiEvent) new ScrollEvent(initialUiModel.getPageNumber() + 1));
             } else {
                 //restore required
-                initialUiModel = UiModel.restoreState(restoredUiModel.getPageNumber(), new ArrayList<MovieViewInfo>(), null);
+                UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(restoredUiModel);
+                initialUiModel = uiModelBuilder.createUiModel();
                 startEventsObservable = Observable.just((UiEvent) new RestoreEvent(initialUiModel.getPageNumber()));
             }
+            filterManager.setFilterOn(initialUiModel.isFilterOn());
             bind();
         }
     }
@@ -156,8 +168,10 @@ public class NowPlayingViewModel extends ViewModel {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected void createNowPlayingInteractor() {
-        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway);
+    protected void createNonInjectedData() {
+        filterManager = new FilterManager(false);
+        filterTransformer = new FilterTransformer(filterManager);
+        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway, filterTransformer);
     }
 
     /**
@@ -180,73 +194,17 @@ public class NowPlayingViewModel extends ViewModel {
                     }
                 })
                 //Scan Results to Update UiModel
-                .scan(UiModel.initState(), new BiFunction<UiModel, Result, UiModel>() {
+                .scan(initialUiModel, new BiFunction<UiModel, Result, UiModel>() {
                     @Override
                     public UiModel apply(UiModel uiModel, Result result) throws Exception {
                         Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
 
                         if (result instanceof ScrollResult) {
-                            ScrollResult scrollResult = (ScrollResult) result;
-
-                            if (result.getType() == Result.ResultType.IN_FLIGHT) {
-                                return UiModel.inProgressState(
-                                        scrollResult.getPageNumber() == 1,
-                                        scrollResult.getPageNumber(),
-                                        uiModel.getCurrentList()
-                                );
-                            } else if (result.getType() == Result.ResultType.SUCCESS) {
-                                List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
-                                List<MovieViewInfo> currentList = uiModel.getCurrentList();
-                                currentList.addAll(listToAdd);
-
-                                return UiModel.successState(
-                                        scrollResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd,
-                                        AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS
-                                );
-                            } else if (result.getType() == Result.ResultType.FAILURE) {
-                                Timber.e(scrollResult.getError());
-                                return UiModel.failureState(
-                                        scrollResult.getPageNumber() == 1,
-                                        scrollResult.getPageNumber() - 1,
-                                        uiModel.getCurrentList(),
-                                        application.getString(R.string.error_msg)
-                                );
-                            }
-
-                        } else {
-                            RestoreResult restoreResult = (RestoreResult) result;
-
-                            List<MovieViewInfo> listToAdd = null;
-                            List<MovieViewInfo> currentList = uiModel.getCurrentList();
-                            if (restoreResult.getResult() != null && !restoreResult.getResult().isEmpty()) {
-                                listToAdd = translateResultsForUi(restoreResult.getResult());
-                                currentList.addAll(listToAdd);
-                            }
-
-                            if (result.getType() == Result.ResultType.IN_FLIGHT) {
-                                return UiModel.restoreState(
-                                        restoreResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd
-                                );
-                            } else if (result.getType() == Result.ResultType.SUCCESS) {
-                                return UiModel.successState(
-                                        restoreResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd,
-                                        AdapterCommandType.ADD_DATA_ONLY
-                                );
-                            } else if (result.getType() == Result.ResultType.FAILURE) {
-                                Timber.e(restoreResult.getError());
-                                return UiModel.failureState(
-                                        true,
-                                        restoreResult.getPageNumber() - 1,
-                                        currentList,
-                                        application.getString(R.string.error_msg)
-                                );
-                            }
+                            return processScrollResult(uiModel, (ScrollResult) result);
+                        } else if (result instanceof RestoreResult) {
+                            return processRestoreResult(uiModel, (RestoreResult) result);
+                        } else if (result instanceof FilterResult) {
+                            return processFilterResult(uiModel, (FilterResult) result);
                         }
 
                         //Unknown result - throw error
@@ -275,6 +233,10 @@ public class NowPlayingViewModel extends ViewModel {
         return movieViewInfoList;
     }
 
+    /**
+     * Setup the transformers used by this {@link NowPlayingViewModel}.
+     */
+    @MainThread
     private void setupTransformers() {
         final ObservableTransformer<ScrollEvent, ScrollAction> scrollTransformer =
                 new ObservableTransformer<ScrollEvent, ScrollAction>() {
@@ -302,6 +264,19 @@ public class NowPlayingViewModel extends ViewModel {
             }
         };
 
+        final ObservableTransformer<FilterEvent, FilterAction> filterTransformer =
+                new ObservableTransformer<FilterEvent, FilterAction>() {
+                    @Override
+                    public ObservableSource<FilterAction> apply(Observable<FilterEvent> upstream) {
+                        return upstream.flatMap(new Function<FilterEvent, ObservableSource<FilterAction>>() {
+                            @Override
+                            public ObservableSource<FilterAction> apply(FilterEvent filterEvent) throws Exception {
+                                return Observable.just(new FilterAction(filterEvent.isFilterOn()));
+                            }
+                        });
+                    }
+                };
+
         transformEventsIntoActions = new ObservableTransformer<UiEvent, Action>() {
             @Override
             public ObservableSource<Action> apply(@io.reactivex.annotations.NonNull Observable<UiEvent> upstream) {
@@ -310,10 +285,161 @@ public class NowPlayingViewModel extends ViewModel {
                     public ObservableSource<Action> apply(Observable<UiEvent> uiEventObservable) throws Exception {
                         return Observable.merge(
                                 uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
-                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer));
+                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer),
+                                uiEventObservable.ofType(FilterEvent.class).compose(filterTransformer)
+                        );
                     }
                 });
             }
         };
+    }
+
+    /**
+     * Update the {@link UiModel} based on input form a {@link ScrollResult}.
+     * @param uiModel - model to update
+     * @param scrollResult - results from {@link ScrollAction}
+     * @return new updated {@link UiModel}
+     */
+    private UiModel processScrollResult(@NonNull UiModel uiModel, ScrollResult scrollResult) {
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(uiModel);
+
+        switch (scrollResult.getType()) {
+            case Result.ResultType.IN_FLIGHT:
+                //In Progress
+                uiModelBuilder
+                        .setFirstTimeLoad(scrollResult.getPageNumber() == 1)
+                        .setFailureMsg(null)
+                        .setPageNumber(scrollResult.getPageNumber())
+                        .setEnableScrollListener(false)
+                        .setResultList(null)
+                        .setAdapterCommandType(scrollResult.getPageNumber() == 1
+                                ? AdapterCommandType.DO_NOTHING : AdapterCommandType.SHOW_IN_PROGRESS);
+                break;
+            case Result.ResultType.SUCCESS:
+                List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
+                List<MovieViewInfo> currentList = uiModel.getCurrentList();
+                currentList.addAll(listToAdd);
+
+                //Success
+                uiModelBuilder
+                        .setFirstTimeLoad(false)
+                        .setFailureMsg(null)
+                        .setPageNumber(scrollResult.getPageNumber())
+                        .setEnableScrollListener(true)
+                        .setCurrentList(currentList)
+                        .setResultList(listToAdd)
+                        .setAdapterCommandType(AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS);
+                break;
+            case Result.ResultType.FAILURE:
+                Timber.e(scrollResult.getError());
+
+                //Failure
+                uiModelBuilder
+                        .setFirstTimeLoad(scrollResult.getPageNumber() == 1)
+                        .setFailureMsg(application.getString(R.string.error_msg))
+                        .setPageNumber(scrollResult.getPageNumber() - 1)
+                        .setEnableScrollListener(false)
+                        .setResultList(null)
+                        .setAdapterCommandType(AdapterCommandType.DO_NOTHING);
+                break;
+            default:
+                //Unknown result - throw error
+                throw new IllegalArgumentException("Unknown ResultType: " + scrollResult.getType());
+        }
+
+        return uiModelBuilder.createUiModel();
+    }
+
+    /**
+     * Update the {@link UiModel} based on input form a {@link RestoreResult}.
+     * @param uiModel - model to update
+     * @param restoreResult - results from {@link RestoreAction}
+     * @return new updated {@link UiModel}
+     */
+    private UiModel processRestoreResult(@NonNull UiModel uiModel, RestoreResult restoreResult) {
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(uiModel);
+
+        List<MovieViewInfo> listToAdd = null;
+        List<MovieViewInfo> currentList = uiModel.getCurrentList();
+
+        if (restoreResult.getResult() != null && !restoreResult.getResult().isEmpty()) {
+            listToAdd = translateResultsForUi(restoreResult.getResult());
+            currentList.addAll(listToAdd);
+        }
+
+        switch (restoreResult.getType()) {
+            case Result.ResultType.IN_FLIGHT:
+                //In Progress
+                uiModelBuilder
+                        .setFirstTimeLoad(true)
+                        .setFailureMsg(null)
+                        .setPageNumber(restoreResult.getPageNumber())
+                        .setEnableScrollListener(false)
+                        .setCurrentList(currentList)
+                        .setResultList(listToAdd)
+                        .setAdapterCommandType(listToAdd == null || listToAdd.isEmpty()
+                                ? AdapterCommandType.DO_NOTHING : AdapterCommandType.ADD_DATA_ONLY);
+                break;
+            case Result.ResultType.SUCCESS:
+                //Success
+                uiModelBuilder
+                        .setFirstTimeLoad(false)
+                        .setFailureMsg(null)
+                        .setPageNumber(restoreResult.getPageNumber())
+                        .setEnableScrollListener(true)
+                        .setCurrentList(currentList)
+                        .setResultList(listToAdd)
+                        .setAdapterCommandType(AdapterCommandType.ADD_DATA_ONLY);
+                break;
+            case Result.ResultType.FAILURE:
+                Timber.e(restoreResult.getError());
+
+                //Error
+                uiModelBuilder
+                        .setFirstTimeLoad(true)
+                        .setFailureMsg(application.getString(R.string.error_msg))
+                        .setPageNumber(restoreResult.getPageNumber() - 1)
+                        .setEnableScrollListener(false)
+                        .setResultList(null)
+                        .setAdapterCommandType(AdapterCommandType.DO_NOTHING);
+                break;
+            default:
+                //Unknown result - throw error
+                throw new IllegalArgumentException("Unknown ResultType: " + restoreResult.getType());
+        }
+
+        return uiModelBuilder.createUiModel();
+    }
+
+    /**
+     * Update the {@link UiModel} based on input form a {@link FilterResult}.
+     * @param uiModel - model to udate
+     * @param filterResult - results from {@link FilterResult}
+     * @return new updated {@link UiModel}
+     */
+    private UiModel processFilterResult(@NonNull UiModel uiModel, FilterResult filterResult) {
+        UiModel.UiModelBuilder uiModelBuilder = new UiModel.UiModelBuilder(uiModel);
+
+        switch (filterResult.getType()) {
+            case Result.ResultType.IN_FLIGHT:
+                Timber.i("Filter - IN_FLIGHT");
+                break;
+            case Result.ResultType.SUCCESS:
+                //Success
+                uiModelBuilder
+                        .setCurrentList(translateResultsForUi(filterResult.getFilteredList()))
+                        .setFilterOn(filterResult.isFilterOn())
+                        .setResultList(null)
+                        .setAdapterCommandType(AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER);
+                break;
+            case Result.ResultType.FAILURE:
+                Timber.e("Failure during filter. Throw error, this should never happen.");
+                throw new IllegalArgumentException("Failure during filter. This should never happen.");
+            default:
+                //Unknown result - throw error
+                throw new IllegalArgumentException("Unknown ResultType: " + filterResult.getType());
+        }
+
+        return uiModelBuilder.createUiModel();
     }
 }

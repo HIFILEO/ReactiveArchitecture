@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/filterImageView"
+        tools:src="@drawable/star_filled"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/app_name"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/filterTextView"
+        android:layout_marginStart="5dp"
+        android:textSize="20sp"
+        android:textColor="@android:color/black"
+        android:layout_toEndOf="@id/filterImageView"
+        android:layout_centerVertical="true"
+        tools:text="Filter"/>
+
+</RelativeLayout>

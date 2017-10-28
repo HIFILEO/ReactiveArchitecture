@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:title="@{viewModel.toolbarTitle}"
-                android:background="?attr/colorPrimary"
+                android:background="@color/colorPrimary"
                 >
             </android.support.v7.widget.Toolbar>
         </android.support.design.widget.AppBarLayout>

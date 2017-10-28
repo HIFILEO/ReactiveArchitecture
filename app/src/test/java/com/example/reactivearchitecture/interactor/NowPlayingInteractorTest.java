@@ -20,13 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package com.example.reactivearchitecture.interactor;
 
 import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.model.FilterManager;
+import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.MovieInfoImpl;
 import com.example.reactivearchitecture.model.NowPlayingInfo;
 import com.example.reactivearchitecture.model.NowPlayingInfoImpl;
 import com.example.reactivearchitecture.model.action.Action;
+import com.example.reactivearchitecture.model.action.FilterAction;
 import com.example.reactivearchitecture.model.action.RestoreAction;
 import com.example.reactivearchitecture.model.action.ScrollAction;
+import com.example.reactivearchitecture.model.result.FilterResult;
 import com.example.reactivearchitecture.model.result.RestoreResult;
 import com.example.reactivearchitecture.model.result.Result;
 import com.example.reactivearchitecture.model.result.ScrollResult;
@@ -35,6 +39,8 @@ import com.example.reactivearchitecture.rx.RxJavaTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +53,7 @@ import io.reactivex.observers.TestObserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -57,6 +64,11 @@ public class NowPlayingInteractorTest extends RxJavaTest {
 
     @Mock
     ServiceGateway mockServiceGateway;
+
+    @Mock
+    FilterManager mockFilterManager;
+
+    FilterTransformer filterTransformer;
 
     final MovieInfo movieInfo = new MovieInfoImpl(
             "www.url.com",
@@ -71,6 +83,16 @@ public class NowPlayingInteractorTest extends RxJavaTest {
     public void setUp() {
         super.setUp();
         initMocks(this);
+
+        when(mockFilterManager.filterList(anyList())).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) {
+                return invocation.getArguments()[0];
+            }
+        });
+
+        //Use real transformers.
+        filterTransformer = new FilterTransformer(mockFilterManager);
     }
 
     @Test
@@ -79,9 +101,9 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
 
-        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        List<MovieInfo> movieInfoList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             movieInfoList.add(movieInfo);
         }
@@ -139,7 +161,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -212,7 +234,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -268,7 +290,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -341,7 +363,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
 
         int pageNumber = 2;
 
@@ -369,6 +391,108 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         testObserver.assertNoErrors();
         testObserver.assertValueCount(4);
     }
+
+    @Test
+    public void testFilter_turnFilterOn() {
+        //
+        //Arrange
+        //
+        TestObserver<Result> testObserver;
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+
+        when(mockFilterManager.isFilterOn()).thenReturn(true);
+        when(mockFilterManager.getFullList()).thenReturn(movieInfoList);
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingInteractor.processAction(
+                Observable.just((Action) new FilterAction(true))).test();
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+
+        //IN_FLIGHT Test
+        Result result = (Result) testObserver.getEvents().get(0).get(0);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(FilterResult.class);
+
+        FilterResult filterResult = (FilterResult) result;
+        assertThat(filterResult.getFilteredList().containsAll(movieInfoList));
+        assertThat(filterResult.isFilterOn()).isTrue();
+        assertThat(filterResult.getType()).isEqualTo(Result.ResultType.SUCCESS);
+    }
+
+    @Test
+    public void testFilter_ScrollResults() {
+        //
+        //Arrange
+        //
+        TestObserver<Result> testObserver;
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+
+        int pageNumber = 2;
+
+        List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
+        for (int i = 0; i < 5; i++) {
+            movieInfoList.add(movieInfo);
+        }
+        NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
+                totalPageNumber);
+
+        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+                Observable.just(nowPlayingInfo));
+
+        when(mockFilterManager.isFilterOn()).thenReturn(true);
+        when(mockFilterManager.filterList(anyList())).thenReturn(new ArrayList<MovieInfo>());
+
+        //
+        //Act
+        //
+        testObserver = nowPlayingInteractor.processAction(
+                Observable.just((Action) new ScrollAction(pageNumber))).test();
+        testScheduler.advanceTimeBy(4, TimeUnit.SECONDS);
+        testScheduler.triggerActions();
+
+        //
+        //Assert
+        //
+        testObserver.assertNoErrors();
+        testObserver.assertValueCount(2);
+
+        //IN_FLIGHT Test
+        Result result = (Result) testObserver.getEvents().get(0).get(0);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(ScrollResult.class);
+
+        ScrollResult scrollResult = (ScrollResult) result;
+        assertThat(scrollResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(scrollResult.getError()).isNull();
+        assertThat(scrollResult.getResult()).isNull();
+        assertThat(scrollResult.getType()).isEqualTo(Result.ResultType.IN_FLIGHT);
+
+        //SUCCESS
+        result = (Result) testObserver.getEvents().get(0).get(1);
+        assertThat(result).isNotNull();
+        assertThat(result).isInstanceOf(ScrollResult.class);
+
+        scrollResult = (ScrollResult) result;
+        assertThat(scrollResult.getPageNumber()).isEqualTo(pageNumber);
+        assertThat(scrollResult.getError()).isNull();
+        assertThat(scrollResult.getResult()).isEmpty();
+        assertThat(scrollResult.getType()).isEqualTo(Result.ResultType.SUCCESS);
+    }
+
+
 
     /**
      * Test class used to test Rx {@link io.reactivex.internal.operators.observable.ObservableRetryPredicate}.

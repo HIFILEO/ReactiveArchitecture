@@ -28,7 +28,7 @@ import java.lang.annotation.RetentionPolicy;
  * Command Types.
  */
 @IntDef({AdapterCommandType.DO_NOTHING, AdapterCommandType.ADD_DATA_ONLY,  AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS,
-        AdapterCommandType.SHOW_IN_PROGRESS})
+        AdapterCommandType.SHOW_IN_PROGRESS, AdapterCommandType.SWAP_LIST_DUE_TO_NEW_FILTER})
 @Retention(RetentionPolicy.SOURCE)
 @SuppressWarnings("checkstyle:abbreviationaswordinname")
 public @interface AdapterCommandType {
@@ -36,4 +36,5 @@ public @interface AdapterCommandType {
     int ADD_DATA_ONLY = 1;
     int ADD_DATA_REMOVE_IN_PROGRESS = 2;
     int SHOW_IN_PROGRESS = 3;
+    int SWAP_LIST_DUE_TO_NEW_FILTER = 4;
 }
