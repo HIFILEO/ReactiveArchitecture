@@ -29,7 +29,7 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.gateway.ServiceController;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
 import com.example.reactivearchitecture.model.FilterManager;
@@ -79,7 +79,7 @@ public class NowPlayingViewModel extends ViewModel {
     private Application application;
 
     @NonNull
-    private ServiceGateway serviceGateway;
+    private ServiceController serviceController;
 
     //Note - left here to show example of android data binding.
     @NonNull
@@ -100,11 +100,11 @@ public class NowPlayingViewModel extends ViewModel {
     /**
      * Constructor. Members are injected.
      * @param application -
-     * @param serviceGateway -
+     * @param serviceController -
      */
     @Inject
-    public NowPlayingViewModel(@NonNull Application application, @NonNull ServiceGateway serviceGateway) {
-        this.serviceGateway = serviceGateway;
+    public NowPlayingViewModel(@NonNull Application application, @NonNull ServiceController serviceController) {
+        this.serviceController = serviceController;
         this.application = application;
         toolbarTitle.set(application.getString(R.string.now_playing));
         createNonInjectedData();
@@ -171,7 +171,7 @@ public class NowPlayingViewModel extends ViewModel {
     protected void createNonInjectedData() {
         filterManager = new FilterManager(false);
         filterTransformer = new FilterTransformer(filterManager);
-        nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway, filterTransformer);
+        nowPlayingInteractor =  new NowPlayingInteractor(serviceController, filterTransformer);
     }
 
     /**

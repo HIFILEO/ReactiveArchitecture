@@ -100,3 +100,4 @@ The following command works for API emulator version 25.
 3. [Medium - Don't Break the Chain](http://blog.danlew.net/2015/03/02/dont-break-the-chain/)
 4. [Medium - State propagation in Android with RxJava Subjects](https://proandroiddev.com/state-propagation-in-android-with-rxjava-subjects-81db49a0dd8e)
 5. [Youtube - Managing State with RxJava by Jake Wharton](https://www.youtube.com/watch?v=0IKHxjkgop4&t=1828s&list=PL6LUvCSPzQMbfOQkSLAINzmXQPDdxWv3P&index=6)
+6. [Thoughts on Clean Architecture](https://android.jlelse.eu/thoughts-on-clean-architecture-b8449d9d02df)

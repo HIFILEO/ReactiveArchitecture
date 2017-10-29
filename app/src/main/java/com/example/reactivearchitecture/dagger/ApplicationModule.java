@@ -22,8 +22,8 @@ package com.example.reactivearchitecture.dagger;
 import android.app.Application;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.gateway.ServiceGateway;
-import com.example.reactivearchitecture.gateway.ServiceGatewayImpl;
+import com.example.reactivearchitecture.gateway.ServiceController;
+import com.example.reactivearchitecture.gateway.ServiceControllerImpl;
 import com.example.reactivearchitecture.service.ServiceApi;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -99,8 +99,8 @@ public class ApplicationModule {
 
     @Provides
     @Singleton
-    public ServiceGateway providesGatewayInfo(ServiceApi serviceApi, Application application) {
-        return new ServiceGatewayImpl(serviceApi,
+    public ServiceController providesGatewayInfo(ServiceApi serviceApi, Application application) {
+        return new ServiceControllerImpl(serviceApi,
                 application.getString(R.string.api_key),
                 application.getString(R.string.image_url_path));
     }

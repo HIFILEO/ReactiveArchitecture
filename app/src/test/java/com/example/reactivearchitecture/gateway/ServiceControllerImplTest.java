@@ -18,7 +18,7 @@ import static com.ibm.icu.impl.Assert.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Category(UnitTest.class)
-public class ServiceGatewayImplTest extends RxJavaTest {
+public class ServiceControllerImplTest extends RxJavaTest {
     private static final String IMAGE_PATH = "www.imagepath.com";
 
     @Before
@@ -40,8 +40,8 @@ public class ServiceGatewayImplTest extends RxJavaTest {
         }
         ServiceResponse serviceResponse = new Gson().fromJson(json,  ServiceResponse.class);
 
-        ServiceGatewayImpl.TranslateNowPlayingSubscriptionFunc translateNowPlayingSubscriptionFunc
-                = new ServiceGatewayImpl.TranslateNowPlayingSubscriptionFunc(IMAGE_PATH);
+        ServiceControllerImpl.TranslateNowPlayingSubscriptionFunc translateNowPlayingSubscriptionFunc
+                = new ServiceControllerImpl.TranslateNowPlayingSubscriptionFunc(IMAGE_PATH);
 
         //
         //Act

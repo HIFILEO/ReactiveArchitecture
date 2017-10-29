@@ -3,7 +3,7 @@ package com.example.reactivearchitecture.viewmodel;
 import android.app.Application;
 
 import com.example.reactivearchitecture.categories.UnitTest;
-import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.gateway.ServiceController;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
 import com.example.reactivearchitecture.model.FilterManager;
@@ -48,7 +48,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 @Category(UnitTest.class)
 public class NowPlayingViewModelTest extends RxJavaTest {
     @Mock
-    ServiceGateway mockServiceGateway;
+    ServiceController mockServiceController;
 
     @Mock
     Application mockApplication;
@@ -102,7 +102,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
         when(mockTestTransformer.transform(any(Action.class))).thenReturn(Observable.<Result>empty());
 
@@ -136,7 +136,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
@@ -188,7 +188,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
         nowPlayingViewModel.init(null);
 
         final int pageNumber = 1;
@@ -250,7 +250,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
 
         //restore activity
         final int pageNumber = 2;
@@ -389,7 +389,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
 
         //restore activity
         List<MovieViewInfo> movieViewInfoList_HighRating = new ArrayList<>();
@@ -474,7 +474,7 @@ public class NowPlayingViewModelTest extends RxJavaTest {
         //
         TestObserver<UiModel> testObserver;
         TestNowPlayingViewModel nowPlayingViewModel = new TestNowPlayingViewModel(mockApplication,
-                mockServiceGateway, mockNowPlayingInteractor, mockFilterManager);
+                mockServiceController, mockNowPlayingInteractor, mockFilterManager);
 
         //restore activity
         List<MovieViewInfo> movieViewInfoList_HighRating = new ArrayList<>();

@@ -26,6 +26,6 @@ import io.reactivex.Observable;
 /**
  * Gateway that fetches movie information from a RESTFUL api service.
  */
-public interface ServiceGateway {
+public interface ServiceController {
     Observable<NowPlayingInfo> getNowPlaying(int pageNumber);
 }

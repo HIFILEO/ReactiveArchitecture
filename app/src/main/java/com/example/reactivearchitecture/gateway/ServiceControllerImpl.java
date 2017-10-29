@@ -45,9 +45,9 @@ import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
- * Implementation of {@link ServiceGateway}.
+ * Implementation of {@link ServiceController}.
  */
-public class ServiceGatewayImpl implements ServiceGateway {
+public class ServiceControllerImpl implements ServiceController {
     private final ServiceApi serviceApi;
     private final String apiKey;
     private final String imageUrlPath;
@@ -58,8 +58,8 @@ public class ServiceGatewayImpl implements ServiceGateway {
      * @param apiKey - access key.
      * @param imageUrlPath - url base path for showing images.
      */
-    public ServiceGatewayImpl(@NonNull ServiceApi serviceApi, @NonNull String apiKey,
-                              @NonNull String imageUrlPath) {
+    public ServiceControllerImpl(@NonNull ServiceApi serviceApi, @NonNull String apiKey,
+                                 @NonNull String imageUrlPath) {
         this.serviceApi = serviceApi;
         this.apiKey = apiKey;
         this.imageUrlPath = imageUrlPath;

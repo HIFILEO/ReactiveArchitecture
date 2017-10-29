@@ -22,7 +22,7 @@ package com.example.reactivearchitecture.interactor;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.gateway.ServiceController;
 import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.NowPlayingInfo;
@@ -51,7 +51,7 @@ import timber.log.Timber;
  */
 public class NowPlayingInteractor {
     @NonNull
-    private final ServiceGateway serviceGateway;
+    private final ServiceController serviceController;
 
     @NonNull
     private final FilterTransformer filterTransformer;
@@ -67,12 +67,12 @@ public class NowPlayingInteractor {
 
     /**
      * Constructor.
-     * @param serviceGatewayIn - Gateway to fetch data from.
+     * @param serviceControllerIn - Gateway to fetch data from.
      * @param filterTransformerIn - {@link FilterTransformer}
      */
     @SuppressWarnings("checkstyle:magicnumber")
-    public NowPlayingInteractor(@NonNull ServiceGateway serviceGatewayIn, @NonNull FilterTransformer filterTransformerIn) {
-        this.serviceGateway = serviceGatewayIn;
+    public NowPlayingInteractor(@NonNull ServiceController serviceControllerIn, @NonNull FilterTransformer filterTransformerIn) {
+        this.serviceController = serviceControllerIn;
         this.filterTransformer = filterTransformerIn;
 
         transformScrollActionToScrollResult = new ObservableTransformer<ScrollAction, ScrollResult>() {
@@ -86,7 +86,7 @@ public class NowPlayingInteractor {
                         Timber.i("Thread name: %s. Load Data, return ScrollResult.", Thread.currentThread().getName());
                         final PublishSubject<ScrollResult> failureStream = PublishSubject.create();
 
-                        return serviceGateway.getNowPlaying(scrollAction.getPageNumber())
+                        return serviceController.getNowPlaying(scrollAction.getPageNumber())
                                 //Delay for 3 seconds to show spinner on screen.
                                 .delay(3, TimeUnit.SECONDS)
                                 //translate external to internal business logic (Example if we wanted to save to prefs)
@@ -135,7 +135,7 @@ public class NowPlayingInteractor {
                                 @Override
                                 public ObservableSource<RestoreResult> apply(final Integer pageNumber) throws Exception {
                                     Timber.i("Thread name: %s. Restore Page #%s.", Thread.currentThread().getName(), pageNumber);
-                                    return serviceGateway.getNowPlaying(pageNumber)
+                                    return serviceController.getNowPlaying(pageNumber)
                                             .delay(3, TimeUnit.SECONDS)
                                             //translate external to internal business logic (Ex if we wanted to save to prefs)
                                             .flatMap(new NowPlayingInteractor.MovieListFetcher())

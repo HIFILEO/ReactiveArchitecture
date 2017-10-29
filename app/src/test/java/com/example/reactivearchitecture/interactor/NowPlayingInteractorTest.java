@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.interactor;
 
-import com.example.reactivearchitecture.gateway.ServiceGateway;
+import com.example.reactivearchitecture.gateway.ServiceController;
 import com.example.reactivearchitecture.model.FilterManager;
 import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
@@ -63,7 +63,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class NowPlayingInteractorTest extends RxJavaTest {
 
     @Mock
-    ServiceGateway mockServiceGateway;
+    ServiceController mockServiceController;
 
     @Mock
     FilterManager mockFilterManager;
@@ -101,7 +101,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
@@ -110,7 +110,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
                 totalPageNumber);
 
-        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+        when(mockServiceController.getNowPlaying(anyInt())).thenReturn(
                 Observable.just(nowPlayingInfo));
 
         //
@@ -161,7 +161,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -172,7 +172,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         String errorMessage = "Error Message";
 
         TestFailure testFailure = new TestFailure(nowPlayingInfo, errorMessage);
-        when(mockServiceGateway.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
+        when(mockServiceController.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
 
         //
         //Act
@@ -234,7 +234,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -243,7 +243,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
                 totalPageNumber);
 
-        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+        when(mockServiceController.getNowPlaying(anyInt())).thenReturn(
                 Observable.just(nowPlayingInfo));
 
         //
@@ -290,7 +290,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -301,7 +301,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         String errorMessage = "Error Message";
 
         TestFailure testFailure = new TestFailure(nowPlayingInfo, errorMessage);
-        when(mockServiceGateway.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
+        when(mockServiceController.getNowPlaying(1)).thenReturn(testFailure.getNowPlayingInfoObservable());
 
         //
         //Act
@@ -363,7 +363,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         int pageNumber = 2;
 
@@ -374,7 +374,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
                 totalPageNumber);
 
-        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+        when(mockServiceController.getNowPlaying(anyInt())).thenReturn(
                 Observable.just(nowPlayingInfo));
 
         //
@@ -398,7 +398,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         List<MovieInfo> movieInfoList = new ArrayList<MovieInfo>();
         for (int i = 0; i < 5; i++) {
@@ -438,7 +438,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         //Arrange
         //
         TestObserver<Result> testObserver;
-        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceGateway, filterTransformer);
+        NowPlayingInteractor nowPlayingInteractor = new NowPlayingInteractor(mockServiceController, filterTransformer);
 
         int pageNumber = 2;
 
@@ -449,7 +449,7 @@ public class NowPlayingInteractorTest extends RxJavaTest {
         NowPlayingInfo nowPlayingInfo = new NowPlayingInfoImpl(movieInfoList, pageNumber,
                 totalPageNumber);
 
-        when(mockServiceGateway.getNowPlaying(anyInt())).thenReturn(
+        when(mockServiceController.getNowPlaying(anyInt())).thenReturn(
                 Observable.just(nowPlayingInfo));
 
         when(mockFilterManager.isFilterOn()).thenReturn(true);
