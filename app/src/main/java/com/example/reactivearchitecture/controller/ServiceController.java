@@ -17,7 +17,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.example.reactivearchitecture.gateway;
+package com.example.reactivearchitecture.controller;
 
 import com.example.reactivearchitecture.model.NowPlayingInfo;
 

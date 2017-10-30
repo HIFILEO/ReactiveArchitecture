@@ -3,7 +3,7 @@ package com.example.reactivearchitecture.viewmodel;
 import android.app.Application;
 import android.support.annotation.NonNull;
 
-import com.example.reactivearchitecture.gateway.ServiceController;
+import com.example.reactivearchitecture.controller.ServiceController;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.FilterManager;
 

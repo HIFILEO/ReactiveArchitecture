@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.interactor;
 
-import com.example.reactivearchitecture.gateway.ServiceController;
+import com.example.reactivearchitecture.controller.ServiceController;
 import com.example.reactivearchitecture.model.FilterManager;
 import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;

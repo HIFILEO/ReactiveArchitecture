@@ -22,7 +22,7 @@ package com.example.reactivearchitecture.interactor;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.example.reactivearchitecture.gateway.ServiceController;
+import com.example.reactivearchitecture.controller.ServiceController;
 import com.example.reactivearchitecture.model.FilterTransformer;
 import com.example.reactivearchitecture.model.MovieInfo;
 import com.example.reactivearchitecture.model.NowPlayingInfo;

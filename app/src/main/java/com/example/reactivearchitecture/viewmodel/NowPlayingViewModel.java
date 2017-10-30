@@ -29,7 +29,7 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.example.reactivearchitecture.R;
-import com.example.reactivearchitecture.gateway.ServiceController;
+import com.example.reactivearchitecture.controller.ServiceController;
 import com.example.reactivearchitecture.interactor.NowPlayingInteractor;
 import com.example.reactivearchitecture.model.AdapterCommandType;
 import com.example.reactivearchitecture.model.FilterManager;

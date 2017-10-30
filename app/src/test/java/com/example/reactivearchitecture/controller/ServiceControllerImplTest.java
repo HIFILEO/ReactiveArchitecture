@@ -1,4 +1,4 @@
-package com.example.reactivearchitecture.gateway;
+package com.example.reactivearchitecture.controller;
 
 import com.example.reactivearchitecture.categories.UnitTest;
 import com.example.reactivearchitecture.model.MovieInfo;
