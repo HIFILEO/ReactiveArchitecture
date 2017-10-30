@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <import type="android.view.View"/>
-        <variable name="viewModel" type="com.example.reactivearchitecture.viewmodel.NowPlayingViewModel"/>
+        <variable name="viewModel" type="com.example.reactivearchitecture.nowplaying.viewmodel.NowPlayingViewModel"/>
     </data>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".viewcontroller.NowPlayingActivity">
+        tools:context=".nowplaying.viewcontroller.NowPlayingActivity">
 
         <android.support.design.widget.AppBarLayout
             android:id="@+id/appBar"

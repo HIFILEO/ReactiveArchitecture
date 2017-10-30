@@ -1,5 +1,9 @@
 package com.example.reactivearchitecture.model;
 
+import com.example.reactivearchitecture.nowplaying.model.FilterManager;
+import com.example.reactivearchitecture.nowplaying.model.MovieInfo;
+import com.example.reactivearchitecture.nowplaying.model.MovieInfoImpl;
+
 import org.junit.Before;
 import org.junit.Test;
 
