@@ -64,7 +64,6 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
@@ -92,13 +91,13 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private PublishRelay<UiEvent> publishRelayUiEvents = PublishRelay.create();
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected NowPlayingInteractor nowPlayingInteractor;
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected FilterManager filterManager;
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected FilterTransformer filterTransformer;
 
     /**
@@ -171,7 +170,7 @@ public class NowPlayingViewModel extends ViewModel {
         return uiModelObservable;
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void createNonInjectedData() {
         filterManager = new FilterManager(false);
         filterTransformer = new FilterTransformer(filterManager);
@@ -181,7 +180,7 @@ public class NowPlayingViewModel extends ViewModel {
     /**
      * Bind to {@link PublishRelay}.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void bind() {
         uiModelObservable = publishRelayUiEvents
                 .observeOn(Schedulers.computation())
@@ -190,30 +189,21 @@ public class NowPlayingViewModel extends ViewModel {
                 //Translate UiEvents into Actions
                 .compose(transformEventsIntoActions)
                 //Asynchronous Actions To Interactor
-                .publish(new Function<Observable<Action>, ObservableSource<Result>>() {
-                    @Override
-                    public ObservableSource<Result> apply(@io.reactivex.annotations.NonNull Observable<Action> actionObservable)
-                            throws Exception {
-                        return  nowPlayingInteractor.processAction(actionObservable);
-                    }
-                })
+                .publish(actionObservable -> nowPlayingInteractor.processAction(actionObservable))
                 //Scan Results to Update UiModel
-                .scan(initialUiModel, new BiFunction<UiModel, Result, UiModel>() {
-                    @Override
-                    public UiModel apply(UiModel uiModel, Result result) throws Exception {
-                        Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
+                .scan(initialUiModel, (uiModel, result) -> {
+                    Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
 
-                        if (result instanceof ScrollResult) {
-                            return processScrollResult(uiModel, (ScrollResult) result);
-                        } else if (result instanceof RestoreResult) {
-                            return processRestoreResult(uiModel, (RestoreResult) result);
-                        } else if (result instanceof FilterResult) {
-                            return processFilterResult(uiModel, (FilterResult) result);
-                        }
-
-                        //Unknown result - throw error
-                        throw new IllegalArgumentException("Unknown Result: " + result);
+                    if (result instanceof ScrollResult) {
+                        return processScrollResult(uiModel, (ScrollResult) result);
+                    } else if (result instanceof RestoreResult) {
+                        return processRestoreResult(uiModel, (RestoreResult) result);
+                    } else if (result instanceof FilterResult) {
+                        return processFilterResult(uiModel, (FilterResult) result);
                     }
+
+                    //Unknown result - throw error
+                    throw new IllegalArgumentException("Unknown Result: " + result);
                 })
                 //Publish results to main thread.
                 .observeOn(AndroidSchedulers.mainThread())
@@ -243,59 +233,21 @@ public class NowPlayingViewModel extends ViewModel {
     @MainThread
     private void setupTransformers() {
         final ObservableTransformer<ScrollEvent, ScrollAction> scrollTransformer =
-                new ObservableTransformer<ScrollEvent, ScrollAction>() {
-            @Override
-            public ObservableSource<ScrollAction> apply(Observable<ScrollEvent> upstream) {
-                return upstream.flatMap(new Function<ScrollEvent, ObservableSource<ScrollAction>>() {
-                    @Override
-                    public ObservableSource<ScrollAction> apply(ScrollEvent scrollEvent) throws Exception {
-                        return Observable.just(new ScrollAction(scrollEvent.getPageNumber()));
-                    }
+                upstream -> upstream.flatMap((Function<ScrollEvent, ObservableSource<ScrollAction>>) scrollEvent -> {
+                    return Observable.just(new ScrollAction(scrollEvent.getPageNumber()));
                 });
-            }
-        };
 
         final ObservableTransformer<RestoreEvent, RestoreAction> restoreTransformer =
-                new ObservableTransformer<RestoreEvent, RestoreAction>() {
-            @Override
-            public ObservableSource<RestoreAction> apply(@io.reactivex.annotations.NonNull Observable<RestoreEvent> upstream) {
-                return upstream.flatMap(new Function<RestoreEvent, ObservableSource<RestoreAction>>() {
-                    @Override
-                    public ObservableSource<RestoreAction> apply(RestoreEvent restoreEvent) throws Exception {
-                        return Observable.just(new RestoreAction(restoreEvent.getPageNumber()));
-                    }
-                });
-            }
-        };
+                upstream -> upstream.flatMap(restoreEvent -> Observable.just(new RestoreAction(restoreEvent.getPageNumber())));
 
         final ObservableTransformer<FilterEvent, FilterAction> filterTransformer =
-                new ObservableTransformer<FilterEvent, FilterAction>() {
-                    @Override
-                    public ObservableSource<FilterAction> apply(Observable<FilterEvent> upstream) {
-                        return upstream.flatMap(new Function<FilterEvent, ObservableSource<FilterAction>>() {
-                            @Override
-                            public ObservableSource<FilterAction> apply(FilterEvent filterEvent) throws Exception {
-                                return Observable.just(new FilterAction(filterEvent.isFilterOn()));
-                            }
-                        });
-                    }
-                };
+                upstream -> upstream.flatMap(filterEvent -> Observable.just(new FilterAction(filterEvent.isFilterOn())));
 
-        transformEventsIntoActions = new ObservableTransformer<UiEvent, Action>() {
-            @Override
-            public ObservableSource<Action> apply(@io.reactivex.annotations.NonNull Observable<UiEvent> upstream) {
-                return upstream.publish(new Function<Observable<UiEvent>, ObservableSource<Action>>() {
-                    @Override
-                    public ObservableSource<Action> apply(Observable<UiEvent> uiEventObservable) throws Exception {
-                        return Observable.merge(
-                                uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
-                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer),
-                                uiEventObservable.ofType(FilterEvent.class).compose(filterTransformer)
-                        );
-                    }
-                });
-            }
-        };
+        transformEventsIntoActions = upstream -> upstream.publish(uiEventObservable -> Observable.merge(
+                uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
+                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer),
+                uiEventObservable.ofType(FilterEvent.class).compose(filterTransformer)
+        ));
     }
 
     /**

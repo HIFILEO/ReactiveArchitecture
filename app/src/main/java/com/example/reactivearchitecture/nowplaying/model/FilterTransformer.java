@@ -26,8 +26,6 @@ import com.example.reactivearchitecture.nowplaying.model.result.FilterResult;
 import com.example.reactivearchitecture.nowplaying.model.result.RestoreResult;
 import com.example.reactivearchitecture.nowplaying.model.result.ScrollResult;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.functions.Function;
 
@@ -55,62 +53,40 @@ public class FilterTransformer {
     public FilterTransformer(@NonNull FilterManager filterManagerIn) {
         this.filterManager = filterManagerIn;
 
-        transformFilterScrollResult = new ObservableTransformer<ScrollResult, ScrollResult>() {
+        transformFilterScrollResult = upstream -> upstream.map(new Function<ScrollResult, ScrollResult>() {
             @Override
-            public ObservableSource<ScrollResult> apply(@io.reactivex.annotations.NonNull Observable<ScrollResult> upstream) {
-
-                return upstream.map(new Function<ScrollResult, ScrollResult>() {
-                    @Override
-                    public ScrollResult apply(@io.reactivex.annotations.NonNull ScrollResult scrollResult) throws Exception {
-                        return new ScrollResult(
-                                scrollResult.getType(),
-                                scrollResult.isSuccessful(),
-                                scrollResult.isLoading(),
-                                scrollResult.getPageNumber(),
-                                scrollResult.getResult() == null ? null : filterManager.filterList(scrollResult.getResult()),
-                                scrollResult.getError()
-                        );
-                    }
-                });
+            public ScrollResult apply(@io.reactivex.annotations.NonNull ScrollResult scrollResult) throws Exception {
+                return new ScrollResult(
+                        scrollResult.getType(),
+                        scrollResult.isSuccessful(),
+                        scrollResult.isLoading(),
+                        scrollResult.getPageNumber(),
+                        scrollResult.getResult() == null ? null : filterManager.filterList(scrollResult.getResult()),
+                        scrollResult.getError()
+                );
             }
-        };
+        });
 
-        transformFilterRestoreResult = new ObservableTransformer<RestoreResult, RestoreResult>() {
+        transformFilterRestoreResult = upstream -> upstream.map(restoreResult -> new RestoreResult(
+                restoreResult.getType(),
+                restoreResult.isSuccessful(),
+                restoreResult.isLoading(),
+                restoreResult.getPageNumber(),
+                restoreResult.getResult() == null ? null : filterManager.filterList(restoreResult.getResult()),
+                restoreResult.getError()
+        ));
+
+        transformFilterActionToFilterResult = upstream -> upstream.map(new Function<FilterAction, FilterResult>() {
             @Override
-            public ObservableSource<RestoreResult> apply(@io.reactivex.annotations.NonNull Observable<RestoreResult> upstream) {
+            public FilterResult apply(@io.reactivex.annotations.NonNull FilterAction filterAction) throws Exception {
+                filterManager.setFilterOn(filterAction.isFilterOn());
 
-                return upstream.map(new Function<RestoreResult, RestoreResult>() {
-                    @Override
-                    public RestoreResult apply(RestoreResult restoreResult) throws Exception {
-                        return new RestoreResult(
-                                restoreResult.getType(),
-                                restoreResult.isSuccessful(),
-                                restoreResult.isLoading(),
-                                restoreResult.getPageNumber(),
-                                restoreResult.getResult() == null ? null : filterManager.filterList(restoreResult.getResult()),
-                                restoreResult.getError()
-                        );
-                    }
-                });
+                return FilterResult.success(
+                        filterManager.isFilterOn(),
+                        filterManager.getFullList()
+                );
             }
-        };
-
-        transformFilterActionToFilterResult = new ObservableTransformer<FilterAction, FilterResult>() {
-            @Override
-            public ObservableSource<FilterResult> apply(Observable<FilterAction> upstream) {
-                return upstream.map(new Function<FilterAction, FilterResult>() {
-                    @Override
-                    public FilterResult apply(@io.reactivex.annotations.NonNull FilterAction filterAction) throws Exception {
-                        filterManager.setFilterOn(filterAction.isFilterOn());
-
-                        return FilterResult.success(
-                                filterManager.isFilterOn(),
-                                filterManager.getFullList()
-                        );
-                    }
-                });
-            }
-        };
+        });
     }
 
     @NonNull
