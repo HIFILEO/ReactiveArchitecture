@@ -21,13 +21,14 @@ package com.example.reactivearchitecture.util;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.core.deps.guava.base.Throwables;
-import android.support.test.espresso.core.deps.guava.collect.Sets;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitor;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -36,6 +37,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.google.common.base.Throwables.throwIfUnchecked;
 
 /**
  * Custom test runner to make sure previous activities are completed (meaning they go through
@@ -133,8 +136,9 @@ public class EspressoTestRule<T extends Activity> extends ActivityTestRule<T> {
         });
         final Throwable exception = exceptionAtomic.get();
         if (exception != null) {
-            Throwables.propagateIfInstanceOf(exception, Exception.class);
-            Throwables.propagate(exception);
+            Throwables.throwIfInstanceOf(exception, Exception.class);
+            throwIfUnchecked(exception);
+            throw new RuntimeException(exception);
         }
         return retAtomic.get();
     }
