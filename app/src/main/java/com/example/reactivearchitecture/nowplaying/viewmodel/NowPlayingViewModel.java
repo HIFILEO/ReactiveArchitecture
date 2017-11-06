@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 package com.example.reactivearchitecture.nowplaying.viewmodel;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.arch.lifecycle.ViewModel;
 import android.databinding.ObservableField;
@@ -71,6 +72,7 @@ import timber.log.Timber;
 /**
  * View interface to be implemented by the forward facing UI part of android. An activity or fragment.
  */
+@SuppressLint("WrongConstant")
 public class NowPlayingViewModel extends ViewModel {
     private Observable<UiModel> uiModelObservable;
     private UiModel initialUiModel;

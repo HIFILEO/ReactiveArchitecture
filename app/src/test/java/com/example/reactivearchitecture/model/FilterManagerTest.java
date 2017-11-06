@@ -1,11 +1,13 @@
 package com.example.reactivearchitecture.model;
 
+import com.example.reactivearchitecture.categories.UnitTest;
 import com.example.reactivearchitecture.nowplaying.model.FilterManager;
 import com.example.reactivearchitecture.nowplaying.model.MovieInfo;
 import com.example.reactivearchitecture.nowplaying.model.MovieInfoImpl;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.List;
 
 import static org.mockito.MockitoAnnotations.initMocks;
 
+@Category(UnitTest.class)
 public class FilterManagerTest {
 
     List<MovieInfo> movieInfoFullList = new ArrayList<>();

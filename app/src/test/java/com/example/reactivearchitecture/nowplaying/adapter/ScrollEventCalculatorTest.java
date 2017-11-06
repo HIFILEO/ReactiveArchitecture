@@ -3,15 +3,18 @@ package com.example.reactivearchitecture.nowplaying.adapter;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.example.reactivearchitecture.categories.UnitTest;
 import com.jakewharton.rxbinding2.support.v7.widget.RecyclerViewScrollEvent;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import static org.mockito.Mockito.when;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Category(UnitTest.class)
 public class ScrollEventCalculatorTest {
 
     @Test
