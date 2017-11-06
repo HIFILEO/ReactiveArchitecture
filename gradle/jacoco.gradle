@@ -1,7 +1,7 @@
 apply plugin: 'jacoco'
 
 jacoco {
-    version '0.7.7.201606060606'
+    toolVersion = "0.7.9"
 }
 
 configurations {
@@ -9,8 +9,8 @@ configurations {
 }
 
 dependencies {
-    jacocoTestReport 'org.jacoco:org.jacoco.ant:0.7.7.201606060606'
-    jacocoTestReport 'org.jacoco:org.jacoco.core:0.7.7.201606060606'
+    jacocoTestReport 'org.jacoco:org.jacoco.ant:0.7.9'
+    jacocoTestReport 'org.jacoco:org.jacoco.core:0.7.9'
 }
 
 android {
@@ -30,12 +30,14 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDE
     reports {
         xml {
             enabled true // coveralls
-            destination "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+            File file = file("${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+            destination file
         }
 
         html {
             enabled true
-            destination "${project.buildDir}/reports/jacoco/test/html"
+            File file = file("${project.buildDir}/reports/jacoco/test/html")
+            destination file
         }
     }
 
@@ -46,6 +48,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDE
     // avoid some side effects through revert renaming
     doLast {
         revertDaggerWorkaround('app/build/intermediates/classes/')
+        println "Report At: " + reportsDir + "/jacoco/test/html/index.html"
     }
 
     // use hidden configuration, for details look into JacocoPlugin.groovy
