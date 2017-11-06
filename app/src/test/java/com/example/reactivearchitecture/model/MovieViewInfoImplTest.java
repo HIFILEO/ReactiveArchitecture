@@ -1,6 +1,9 @@
 package com.example.reactivearchitecture.model;
 
 import com.example.reactivearchitecture.categories.UnitTest;
+import com.example.reactivearchitecture.nowplaying.model.MovieInfoImpl;
+import com.example.reactivearchitecture.nowplaying.view.MovieViewInfo;
+import com.example.reactivearchitecture.nowplaying.view.MovieViewInfoImpl;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

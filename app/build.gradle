@@ -7,14 +7,14 @@ apply from: '../gradle/jacoco.gradle'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.example.reactivearchitecture"
         minSdkVersion 23
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner 'com.example.reactivearchitecture.application.ReactiveArchitectureTestRunner'
+        testInstrumentationRunner 'com.example.reactivearchitecture.core.application.ReactiveArchitectureTestRunner'
     }
     buildTypes {
         release {
@@ -26,98 +26,89 @@ android {
     dataBinding {
         enabled = true
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 //Required for androidTestCompile collisions with annotation library
 //https://github.com/JakeWharton/u2020/blob/05a57bf43b9b61f16d32cbe8717af77cd608b0fb/build.gradle#L136-L140
 configurations.all {
     resolutionStrategy {
-        force 'com.android.support:support-annotations:26.0.0'
+        force 'com.android.support:support-annotations:26.1.0'
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     //Support Libs
-    compile 'com.android.support:appcompat-v7:26.0.0'
-    compile 'com.android.support:recyclerview-v7:26.0.0'
-    compile 'com.android.support:design:26.0.0'
-    compile 'com.android.support:support-annotations:26.0.0'
-    compile "android.arch.lifecycle:runtime:1.0.0-alpha9"
-    compile "android.arch.lifecycle:extensions:1.0.0-alpha9"
-    annotationProcessor "android.arch.lifecycle:compiler:1.0.0-alpha9"
-
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:recyclerview-v7:26.1.0'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.android.support:support-annotations:27.0.0'
+    implementation 'android.arch.lifecycle:runtime:1.0.3'
+    implementation 'android.arch.lifecycle:extensions:1.0.0-rc1'
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0-rc1"
     //Dagger
     annotationProcessor "com.google.dagger:dagger-compiler:2.11"
-    provided 'javax.annotation:jsr250-api:1.0'
-    compile 'com.google.dagger:dagger:2.11'
-    compile "com.google.dagger:dagger-android-support:2.11" // because we use the support libraries
-    compile "com.google.dagger:dagger-android:2.11"
+    compileOnly 'javax.annotation:jsr250-api:1.0'
+    implementation 'com.google.dagger:dagger:2.11'
+    implementation 'com.google.dagger:dagger-android-support:2.11'
+    // because we use the support libraries
+    implementation 'com.google.dagger:dagger-android:2.11'
     annotationProcessor "com.google.dagger:dagger-android-processor:2.11"
-
     //RxBindings
-    compile 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    compile 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.0.0'
-    compile 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.0.0'
-
+    implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.0.0'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.0.0'
     //okhttp
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-    compile 'com.squareup.okhttp3:okhttp-urlconnection:3.2.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
-    compile 'com.squareup.okio:okio:1.6.0'
-
+    implementation 'com.squareup.okhttp3:okhttp:3.8.0'
+    implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.4.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.8.0'
+    implementation 'com.squareup.okio:okio:1.13.0'
     //Retrofit
-    compile('com.squareup.retrofit2:retrofit:2.2.0') {
+    implementation('com.squareup.retrofit2:retrofit:2.2.0') {
         //exclude Retrofit's Okhttp peer-dependency module and define your own module import
         exclude module: 'okhttp'
     }
-    compile 'com.squareup.retrofit2:converter-gson:2.2.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
-
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
     //Rx
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.5'
-
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.5'
     //Rx Lint Checker - https://bitbucket.org/littlerobots/rxlint
-    compile 'nl.littlerobots.rxlint:rxlint:1.3'
-
+    implementation 'nl.littlerobots.rxlint:rxlint:1.3'
     //RxRelay
-    compile 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
-
+    implementation 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
     //Timber
-    compile 'com.jakewharton.timber:timber:4.5.1'
-
+    implementation 'com.jakewharton.timber:timber:4.5.1'
     //Gson
-    compile 'com.google.code.gson:gson:2.7'
-
+    implementation 'com.google.code.gson:gson:2.8.0'
     //picaso
-    compile 'com.squareup.picasso:picasso:2.5.2'
-
+    implementation 'com.squareup.picasso:picasso:2.5.2'
     //Unit Test
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.apache.maven:maven-ant-tasks:2.1.3'
-    testCompile 'org.robolectric:robolectric:3.1.1'
-    testCompile 'org.robolectric:shadows-support-v4:3.1.1'
-    testCompile 'org.mockito:mockito-core:2.0.7-beta'
-    testCompile "org.robolectric:shadows-multidex:3.0"
-    testCompile 'org.assertj:assertj-core:1.7.1'
-
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
+    testImplementation 'org.robolectric:robolectric:3.3.2'
+    testImplementation 'org.robolectric:shadows-support-v4:3.3.2'
+    testImplementation 'org.mockito:mockito-core:2.6.2'
+    testImplementation 'org.robolectric:shadows-multidex:3.0'
+    testImplementation 'org.assertj:assertj-core:2.6.0'
     //Espresso Test
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    androidTestCompile 'com.android.support.test:rules:0.5'
-    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
-    androidTestCompile('com.android.support.test.espresso:espresso-contrib:2.2') {
-        // Necessary to avoid version conflicts
-        exclude group: 'com.android.support', module: 'appcompat'
-        exclude group: 'com.android.support', module: 'support-v4'
-        exclude group: 'com.android.support', module: 'support-annotations'
-        exclude module: 'recyclerview-v7'
-    }
-    androidTestCompile 'org.assertj:assertj-core:1.7.1'
-    androidTestCompile "com.google.dagger:dagger-android:2.11"
-    androidTestCompile 'com.squareup.retrofit2:retrofit-mock:2.2.0'
-    androidTestCompile 'org.mockito:mockito-android:2.6.2'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test:rules:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-intents:3.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.1'
+
+    androidTestImplementation 'org.assertj:assertj-core:2.6.0'
+    androidTestImplementation 'com.google.dagger:dagger-android:2.11'
+    androidTestImplementation 'com.squareup.retrofit2:retrofit-mock:2.2.0'
+    androidTestImplementation 'org.mockito:mockito-android:2.6.2'
     androidTestAnnotationProcessor 'com.google.dagger:dagger-compiler:2.11'
+
+    //Normally I don't include Guava, but needed for EspressoTestRule
+    androidTestImplementation 'com.google.guava:guava:23.0-android'
 }
