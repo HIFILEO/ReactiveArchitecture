@@ -45,7 +45,7 @@ import static com.google.common.base.Throwables.throwIfUnchecked;
  * the entire lifecycle) before starting next test.
  *
  * There is a bug in espresso 2.2.2 where previous activity under test does NOT become destroyed
- * until the next activity test is started.
+ * until the next activity test is started. This is used for for 3.0.0.
  * https://issuetracker.google.com/issues/37082857
  *
  * Inspired from:
