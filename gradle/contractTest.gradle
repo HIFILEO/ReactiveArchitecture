@@ -44,7 +44,7 @@ task contractTest(
         group: "Verification") {
 
     //Here for task completion, not actually used since sub task of testDebugUnitTest
-    testClassesDir = file("src/contractTest/java/");
+    testClassesDirs = files("src/contractTest/java/")
     classpath = files("$System.env.ANDROID_HOME/sources/android-18")
 
     //
