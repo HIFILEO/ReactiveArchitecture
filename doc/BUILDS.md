@@ -1,5 +1,7 @@
 # BUILDS.md
 
+This project is built to use Java 8 and Android Studio 3.0 running on a Mac. 
+
 ### Usage
 
 This document describes official test and production builds.
