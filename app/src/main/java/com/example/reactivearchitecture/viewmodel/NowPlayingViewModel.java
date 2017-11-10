@@ -55,7 +55,6 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
@@ -84,7 +83,7 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private ObservableTransformer<UiEvent, Action> transformEventsIntoActions;
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected NowPlayingInteractor nowPlayingInteractor;
 
     /**
@@ -112,11 +111,11 @@ public class NowPlayingViewModel extends ViewModel {
         if (initialUiModel == null) {
             if (restoredUiModel == null) {
                 initialUiModel = UiModel.initState();
-                startEventsObservable = Observable.just((UiEvent) new ScrollEvent(initialUiModel.getPageNumber() + 1));
+                startEventsObservable = Observable.just(new ScrollEvent(initialUiModel.getPageNumber() + 1));
             } else {
                 //restore required
-                initialUiModel = UiModel.restoreState(restoredUiModel.getPageNumber(), new ArrayList<MovieViewInfo>(), null);
-                startEventsObservable = Observable.just((UiEvent) new RestoreEvent(initialUiModel.getPageNumber()));
+                initialUiModel = UiModel.restoreState(restoredUiModel.getPageNumber(), new ArrayList<>(), null);
+                startEventsObservable = Observable.just(new RestoreEvent(initialUiModel.getPageNumber()));
             }
             bind();
         }
@@ -155,7 +154,7 @@ public class NowPlayingViewModel extends ViewModel {
         return uiModelObservable;
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void createNowPlayingInteractor() {
         nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway);
     }
@@ -163,7 +162,7 @@ public class NowPlayingViewModel extends ViewModel {
     /**
      * Bind to {@link PublishRelay}.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void bind() {
         uiModelObservable = publishRelayUiEvents
                 .observeOn(Schedulers.computation())
@@ -172,86 +171,77 @@ public class NowPlayingViewModel extends ViewModel {
                 //Translate UiEvents into Actions
                 .compose(transformEventsIntoActions)
                 //Asynchronous Actions To Interactor
-                .publish(new Function<Observable<Action>, ObservableSource<Result>>() {
-                    @Override
-                    public ObservableSource<Result> apply(@io.reactivex.annotations.NonNull Observable<Action> actionObservable)
-                            throws Exception {
-                        return  nowPlayingInteractor.processAction(actionObservable);
-                    }
-                })
+                .publish(actionObservable -> nowPlayingInteractor.processAction(actionObservable))
                 //Scan Results to Update UiModel
-                .scan(UiModel.initState(), new BiFunction<UiModel, Result, UiModel>() {
-                    @Override
-                    public UiModel apply(UiModel uiModel, Result result) throws Exception {
-                        Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
+                .scan(UiModel.initState(), (uiModel, result) -> {
+                    Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
 
-                        if (result instanceof ScrollResult) {
-                            ScrollResult scrollResult = (ScrollResult) result;
+                    if (result instanceof ScrollResult) {
+                        ScrollResult scrollResult = (ScrollResult) result;
 
-                            if (result.getType() == Result.ResultType.IN_FLIGHT) {
-                                return UiModel.inProgressState(
-                                        scrollResult.getPageNumber() == 1,
-                                        scrollResult.getPageNumber(),
-                                        uiModel.getCurrentList()
-                                );
-                            } else if (result.getType() == Result.ResultType.SUCCESS) {
-                                List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
-                                List<MovieViewInfo> currentList = uiModel.getCurrentList();
-                                currentList.addAll(listToAdd);
-
-                                return UiModel.successState(
-                                        scrollResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd,
-                                        AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS
-                                );
-                            } else if (result.getType() == Result.ResultType.FAILURE) {
-                                Timber.e(scrollResult.getError());
-                                return UiModel.failureState(
-                                        scrollResult.getPageNumber() == 1,
-                                        scrollResult.getPageNumber() - 1,
-                                        uiModel.getCurrentList(),
-                                        application.getString(R.string.error_msg)
-                                );
-                            }
-
-                        } else {
-                            RestoreResult restoreResult = (RestoreResult) result;
-
-                            List<MovieViewInfo> listToAdd = null;
+                        if (result.getType() == Result.ResultType.IN_FLIGHT) {
+                            return UiModel.inProgressState(
+                                    scrollResult.getPageNumber() == 1,
+                                    scrollResult.getPageNumber(),
+                                    uiModel.getCurrentList()
+                            );
+                        } else if (result.getType() == Result.ResultType.SUCCESS) {
+                            List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
                             List<MovieViewInfo> currentList = uiModel.getCurrentList();
-                            if (restoreResult.getResult() != null && !restoreResult.getResult().isEmpty()) {
-                                listToAdd = translateResultsForUi(restoreResult.getResult());
-                                currentList.addAll(listToAdd);
-                            }
+                            currentList.addAll(listToAdd);
 
-                            if (result.getType() == Result.ResultType.IN_FLIGHT) {
-                                return UiModel.restoreState(
-                                        restoreResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd
-                                );
-                            } else if (result.getType() == Result.ResultType.SUCCESS) {
-                                return UiModel.successState(
-                                        restoreResult.getPageNumber(),
-                                        currentList,
-                                        listToAdd,
-                                        AdapterCommandType.ADD_DATA_ONLY
-                                );
-                            } else if (result.getType() == Result.ResultType.FAILURE) {
-                                Timber.e(restoreResult.getError());
-                                return UiModel.failureState(
-                                        true,
-                                        restoreResult.getPageNumber() - 1,
-                                        currentList,
-                                        application.getString(R.string.error_msg)
-                                );
-                            }
+                            return UiModel.successState(
+                                    scrollResult.getPageNumber(),
+                                    currentList,
+                                    listToAdd,
+                                    AdapterCommandType.ADD_DATA_REMOVE_IN_PROGRESS
+                            );
+                        } else if (result.getType() == Result.ResultType.FAILURE) {
+                            Timber.e(scrollResult.getError());
+                            return UiModel.failureState(
+                                    scrollResult.getPageNumber() == 1,
+                                    scrollResult.getPageNumber() - 1,
+                                    uiModel.getCurrentList(),
+                                    application.getString(R.string.error_msg)
+                            );
                         }
 
-                        //Unknown result - throw error
-                        throw new IllegalArgumentException("Unknown Result: " + result);
+                    } else {
+                        RestoreResult restoreResult = (RestoreResult) result;
+
+                        List<MovieViewInfo> listToAdd = null;
+                        List<MovieViewInfo> currentList = uiModel.getCurrentList();
+                        if (restoreResult.getResult() != null && !restoreResult.getResult().isEmpty()) {
+                            listToAdd = translateResultsForUi(restoreResult.getResult());
+                            currentList.addAll(listToAdd);
+                        }
+
+                        if (result.getType() == Result.ResultType.IN_FLIGHT) {
+                            return UiModel.restoreState(
+                                    restoreResult.getPageNumber(),
+                                    currentList,
+                                    listToAdd
+                            );
+                        } else if (result.getType() == Result.ResultType.SUCCESS) {
+                            return UiModel.successState(
+                                    restoreResult.getPageNumber(),
+                                    currentList,
+                                    listToAdd,
+                                    AdapterCommandType.ADD_DATA_ONLY
+                            );
+                        } else if (result.getType() == Result.ResultType.FAILURE) {
+                            Timber.e(restoreResult.getError());
+                            return UiModel.failureState(
+                                    true,
+                                    restoreResult.getPageNumber() - 1,
+                                    currentList,
+                                    application.getString(R.string.error_msg)
+                            );
+                        }
                     }
+
+                    //Unknown result - throw error
+                    throw new IllegalArgumentException("Unknown Result: " + result);
                 })
                 //Publish results to main thread.
                 .observeOn(AndroidSchedulers.mainThread())
@@ -277,43 +267,18 @@ public class NowPlayingViewModel extends ViewModel {
 
     private void setupTransformers() {
         final ObservableTransformer<ScrollEvent, ScrollAction> scrollTransformer =
-                new ObservableTransformer<ScrollEvent, ScrollAction>() {
-            @Override
-            public ObservableSource<ScrollAction> apply(Observable<ScrollEvent> upstream) {
-                return upstream.flatMap(new Function<ScrollEvent, ObservableSource<ScrollAction>>() {
-                    @Override
-                    public ObservableSource<ScrollAction> apply(ScrollEvent scrollEvent) throws Exception {
-                        return Observable.just(new ScrollAction(scrollEvent.getPageNumber()));
-                    }
+                upstream -> upstream.flatMap((Function<ScrollEvent, ObservableSource<ScrollAction>>) scrollEvent -> {
+                    return Observable.just(new ScrollAction(scrollEvent.getPageNumber()));
                 });
-            }
-        };
 
         final ObservableTransformer<RestoreEvent, RestoreAction> restoreTransformer =
-                new ObservableTransformer<RestoreEvent, RestoreAction>() {
-            @Override
-            public ObservableSource<RestoreAction> apply(@io.reactivex.annotations.NonNull Observable<RestoreEvent> upstream) {
-                return upstream.flatMap(new Function<RestoreEvent, ObservableSource<RestoreAction>>() {
-                    @Override
-                    public ObservableSource<RestoreAction> apply(RestoreEvent restoreEvent) throws Exception {
-                        return Observable.just(new RestoreAction(restoreEvent.getPageNumber()));
-                    }
-                });
-            }
-        };
+                upstream -> upstream.flatMap(restoreEvent -> Observable.just(new RestoreAction(restoreEvent.getPageNumber())));
 
-        transformEventsIntoActions = new ObservableTransformer<UiEvent, Action>() {
-            @Override
-            public ObservableSource<Action> apply(@io.reactivex.annotations.NonNull Observable<UiEvent> upstream) {
-                return upstream.publish(new Function<Observable<UiEvent>, ObservableSource<Action>>() {
-                    @Override
-                    public ObservableSource<Action> apply(Observable<UiEvent> uiEventObservable) throws Exception {
-                        return Observable.merge(
-                                uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
-                                uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer));
-                    }
-                });
-            }
-        };
+        transformEventsIntoActions = upstream ->
+                upstream.publish((Function<Observable<UiEvent>, ObservableSource<Action>>) uiEventObservable -> {
+            return Observable.merge(
+                    uiEventObservable.ofType(ScrollEvent.class).compose(scrollTransformer),
+                    uiEventObservable.ofType(RestoreEvent.class).compose(restoreTransformer));
+        });
     }
 }

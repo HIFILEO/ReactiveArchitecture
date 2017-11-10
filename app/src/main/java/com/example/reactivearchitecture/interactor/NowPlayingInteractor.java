@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
-import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 import timber.log.Timber;
@@ -68,119 +67,90 @@ public class NowPlayingInteractor {
     public NowPlayingInteractor(ServiceGateway serviceGatewayLocal) {
         this.serviceGateway = serviceGatewayLocal;
 
-        transformScrollActionToScrollResult = new ObservableTransformer<ScrollAction, ScrollResult>() {
-            @Override
-            public ObservableSource<ScrollResult> apply(@io.reactivex.annotations.NonNull Observable<ScrollAction> upstream) {
-                Timber.i("Thread name: %s. Translate ScrollAction into ScrollResult.", Thread.currentThread().getName());
+        transformScrollActionToScrollResult = upstream -> {
+            Timber.i("Thread name: %s. Translate ScrollAction into ScrollResult.", Thread.currentThread().getName());
 
-                return upstream.flatMap(new Function<ScrollAction, ObservableSource<ScrollResult>>() {
-                    @Override
-                    public ObservableSource<ScrollResult> apply(@NonNull final ScrollAction scrollAction) throws Exception {
-                        Timber.i("Thread name: %s. Load Data, return ScrollResult.", Thread.currentThread().getName());
-                        final PublishSubject<ScrollResult> failureStream = PublishSubject.create();
+            return upstream.flatMap(new Function<ScrollAction, ObservableSource<ScrollResult>>() {
+                @Override
+                public ObservableSource<ScrollResult> apply(@NonNull final ScrollAction scrollAction) throws Exception {
+                    Timber.i("Thread name: %s. Load Data, return ScrollResult.", Thread.currentThread().getName());
+                    final PublishSubject<ScrollResult> failureStream = PublishSubject.create();
 
-                        return serviceGateway.getNowPlaying(scrollAction.getPageNumber())
-                                //Delay for 3 seconds to show spinner on screen.
-                                .delay(1, TimeUnit.SECONDS)
-                                //translate external to internal business logic (Example if we wanted to save to prefs)
-                                .flatMap(new NowPlayingInteractor.MovieListFetcher())
-                                .flatMap(new Function<List<MovieInfo>, ObservableSource<ScrollResult>>() {
-                                    @Override
-                                    public ObservableSource<ScrollResult> apply(List<MovieInfo> movieInfos) throws Exception {
-                                        return Observable.just(ScrollResult.sucess(scrollAction.getPageNumber(), movieInfos));
-                                    }
-                                })
-                                //handle retry, send status on failure stream.
-                                .retry(new BiPredicate<Integer, Throwable>() {
-                                    @Override
-                                    public boolean test(Integer retryNumber, Throwable throwable) throws Exception {
-                                        failureStream.onNext(ScrollResult.failure(scrollAction.getPageNumber(), throwable));
-                                        return true;
-                                    }
-                                })
-                                .mergeWith(failureStream)
-                                .startWith(ScrollResult.inFlight(scrollAction.getPageNumber()));
-                    }
-                });
-            }
-        };
-
-        transformRestoreActionToRestoreResult = new ObservableTransformer<RestoreAction, RestoreResult>() {
-            @Override
-            public ObservableSource<RestoreResult> apply(@io.reactivex.annotations.NonNull Observable<RestoreAction> upstream) {
-                Timber.i("Thread name: %s. Translate RestoreAction into RestoreResult.", Thread.currentThread().getName());
-
-                return upstream.flatMap(new Function<RestoreAction, ObservableSource<RestoreResult>>() {
-                    @Override
-                    public ObservableSource<RestoreResult> apply(final RestoreAction restoreAction) throws Exception {
-                        //Set the number of pages to restore
-                        ArrayList<Integer> pagesToRestore = new ArrayList<>();
-                        for (int i = 1; i <= restoreAction.getPageNumberToRestore(); i++) {
-                            pagesToRestore.add(i);
-                        }
-
-                        final PublishSubject<RestoreResult> failureStream = PublishSubject.create();
-
-                        //Execute
-                        return Observable.fromIterable(pagesToRestore)
-                            //output sequence must be ordered. Fetch the 1st page, then second, etc etc.
-                            .concatMap(new Function<Integer, ObservableSource<RestoreResult>>() {
-                                @Override
-                                public ObservableSource<RestoreResult> apply(final Integer pageNumber) throws Exception {
-                                    Timber.i("Thread name: %s. Restore Page #%s.", Thread.currentThread().getName(), pageNumber);
-                                    return serviceGateway.getNowPlaying(pageNumber)
-                                            .delay(3, TimeUnit.SECONDS)
-                                            //translate external to internal business logic (Ex if we wanted to save to prefs)
-                                            .flatMap(new NowPlayingInteractor.MovieListFetcher())
-                                            .flatMap(new Function<List<MovieInfo>, ObservableSource<RestoreResult>>() {
-                                                @Override
-                                                public ObservableSource<RestoreResult> apply(List<MovieInfo> movieInfos)
-                                                        throws Exception {
-                                                    Timber.i("Thread name: %s. Create Restore Results for page %s",
-                                                            Thread.currentThread().getName(), pageNumber);
-                                                    if (pageNumber == restoreAction.getPageNumberToRestore()) {
-                                                        return Observable.just(RestoreResult.sucess(pageNumber, movieInfos));
-                                                    } else {
-                                                        return Observable.just(RestoreResult.inFlight(pageNumber, movieInfos));
-                                                    }
-                                                }
-                                            })
-                                            //handle retry, send status on failure stream.
-                                            .retry(new BiPredicate<Integer, Throwable>() {
-                                                @Override
-                                                public boolean test(Integer retryNumber, Throwable throwable) throws Exception {
-                                                    failureStream.onNext(
-                                                            RestoreResult.failure(
-                                                                    restoreAction.getPageNumberToRestore(),
-                                                                    true,
-                                                                    throwable));
-                                                    return true;
-                                                }
-                                            })
-                                            .startWith(RestoreResult.inFlight(pageNumber, null));
-                                }
+                    return serviceGateway.getNowPlaying(scrollAction.getPageNumber())
+                            //Delay for 3 seconds to show spinner on screen.
+                            .delay(1, TimeUnit.SECONDS)
+                            //translate external to internal business logic (Example if we wanted to save to prefs)
+                            .flatMap(new MovieListFetcher())
+                            .flatMap(movieInfos -> Observable.just(ScrollResult.sucess(scrollAction.getPageNumber(), movieInfos)))
+                            //handle retry, send status on failure stream.
+                            .retry((retryNumber, throwable) -> {
+                                failureStream.onNext(ScrollResult.failure(scrollAction.getPageNumber(), throwable));
+                                return true;
                             })
-                            .mergeWith(failureStream);
-                    }
-                });
-            }
+                            .mergeWith(failureStream)
+                            .startWith(ScrollResult.inFlight(scrollAction.getPageNumber()));
+                }
+            });
         };
 
-        transformActionIntoResults = new ObservableTransformer<Action, Result>() {
-            @Override
-            public ObservableSource<Result> apply(Observable<Action> upstream) {
-                return upstream.publish(new Function<Observable<Action>, ObservableSource<Result>>() {
-                    @Override
-                    public ObservableSource<Result> apply(Observable<Action> actionObservable) throws Exception {
-                        Timber.i("Thread name: %s. Translate Actions into Specific Actions.", Thread.currentThread().getName());
-                        return Observable.merge(
-                                actionObservable.ofType(ScrollAction.class).compose(transformScrollActionToScrollResult),
-                                actionObservable.ofType(RestoreAction.class).compose(transformRestoreActionToRestoreResult)
-                        );
+        transformRestoreActionToRestoreResult = upstream -> {
+            Timber.i("Thread name: %s. Translate RestoreAction into RestoreResult.", Thread.currentThread().getName());
+
+            return upstream.flatMap(new Function<RestoreAction, ObservableSource<RestoreResult>>() {
+                @Override
+                public ObservableSource<RestoreResult> apply(final RestoreAction restoreAction) throws Exception {
+                    //Set the number of pages to restore
+                    ArrayList<Integer> pagesToRestore = new ArrayList<>();
+                    for (int i = 1; i <= restoreAction.getPageNumberToRestore(); i++) {
+                        pagesToRestore.add(i);
                     }
-                });
-            }
+
+                    final PublishSubject<RestoreResult> failureStream = PublishSubject.create();
+
+                    //Execute
+                    return Observable.fromIterable(pagesToRestore)
+                        //output sequence must be ordered. Fetch the 1st page, then second, etc etc.
+                        .concatMap(pageNumber -> {
+                            Timber.i("Thread name: %s. Restore Page #%s.", Thread.currentThread().getName(), pageNumber);
+                            return serviceGateway.getNowPlaying(pageNumber)
+                                    .delay(3, TimeUnit.SECONDS)
+                                    //translate external to internal business logic (Ex if we wanted to save to prefs)
+                                    .flatMap(new MovieListFetcher())
+                                    .flatMap(movieInfos -> {
+                                        Timber.i("Thread name: %s. Create Restore Results for page %s",
+                                                Thread.currentThread().getName(), pageNumber);
+                                        if (pageNumber == restoreAction.getPageNumberToRestore()) {
+                                            return Observable.just(RestoreResult.sucess(pageNumber, movieInfos));
+                                        } else {
+                                            return Observable.just(RestoreResult.inFlight(pageNumber, movieInfos));
+                                        }
+                                    })
+                                    //handle retry, send status on failure stream.
+                                    .retry((retryNumber, throwable) -> {
+                                        failureStream.onNext(
+                                                RestoreResult.failure(
+                                                        restoreAction.getPageNumberToRestore(),
+                                                        true,
+                                                        throwable));
+                                        return true;
+                                    })
+                                    .startWith(RestoreResult.inFlight(pageNumber, null));
+                        })
+                        .mergeWith(failureStream);
+                }
+            });
         };
+
+        transformActionIntoResults = upstream -> upstream.publish(new Function<Observable<Action>, ObservableSource<Result>>() {
+            @Override
+            public ObservableSource<Result> apply(Observable<Action> actionObservable) throws Exception {
+                Timber.i("Thread name: %s. Translate Actions into Specific Actions.", Thread.currentThread().getName());
+                return Observable.merge(
+                        actionObservable.ofType(ScrollAction.class).compose(transformScrollActionToScrollResult),
+                        actionObservable.ofType(RestoreAction.class).compose(transformRestoreActionToRestoreResult)
+                );
+            }
+        });
     }
 
     /**
