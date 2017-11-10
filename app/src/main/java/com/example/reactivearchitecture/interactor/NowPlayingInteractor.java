@@ -36,7 +36,6 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import timber.log.Timber;
 
@@ -55,45 +54,29 @@ public class NowPlayingInteractor {
     public NowPlayingInteractor(final ServiceGateway serviceGateway) {
         this.serviceGateway = serviceGateway;
 
-        transformActionToResult = new ObservableTransformer<ScrollAction, ScrollResult>() {
+        transformActionToResult = upstream -> upstream.flatMap(new Function<ScrollAction, ObservableSource<ScrollResult>>() {
             @Override
-            public ObservableSource<ScrollResult> apply(@io.reactivex.annotations.NonNull Observable<ScrollAction> upstream) {
-                return upstream.flatMap(new Function<ScrollAction, ObservableSource<ScrollResult>>() {
-                    @Override
-                    public ObservableSource<ScrollResult> apply(@NonNull final ScrollAction scrollAction) throws Exception {
-                        Timber.i("Thread name: %s. Load Data, return ScrollResult.", Thread.currentThread().getName());
+            public ObservableSource<ScrollResult> apply(@NonNull final ScrollAction scrollAction) throws Exception {
+                Timber.i("Thread name: %s. Load Data, return ScrollResult.", Thread.currentThread().getName());
 
-                        Observable<Integer> pageNumberObservable = Observable.just(scrollAction.getPageNumber());
+                Observable<Integer> pageNumberObservable = Observable.just(scrollAction.getPageNumber());
 
-                        Observable<List<MovieInfo>> serviceGatewayObservable =
-                                serviceGateway.getNowPlaying(scrollAction.getPageNumber())
-                                        //Delay for 3 seconds to show spinner on screen.
-                                        .delay(3, TimeUnit.SECONDS)
-                                        //translate external to internal business logic (Example if we wanted to save to prefs)
-                                        .flatMap(new NowPlayingInteractor.MovieListFetcher());
+                Observable<List<MovieInfo>> serviceGatewayObservable =
+                        serviceGateway.getNowPlaying(scrollAction.getPageNumber())
+                                //Delay for 3 seconds to show spinner on screen.
+                                .delay(3, TimeUnit.SECONDS)
+                                //translate external to internal business logic (Example if we wanted to save to prefs)
+                                .flatMap(new MovieListFetcher());
 
-                        //Combine the two observables into result. We need the page number combined w/ results (in case of error).
-                        return Observable.zip(
-                                pageNumberObservable,
-                                serviceGatewayObservable,
-                                new BiFunction<Integer, List<MovieInfo>, ScrollResult>() {
-                                    @Override
-                                    public ScrollResult apply(@NonNull Integer pageNumber, @NonNull List<MovieInfo> movieInfos)
-                                            throws Exception {
-                                        return ScrollResult.sucess(pageNumber, movieInfos);
-                                    }
-                                })
-                                .onErrorReturn(new Function<Throwable, ScrollResult>() {
-                                    @Override
-                                    public ScrollResult apply(@NonNull Throwable throwable) throws Exception {
-                                        return ScrollResult.failure(scrollAction.getPageNumber(), throwable);
-                                    }
-                                })
-                                .startWith(ScrollResult.inFlight(scrollAction.getPageNumber()));
-                    }
-                });
+                //Combine the two observables into result. We need the page number combined w/ results (in case of error).
+                return Observable.zip(
+                        pageNumberObservable,
+                        serviceGatewayObservable,
+                        (pageNumber, movieInfos) -> ScrollResult.sucess(pageNumber, movieInfos))
+                        .onErrorReturn(throwable -> ScrollResult.failure(scrollAction.getPageNumber(), throwable))
+                        .startWith(ScrollResult.inFlight(scrollAction.getPageNumber()));
             }
-        };
+        });
     }
 
     /**
@@ -103,20 +86,14 @@ public class NowPlayingInteractor {
      */
     public Observable<Result> processAction(Observable<Action> actions) {
         return actions
-                .flatMap(new Function<Action, ObservableSource<ScrollAction>>() {
-                    @Override
-                    public ObservableSource<ScrollAction> apply(@NonNull Action action) throws Exception {
-                        Timber.i("Thread name: %s. Translate Actions into ScrollActions.", Thread.currentThread().getName());
-                        return Observable.just((ScrollAction) action);
-                    }
+                .flatMap(action -> {
+                    Timber.i("Thread name: %s. Translate Actions into ScrollActions.", Thread.currentThread().getName());
+                    return Observable.just((ScrollAction) action);
                 })
                 .compose(transformActionToResult)
-                .flatMap(new Function<ScrollResult, ObservableSource<Result>>() {
-                    @Override
-                    public ObservableSource<Result> apply(@NonNull ScrollResult scrollResult) throws Exception {
-                        Timber.i("Thread name: %s. Translate ScrollResult into Result.", Thread.currentThread().getName());
-                        return Observable.just((Result) scrollResult);
-                    }
+                .flatMap(scrollResult -> {
+                    Timber.i("Thread name: %s. Translate ScrollResult into Result.", Thread.currentThread().getName());
+                    return Observable.just((Result) scrollResult);
                 });
     }
 

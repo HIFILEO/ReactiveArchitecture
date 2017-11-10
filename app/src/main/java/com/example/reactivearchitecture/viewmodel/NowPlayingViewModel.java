@@ -48,10 +48,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
@@ -74,7 +71,7 @@ public class NowPlayingViewModel extends ViewModel {
     @NonNull
     private PublishRelay<UiEvent> publishRelayUiEvents = PublishRelay.create();
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected NowPlayingInteractor nowPlayingInteractor;
 
     /**
@@ -113,7 +110,7 @@ public class NowPlayingViewModel extends ViewModel {
         return uiModelObservable;
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void init() {
         nowPlayingInteractor =  new NowPlayingInteractor(serviceGateway);
         bind();
@@ -122,61 +119,49 @@ public class NowPlayingViewModel extends ViewModel {
     /**
      * Bind to {@link PublishRelay}.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     protected void bind() {
         uiModelObservable = publishRelayUiEvents
                 .observeOn(Schedulers.computation())
                 //Translate UiEvents into Actions
-                .flatMap(new Function<UiEvent, ObservableSource<Action>>() {
-                    @Override
-                    public ObservableSource<Action> apply(@io.reactivex.annotations.NonNull UiEvent uiEvent) throws Exception {
-                        Timber.i("Thread name: %s. Translate UiEvents into Actions.", Thread.currentThread().getName());
-                        ScrollAction scrollAction = new ScrollAction(((ScrollEvent) uiEvent).getPageNumber());
-                        return Observable.just((Action) scrollAction);
-                    }
+                .flatMap(uiEvent -> {
+                    Timber.i("Thread name: %s. Translate UiEvents into Actions.", Thread.currentThread().getName());
+                    ScrollAction scrollAction = new ScrollAction(((ScrollEvent) uiEvent).getPageNumber());
+                    return Observable.just((Action) scrollAction);
                 })
                 //Asynchronous Actions To Interactor
-                .publish(new Function<Observable<Action>, ObservableSource<Result>>() {
-                    @Override
-                    public ObservableSource<Result> apply(@io.reactivex.annotations.NonNull Observable<Action> actionObservable)
-                            throws Exception {
-                        return  nowPlayingInteractor.processAction(actionObservable);
-                    }
-                })
+                .publish(actionObservable -> nowPlayingInteractor.processAction(actionObservable))
                 //Scan Results to Update UiModel
-                .scan(UiModel.initState(), new BiFunction<UiModel, Result, UiModel>() {
-                    @Override
-                    public UiModel apply(UiModel uiModel, Result result) throws Exception {
-                        Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
+                .scan(UiModel.initState(), (uiModel, result) -> {
+                    Timber.i("Thread name: %s. Scan Results to UiModel", Thread.currentThread().getName());
 
-                        ScrollResult scrollResult = (ScrollResult) result;
+                    ScrollResult scrollResult = (ScrollResult) result;
 
-                        if (result.getType() == Result.ResultType.IN_FLIGHT) {
-                            return UiModel.inProgressState(
-                                    scrollResult.getPageNumber() == 1,
-                                    scrollResult.getPageNumber(),
-                                    uiModel.getCurrentList());
-                        } else if (result.getType() == Result.ResultType.SUCCESS) {
-                            List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
-                            uiModel.getCurrentList().addAll(listToAdd);
+                    if (result.getType() == Result.ResultType.IN_FLIGHT) {
+                        return UiModel.inProgressState(
+                                scrollResult.getPageNumber() == 1,
+                                scrollResult.getPageNumber(),
+                                uiModel.getCurrentList());
+                    } else if (result.getType() == Result.ResultType.SUCCESS) {
+                        List<MovieViewInfo> listToAdd = translateResultsForUi(scrollResult.getResult());
+                        uiModel.getCurrentList().addAll(listToAdd);
 
-                            return UiModel.successState(
-                                    scrollResult.getPageNumber(),
-                                    uiModel.getCurrentList(),
-                                    listToAdd
-                            );
-                        } else if (result.getType() == Result.ResultType.FAILURE) {
-                            Timber.e(scrollResult.getError());
-                            return UiModel.failureState(
-                                    scrollResult.getPageNumber() - 1,
-                                    uiModel.getCurrentList(),
-                                    application.getString(R.string.error_msg)
-                            );
-                        }
-
-                        //Unknown result - throw error
-                        throw new IllegalArgumentException("Unknown Result: " + result);
+                        return UiModel.successState(
+                                scrollResult.getPageNumber(),
+                                uiModel.getCurrentList(),
+                                listToAdd
+                        );
+                    } else if (result.getType() == Result.ResultType.FAILURE) {
+                        Timber.e(scrollResult.getError());
+                        return UiModel.failureState(
+                                scrollResult.getPageNumber() - 1,
+                                uiModel.getCurrentList(),
+                                application.getString(R.string.error_msg)
+                        );
                     }
+
+                    //Unknown result - throw error
+                    throw new IllegalArgumentException("Unknown Result: " + result);
                 })
                 //Publish results to main thread.
                 .observeOn(AndroidSchedulers.mainThread())

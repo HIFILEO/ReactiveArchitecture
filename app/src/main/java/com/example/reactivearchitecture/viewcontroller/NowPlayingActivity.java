@@ -40,7 +40,6 @@ import com.example.reactivearchitecture.model.UiModel;
 import com.example.reactivearchitecture.model.event.ScrollEvent;
 import com.example.reactivearchitecture.view.DividerItemDecoration;
 import com.example.reactivearchitecture.viewmodel.NowPlayingViewModel;
-import com.jakewharton.rxbinding2.support.v7.widget.RecyclerViewScrollEvent;
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView;
 
 import java.util.ArrayList;
@@ -50,12 +49,8 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import timber.log.Timber;
 
 /**
@@ -148,17 +143,9 @@ public class NowPlayingActivity extends BaseActivity {
         //Bind to UiModel
         //
         compositeDisposable.add(nowPlayingViewModel.getUiModels()
-                .subscribe(new Consumer<UiModel>() {
-                    @Override
-                    public void accept(@NonNull UiModel uiModel) throws Exception {
-                        processUiModel(uiModel);
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@NonNull Throwable throwable) throws Exception {
-                        throw new UnsupportedOperationException("Errors from Model Unsupported: "
-                                + throwable.getLocalizedMessage());
-                    }
+                .subscribe(this::processUiModel, throwable -> {
+                    throw new UnsupportedOperationException("Errors from Model Unsupported: "
+                            + throwable.getLocalizedMessage());
                 })
         );
     }
@@ -170,42 +157,25 @@ public class NowPlayingActivity extends BaseActivity {
     private void bindToScrollEvent() {
         scrollDisposable = RxRecyclerView.scrollEvents(nowPlayingBinding.recyclerView)
                 //Bind to RxBindings.
-                .flatMap(new Function<RecyclerViewScrollEvent, ObservableSource<ScrollEvent>>() {
-                    @Override
-                    public ObservableSource<ScrollEvent> apply(@NonNull RecyclerViewScrollEvent recyclerViewScrollEvent)
-                            throws Exception {
-                        ScrollEventCalculator scrollEventCalculator =
-                                new ScrollEventCalculator(recyclerViewScrollEvent);
+                .flatMap(recyclerViewScrollEvent -> {
+                    ScrollEventCalculator scrollEventCalculator =
+                            new ScrollEventCalculator(recyclerViewScrollEvent);
 
-                        //Only handle 'is at end' of list scroll events
-                        if (scrollEventCalculator.isAtScrollEnd()) {
-                            ScrollEvent scrollEvent = new ScrollEvent();
-                            scrollEvent.setPageNumber(pageNumber + 1);
-                            return Observable.just(scrollEvent);
-                        } else {
-                            return Observable.empty();
-                        }
+                    //Only handle 'is at end' of list scroll events
+                    if (scrollEventCalculator.isAtScrollEnd()) {
+                        ScrollEvent scrollEvent = new ScrollEvent();
+                        scrollEvent.setPageNumber(pageNumber + 1);
+                        return Observable.just(scrollEvent);
+                    } else {
+                        return Observable.empty();
                     }
                 })
                 //Filter any multiple events before 250MS
-                .debounce(new Function<ScrollEvent, ObservableSource<ScrollEvent>>() {
-                    @Override
-                    public ObservableSource<ScrollEvent> apply(@NonNull ScrollEvent scrollEvent) throws Exception {
-                        return Observable.<ScrollEvent>empty().delay(250, TimeUnit.MILLISECONDS);
-                    }
-                })
+                .debounce(scrollEvent -> Observable.<ScrollEvent>empty().delay(250, TimeUnit.MILLISECONDS))
                 //Send ScrollEvent to ViewModel
-                .subscribe(new Consumer<ScrollEvent>() {
-                    @Override
-                    public void accept(@NonNull ScrollEvent scrollEvent) throws Exception {
-                        nowPlayingViewModel.processUiEvent(scrollEvent);
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@NonNull Throwable throwable) throws Exception {
-                        throw new UnsupportedOperationException("Errors in scroll event unsupported. Crash app."
-                                + throwable.getLocalizedMessage());
-                    }
+                .subscribe(scrollEvent -> nowPlayingViewModel.processUiEvent(scrollEvent), throwable -> {
+                    throw new UnsupportedOperationException("Errors in scroll event unsupported. Crash app."
+                            + throwable.getLocalizedMessage());
                 });
 
         compositeDisposable.add(scrollDisposable);
