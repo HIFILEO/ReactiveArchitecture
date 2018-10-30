@@ -13,7 +13,6 @@ task checkstyle(type: Checkstyle) {
 }
 
 checkstyle {
-    //Note - the highest version that works with gradle is 6.7
     toolVersion = "7.0"
 
     //Note - the location of the checkstyle.xml file

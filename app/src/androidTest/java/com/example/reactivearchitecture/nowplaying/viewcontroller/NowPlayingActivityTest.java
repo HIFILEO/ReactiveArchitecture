@@ -24,7 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
+import android.support.test.espresso.IdlingRegistry;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.NoMatchingViewException;
 import android.support.test.espresso.ViewAssertion;
@@ -61,6 +61,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -207,7 +208,7 @@ public class NowPlayingActivityTest {
         RxEspressoHandler rxEspressoHandler = new RxEspressoHandler();
         RxJavaPlugins.setScheduleHandler(rxEspressoHandler.getRxEspressoScheduleHandler());
         RxJavaPlugins.setOnObservableAssembly(rxEspressoHandler.getRxEspressoObserverHandler());
-        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
+        IdlingRegistry.getInstance().register(rxEspressoHandler.getIdlingResource());
 
         //
         //Act
@@ -230,7 +231,7 @@ public class NowPlayingActivityTest {
         RxEspressoHandler rxEspressoHandler = new RxEspressoHandler();
         RxJavaPlugins.setScheduleHandler(rxEspressoHandler.getRxEspressoScheduleHandler());
         RxJavaPlugins.setOnObservableAssembly(rxEspressoHandler.getRxEspressoObserverHandler());
-        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
+        IdlingRegistry.getInstance().register(rxEspressoHandler.getIdlingResource());
 
         //
         //Act
@@ -244,7 +245,7 @@ public class NowPlayingActivityTest {
         onView(withId(R.id.recyclerView)).check(new RecyclerViewItemCountAssertion(20));
 
         //unregister so we can do checks without waiting for data
-        Espresso.unregisterIdlingResources(rxEspressoHandler.getIdlingResource());
+        IdlingRegistry.getInstance().unregister(rxEspressoHandler.getIdlingResource());
 
         //Scroll to the bottom to trigger the progress par.
         onView(withId(R.id.recyclerView)).perform(
@@ -302,7 +303,7 @@ public class NowPlayingActivityTest {
                 })).perform(click());
 
         //enable idling resource AFTER we trigger the filter.
-        Espresso.registerIdlingResources(rxEspressoHandler.getIdlingResource());
+        IdlingRegistry.getInstance().register(rxEspressoHandler.getIdlingResource());
 
         //
         //Assert
@@ -319,7 +320,7 @@ public class NowPlayingActivityTest {
 
                 RecyclerView recyclerView = (RecyclerView) view;
                 RecyclerView.Adapter adapter = recyclerView.getAdapter();
-                assertThat(adapter.getItemCount(), Matchers.is(7));
+                assertThat(adapter.getItemCount(), Matchers.is(9));
 
                 assertThat(adapter).isInstanceOf(NowPlayingListAdapter.class);
                 NowPlayingListAdapter nowPlayingListAdapter = (NowPlayingListAdapter) adapter;
@@ -331,12 +332,11 @@ public class NowPlayingActivityTest {
     @After
     public void tearDown() {
         //Note - you must remove the idling resources after each Test
-        List<IdlingResource> idlingResourceList = Espresso.getIdlingResources();
-        if (idlingResourceList != null) {
-            for (int i = 0; i < idlingResourceList.size(); i++) {
-                Espresso.unregisterIdlingResources(idlingResourceList.get(i));
-            }
+        Collection<IdlingResource> idlingResourceCollection = IdlingRegistry.getInstance().getResources();
+        for (IdlingResource idlingResource : idlingResourceCollection) {
+            IdlingRegistry.getInstance().unregister(idlingResource);
         }
+
     }
 
     @NonNull
