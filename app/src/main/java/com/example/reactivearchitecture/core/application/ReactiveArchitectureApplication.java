@@ -22,9 +22,9 @@ package com.example.reactivearchitecture.core.application;
 import android.app.Activity;
 import android.app.Application;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.BuildConfig;
 import android.util.Log;
 
+import com.example.reactivearchitecture.BuildConfig;
 import com.example.reactivearchitecture.core.dagger.AppInjector;
 import com.example.reactivearchitecture.core.dagger.ApplicationComponent;
 

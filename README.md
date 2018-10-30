@@ -90,7 +90,7 @@ To run all lint:
 
 #### Run All
 
-The following command works for API emulator version 25.
+The following command works for API emulator version 25 (Pixel 2XL)
 ./gradlew checkstyle lintDebug jacocoTestReport contractTest -Pcontract=true connectedDebugAndroidTest
 
 ## Resources

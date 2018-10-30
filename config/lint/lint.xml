@@ -29,7 +29,7 @@
     <issue id="UnusedIds" severity="warning"/>
     <issue id="UseSparseArrays" severity="info"/>
     <issue id="UsingHttp" severity="error"/>
-    <issue id="InvalidPackage2" severity="warning">
+    <issue id="InvalidPackage" severity="warning">
         <ignore regexp=".*okio.*" />
     </issue>
     <issue id="MissingTranslation">

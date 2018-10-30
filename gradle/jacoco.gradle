@@ -52,7 +52,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ["${project['JACOCO_DEPENDE
     }
 
     // use hidden configuration, for details look into JacocoPlugin.groovy
-    jacocoClasspath = project.configurations['androidJacocoAnt']
+    jacocoClasspath = configurations['jacocoAnt']
 
     // exclude auto-generated classes and tests
     def fileFilter = JACOCO_FILE_FILTER.tokenize(",")
